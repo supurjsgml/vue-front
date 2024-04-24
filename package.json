@@ -1,0 +1,22 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "local": "nuxt dev --dotenv .env.local",
+    "dev": "nuxt dev --dotenv .env.dev",
+    "prod": "nuxt dev --dotenv .env.prod",
+    "build": "nuxt build --dotenv .env.prod",
+    "start": "nuxt start --dotenv .env.prod",
+    "generate": "nuxt generate",
+    "heroku-postbuild": "npm run build",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "nuxt": "^3.11.2",
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.0"
+  }
+}

@@ -1,0 +1,15 @@
+.camel{
+    width: 48.5%;
+    height: 650px;
+}
+
+.camel-schema-div {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* 반응형 그리드 설정 */
+    grid-gap: 20px; /* 간격 설정 */
+
+    .camel-schema-tex{
+        width: 36.7rem;
+        height: 350px;
+    }
+}
