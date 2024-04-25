@@ -108,10 +108,10 @@
 <script setup lang="ts">
 
 import { onMounted, ref } from 'vue';
-// import { camelStore } from "~/stores/camel";
+import { camelStore } from "~/stores/camel";
 
 
-// const store = camelStore();
+const store = camelStore();
 
 
 onMounted(() => {
