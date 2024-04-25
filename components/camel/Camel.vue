@@ -115,6 +115,8 @@ const store = camelStore();
 
 
 onMounted(() => {
+    store.camelStr = 'test';
+    store.genFile();
     // camelStore().camelStr = 'test';
     // console.log(camelStore().camelStr);
     // store.genFile();

@@ -6,9 +6,6 @@ export const camelAPI = () => {
     //  * 
     //  * @author 이건희
     //  * @param query
-    //  * @param query.upperCmtNo // 상위 댓글 번호
-    //  * @param query.pageNo // 페이지 번호
-    //  * @param query.pageSize // 페이지 크기
     //  */
     // async getCommunityDetailReComment(query: { upperCmtNo: number; pageNo: number; pageSize: number }) {
     //   Object.assign(query, { commentType: "REPLY" })
@@ -30,6 +27,7 @@ export const camelAPI = () => {
       //   body: { "word" : searchValue.value },
       // });
       console.log("tttt : ", camelStr);
+      return { data : {camelStr} };
       // return await useFetch ("/cmy/kywrdSrch", { method: "POST", body })
     }
   }

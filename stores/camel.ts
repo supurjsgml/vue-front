@@ -92,8 +92,8 @@ export const camelStore = defineStore("camel", {
     //   }
     // },
     async genFile() {
-      const { body } = await camelAPI().getGenFile(this.camelStr);
-      console.log("ttttttttttttttttttttttttttttttttttttttttt : ", body);
+      const { data } = await camelAPI().getGenFile(this.camelStr);
+      console.log("ttttttttttttttttttttttttttttttttttttttttt : ", data);
       // $state.loaded()
     }
     // ,
