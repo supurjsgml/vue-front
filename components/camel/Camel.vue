@@ -169,7 +169,7 @@ function convert() {
         }
 
         // conversion
-        let after = before.replace(/_(\w)/g, function(word) {
+        let after = before.replace(/_(\w)/g, function(word: string) {
             return word.toUpperCase();
         });
         
@@ -208,24 +208,24 @@ function convert() {
 
             // Select
             if(count == 0) {
-                output1 += getTableAlias() + (before.toUpperCase());
+                output1 += getTableAlias(false) + (before.toUpperCase());
             } else {
-                output1 += ('\n     , ' + getTableAlias() + before.toUpperCase());
+                output1 += ('\n     , ' + getTableAlias(false) + before.toUpperCase());
             }
 
             if(count == 0) {
-                output2 += getTableAlias() + (before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}\n');
+                output2 += getTableAlias(false) + (before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}\n');
             } else {
-                output2 += ('   AND ' + getTableAlias() + before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}\n');
+                output2 += ('   AND ' + getTableAlias(false) + before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}\n');
             }
         } else if('code_insert' === checked.value) {
             tableOptions.value = true;
 
             // Insert
             if(count == 0) {
-                output1 += '     ' + getTableAlias() + (before.toUpperCase());
+                output1 += '     ' + getTableAlias(false) + (before.toUpperCase());
             } else {
-                output1 += ('\n          , ' + getTableAlias() + before.toUpperCase());
+                output1 += ('\n          , ' + getTableAlias(false) + before.toUpperCase());
             }
 
             if(count == 0) {
@@ -238,24 +238,24 @@ function convert() {
 
             // Update
             if(count == 0) {
-                output1 += getTableAlias() + (before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}');
+                output1 += getTableAlias(false) + (before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}');
             } else {
-                output1 += ('\n     , ' + getTableAlias() + before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}');
+                output1 += ('\n     , ' + getTableAlias(false) + before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}');
             }
 
             if(count == 0) {
-                output2 += getTableAlias() + (before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}\n');
+                output2 += getTableAlias(false) + (before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}\n');
             } else {
-                output2 += ('   AND ' + getTableAlias() + before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}\n');
+                output2 += ('   AND ' + getTableAlias(false) + before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}\n');
             }
         } else if('code_delete' === checked.value) {
             tableOptions.value = true;
 
             // Delete
             if(count == 0) {
-                output1 += getTableAlias() + (before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}\n');
+                output1 += getTableAlias(false) + (before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}\n');
             } else {
-                output1 += ('   AND ' + getTableAlias() + before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}\n');
+                output1 += ('   AND ' + getTableAlias(false) + before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}\n');
             }
         } else if('code_queryStr' === checked.value) {
             // queryStr
@@ -312,7 +312,7 @@ function getTableName() {
     return tableName;
 }
 
-function getTableAlias(flg) {
+function getTableAlias(flg: boolean) {
     let alias = '';
 
     if (document.conf.as.value) {
@@ -322,7 +322,7 @@ function getTableAlias(flg) {
     return flg ? document.conf.as.value : alias;
 }
 
-const convertType = (linesType, i) => {
+const convertType = (linesType: Array<string>, i: number) => {
     let returnVal = '';
 
     if (linesType && linesType[i]) {
@@ -353,7 +353,7 @@ const convertType = (linesType, i) => {
     return returnVal;
 }
 
-const convertComment = (linesType, i) => {
+const convertComment = (linesType: Array<string>, i: number) => {
     let returnVal = '';
 
     if (linesType && linesType[i]) {
