@@ -76,7 +76,7 @@
             <textarea class="camel" readonly v-model="output"></textarea>
         </div>
         <div id="schemaDiv">
-            <input type="button" value="save" @click="genFile">
+            <button @click="genFile">save</button>
             <div class="camel-schema-div">
                 <div>
                     <strong>Column</strong>

@@ -12,4 +12,9 @@ export default defineNuxtConfig({
     "@/assets/styles/ui.css"
   ],
   modules: ["@pinia/nuxt"],
+  runtimeConfig: {
+    public: {
+      apiBase: process.env.BASE_URL,
+    },
+  },
 })

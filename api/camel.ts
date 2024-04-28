@@ -1,6 +1,6 @@
 
 export const camelAPI = () => {
-  const BASE_URL = process.env.BASE_URL || "";
+  const BASE_URL = useRuntimeConfig().public.apiBase;
   return {
 
     // /**
@@ -19,7 +19,7 @@ export const camelAPI = () => {
      * @param {string} camelStr - dto str Data
      */
     async getGenFile(data: object) {
-      return await $fetch("https://redoc-dd2a33735c4a.herokuapp.com/com/genFile" , {
+      return await useFetch(BASE_URL.concat("/com/genFile") , {
         method:'POST',
         headers:{
           'Content-Type':'application/json'
