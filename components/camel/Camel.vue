@@ -119,16 +119,19 @@ const store = camelStore();
  */
 const genFile = async () => {
     store.data.camelStr = output;
-    
-    const result = await store.genFile();
-    const url = window.URL.createObjectURL(new Blob([result]));
-    const link = document.createElement('a');
 
-    link.href = url;
-    link.setAttribute('download', 'dto.java'); // 다운로드될 파일의 이름과 확장자를 지정합니다.
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const result = await store.genFile();
+    
+    if (result) {
+        const url = window.URL.createObjectURL(new Blob([result]));
+        const link = document.createElement('a');
+    
+        link.href = url;
+        link.setAttribute('download', 'dto.java'); // 다운로드될 파일의 이름과 확장자를 지정합니다.
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 }
 
 onMounted(() => {

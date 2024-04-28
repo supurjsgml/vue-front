@@ -1,6 +1,6 @@
+import fetch from '~/api/commonApi'; 
 
 export const camelAPI = () => {
-  const BASE_URL = useRuntimeConfig().public.apiBase;
   return {
 
     // /**
@@ -19,15 +19,7 @@ export const camelAPI = () => {
      * @param {string} camelStr - dto str Data
      */
     async getGenFile(data: object) {
-      return await $fetch(BASE_URL.concat("/com/genFile") , {
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json'
-          // authorization : 'token',
-        },
-        body: { data },
-        responseType : "blob"
-      });
+      return fetch("/com/genFile", "POST", data, "blob");
     }
   }
 }
