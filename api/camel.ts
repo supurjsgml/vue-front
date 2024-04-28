@@ -19,14 +19,14 @@ export const camelAPI = () => {
      * @param {string} camelStr - dto str Data
      */
     async getGenFile(data: object) {
-      return await useFetch(BASE_URL.concat("/com/genFile") , {
+      return await $fetch(BASE_URL.concat("/com/genFile") , {
         method:'POST',
         headers:{
           'Content-Type':'application/json'
           // authorization : 'token',
         },
         body: { data },
-        // responseType : "blob"
+        responseType : "blob"
       });
     }
   }
