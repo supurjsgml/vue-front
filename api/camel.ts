@@ -1,5 +1,6 @@
 
 export const camelAPI = () => {
+  const BASE_URL = process.env.BASE_URL || "";
   return {
 
     // /**
@@ -15,20 +16,18 @@ export const camelAPI = () => {
     /**
      * 
      * @author 이건희
-     * @param {Object} body - 커뮤니티 키워드 목록 조회 파라미터
+     * @param {string} camelStr - dto str Data
      */
-    async getGenFile(camelStr: string) {
-      // const { data } = await useFetch('search api url', {
-      //   method:'POST',
-      //   headers:{
-      //     'Content-Type':'application/json',
-      //     authorization : 'token',
-      //   },
-      //   body: { "word" : searchValue.value },
-      // });
-      console.log("tttt : ", camelStr);
-      return { data : {camelStr} };
-      // return await useFetch ("/cmy/kywrdSrch", { method: "POST", body })
+    async getGenFile(data: object) {
+      return await $fetch("https://redoc-dd2a33735c4a.herokuapp.com/com/genFile" , {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json'
+          // authorization : 'token',
+        },
+        body: { data },
+        // responseType : "blob"
+      });
     }
   }
 }

@@ -4,27 +4,8 @@ declare interface FilterSlidesType {
   active: number
 }
 declare interface camelStateType {
-  query: {
-    ctgNo: string
-    sortStd: string
-    pageNo: number
-    pageSize: number
-  }
-  kwdParam: {
-    ctgNo: string
-    kwd: string
-    colType: string
-    kwdSort: string
-    boldFlg: boolean
-    pageNo: number
-    pageSize: number
-  }
+  data: {
+    camelStr: string
+  },
   filterSlides: FilterSlidesType[]
-  cmyList: any[]
-  cmyCount: number
-  fixCmyList: any[]
-  cmyKwdList: any[]
-  totalRecords: number
-  uploadingCount: number
-  camelStr: string
 }

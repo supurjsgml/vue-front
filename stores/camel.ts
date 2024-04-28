@@ -4,29 +4,10 @@ import { defineStore } from 'pinia';
 
 export const camelStore = defineStore("camel", {
   state: (): camelStateType => ({
-    query: {
-      ctgNo: "",
-      sortStd: "L",
-      pageNo: 0,
-      pageSize: 10
-    },
-    kwdParam: {
-      ctgNo: "",
-      kwd: "",
-      colType: "CMY",
-      kwdSort: "",
-      boldFlg: true,
-      pageNo: 0,
-      pageSize: 10
-    },
     filterSlides: [{ title: "전체글", catIdx: "all", active: 0 }],
-    cmyList: [],
-    cmyCount: 0,
-    fixCmyList: [],
-    cmyKwdList: [],
-    totalRecords: 0,
-    uploadingCount: 0,
-    camelStr: ""
+    data: {
+      camelStr: ""
+    }
   }),
   getters: {
     // activeSlide(state: camelStateType): FilterSlidesType {
@@ -92,19 +73,7 @@ export const camelStore = defineStore("camel", {
     //   }
     // },
     async genFile() {
-      const { data } = await camelAPI().getGenFile(this.camelStr);
-      console.log("ttttttttttttttttttttttttttttttttttttttttt : ", data);
-      // $state.loaded()
+      return await camelAPI().getGenFile(this.data);
     }
-    // ,
-    // addUploadingCount() {
-    //   this.uploadingCount++
-    // },
-    // subtractUploadingCount() {
-    //   this.uploadingCount--
-    // },
-    // resetUploadingCount() {
-    //   this.uploadingCount = 0
-    // }
   }
 })

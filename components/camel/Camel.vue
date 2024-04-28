@@ -76,6 +76,7 @@
             <textarea class="camel" readonly v-model="output"></textarea>
         </div>
         <div id="schemaDiv">
+            <input type="button" value="save" @click="genFile">
             <div class="camel-schema-div">
                 <div>
                     <strong>Column</strong>
@@ -113,13 +114,23 @@ import { camelStore } from "~/stores/camel";
 
 const store = camelStore();
 
+/**
+ * 파일 다운
+ */
+const genFile = async () => {
+    store.data.camelStr = output;
+    const result = await store.genFile();
+
+    const url = window.URL.createObjectURL(new Blob([result]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'dto.java'); // 다운로드될 파일의 이름과 확장자를 지정합니다.
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
 
 onMounted(() => {
-    store.camelStr = 'test';
-    store.genFile();
-    // camelStore().camelStr = 'test';
-    // console.log(camelStore().camelStr);
-    // store.genFile();
     convert();
 })
 
@@ -194,7 +205,7 @@ function convert() {
                 basicDiv.style = 'display:none';
                 schemaDiv.style = '';
 
-                output1 += ('@Schema(description = "' + convertComment(linesComment, i) + '" example = "")\n' + modifier + ' ' + (linesType ? convertType(linesType, i) : datatype) + ' ' + after + ';\n\n');
+                output1 += ('@Schema(description = "' + convertComment(linesComment, i) + '", example = "")\n' + modifier + ' ' + (linesType ? convertType(linesType, i) : datatype) + ' ' + after + ';\n\n');
             } else {
                 output1 += (modifier + ' ' + datatype + ' ' + after + ';\n');
             }
