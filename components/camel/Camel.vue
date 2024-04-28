@@ -76,6 +76,7 @@
             <textarea class="camel" readonly v-model="output"></textarea>
         </div>
         <div id="schemaDiv">
+            <input type="button" value="save" @click="genFile">
             <div class="camel-schema-div">
                 <div>
                     <strong>Column</strong>
@@ -113,13 +114,15 @@ import { camelStore } from "~/stores/camel";
 
 const store = camelStore();
 
-
-onMounted(() => {
+/**
+ * 파일 다운
+ */
+const genFile = () => {
     store.camelStr = 'test';
     store.genFile();
-    // camelStore().camelStr = 'test';
-    // console.log(camelStore().camelStr);
-    // store.genFile();
+}
+
+onMounted(() => {
     convert();
 })
 

@@ -96,15 +96,5 @@ export const camelStore = defineStore("camel", {
       console.log("ttttttttttttttttttttttttttttttttttttttttt : ", data);
       // $state.loaded()
     }
-    // ,
-    // addUploadingCount() {
-    //   this.uploadingCount++
-    // },
-    // subtractUploadingCount() {
-    //   this.uploadingCount--
-    // },
-    // resetUploadingCount() {
-    //   this.uploadingCount = 0
-    // }
   }
 })
