@@ -8,8 +8,39 @@
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* 반응형 그리드 설정 */
     grid-gap: 20px; /* 간격 설정 */
 
-    .camel-schema-tex{
+    .camel-schema-tex {
         width: 36.7rem;
         height: 350px;
     }
 }
+
+.table {
+    border-collapse: separate; /* 셀 경계를 분리하여 구분선을 만듭니다. */
+    border-spacing: 0; /* 셀 경계 사이의 간격을 없앱니다. */
+    width: 100%;
+  }
+  
+  .table th,
+  .table td {
+    border: 1px solid #dddddd; /* 각 셀에 경계를 만듭니다. */
+    padding: 10px;
+    text-align: left;
+  }
+  
+  .table th {
+    background-color: #7286d5; /* 테이블 헤더 배경색 */
+    font-weight: bold; /* 헤더 글꼴을 굵게 지정합니다. */
+  }
+  
+  .table td {
+    background-color: #ffffff; /* 테이블 내용 배경색 */
+  }
+  
+  /* 짝수 행과 홀수 행에 대해 다른 배경색 적용 */
+  .table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .table tr:nth-child(odd) {
+    background-color: #e6e6e6;
+  }

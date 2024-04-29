@@ -105,12 +105,45 @@
         </div>
     </div>
     
+    <div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Image Upload</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(item, index) in items" :key="index">
+                    <td>{{ item.name }}</td>
+                    <td>
+                        <input type="file" @change="handleFileUpload(index, $event)">
+                        <img :src="item.imageUrl" v-if="item.imageUrl" alt="Uploaded Image">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </template>
 <script setup lang="ts">
 
 import { onMounted, ref } from 'vue';
 import { camelStore } from "~/stores/camel";
 
+const items = ref([
+    { id: 1, name: 'Item 1', imageUrl: '' },
+    { id: 2, name: 'Item 2', imageUrl: '' },
+    // Add more items as needed
+]);
+
+const handleFileUpload = (index: number, event: any) => {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+    items.value[index].imageUrl = reader.result;
+    };
+    reader.readAsDataURL(file);
+};
 
 const store = camelStore();
 
@@ -381,4 +414,5 @@ const convertComment = (linesType: Array<string>, i: number) => {
 </script>
 
 <style>
+
 </style>
