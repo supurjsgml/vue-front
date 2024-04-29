@@ -1,6 +1,7 @@
 import fetch from '~/api/commonApi'; 
 
 export const camelAPI = () => {
+  const { fetchInstance } = fetch();
   return {
 
     // /**
@@ -16,10 +17,13 @@ export const camelAPI = () => {
     /**
      * 
      * @author 이건희
-     * @param {string} camelStr - dto str Data
+     * @param {string} data.camelStr - dto str Data
      */
+    // async getGenFile(data: object) {
+    //   return fetch("/com/genFile", "POST", data, "blob");
+    // }
     async getGenFile(data: object) {
-      return fetch("/com/genFile", "POST", data, "blob");
+      return await fetchInstance("/com/genFile", { method: "POST" , body: { data }, responseType : "blob" });
     }
   }
 }

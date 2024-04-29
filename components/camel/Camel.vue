@@ -122,7 +122,7 @@ const genFile = async () => {
 
     const result = await store.genFile();
     
-    if (result) {
+    if (0 < result.size) {
         const url = window.URL.createObjectURL(new Blob([result]));
         const link = document.createElement('a');
     
