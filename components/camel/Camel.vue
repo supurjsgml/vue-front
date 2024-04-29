@@ -130,21 +130,6 @@
 import { onMounted, ref } from 'vue';
 import { camelStore } from "~/stores/camel";
 
-const items = ref([
-    { id: 1, name: 'Item 1', imageUrl: '' },
-    { id: 2, name: 'Item 2', imageUrl: '' },
-    // Add more items as needed
-]);
-
-const handleFileUpload = (index: number, event: any) => {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-    reader.onload = () => {
-    items.value[index].imageUrl = reader.result;
-    };
-    reader.readAsDataURL(file);
-};
-
 const store = camelStore();
 
 /**
@@ -410,6 +395,20 @@ const convertComment = (linesType: Array<string>, i: number) => {
     }
     return returnVal;
 }
+
+const items = ref([
+    { id: 1, name: 'Item 1', imageUrl: '' },
+    { id: 2, name: 'Item 2', imageUrl: '' },
+]);
+
+const handleFileUpload = (index: number, event: any) => {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = () => {
+        items.value[index].imageUrl = reader.result;
+    };
+    reader.readAsDataURL(file);
+};
 
 </script>
 
