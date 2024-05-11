@@ -55,6 +55,15 @@
                             <input type="radio" id="schema" @change="convert()" v-model="annotationCheck" value="schema"/><label for="schema">@Schema</label>
                             <input type="radio" id="column" @change="convert()" v-model="annotationCheck" value="column"/><label for="column">@Column</label>
                         </p>
+                        <div>
+                            <p>
+                                <input type="checkbox" id="package" name="package" @click="createPackage()" v-model="checkBoxDisplay"/><label for="">createPackage</label>
+                            </p>
+                            <div v-show="checkBoxDisplay">
+                                ClassName: <input id="ClassName" type="text" name="ClassName" @keyup="to => { inputData.class = to.target.value; createPackage(); }" />&nbsp;
+                                PackageName: <input id="PackageName" type="text" name="PackageName" @keyup="to => { inputData.package = to.target.value; createPackage() }" />&nbsp;
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <p v-show="resultmapOptions">
@@ -166,9 +175,16 @@ const inputComment = ref();
 
 // default option
 const checked = ref('code_basic');
-const annotationCheck = ref();
 const modifierOptions = ref('private');
 const datatypeOptions = ref('String');
+const inputData = reactive({
+    class: null,
+    package: null
+});
+
+const annotationCheck = ref();
+const checkBoxDisplay = ref(false);
+
 const voOptions = ref(false);
 const resultmapOptions = ref(false);
 const tableOptions = ref(false);
@@ -409,6 +425,34 @@ const handleFileUpload = (index: number, event: any) => {
     };
     reader.readAsDataURL(file);
 };
+
+const createPackage = async () => {
+    checkBoxDisplay.value = checkBoxDisplay.value
+    
+    const bar = '\n'
+    const strArray = new Array()
+    
+    if (!checkBoxDisplay.value) {
+        strArray.push('package com.app.common.dto'.concat(bar).concat(bar))
+        strArray.push('import io.swagger.v3.oas.annotations.media.Schema;'.concat(bar))
+        strArray.push('import lombok.AccessLevel;'.concat(bar))
+        strArray.push('import lombok.Builder;'.concat(bar))
+        strArray.push('import lombok.Getter;'.concat(bar))
+        strArray.push('import lombok.Setter;'.concat(bar))
+        strArray.push('import lombok.ToString;'.concat(bar).concat(bar))
+        
+        strArray.push('@NoArgsConstructor(access = AccessLevel.PRIVATE)'.concat(bar))
+        strArray.push(`public class ${inputData.class || 'ApiBodyDTO'} {`.concat(bar).concat(bar))
+    
+        strArray.push(output.value.replaceAll('@', '    @').replaceAll('private', '    private '))
+        strArray.push('}')
+
+        output.value = strArray.join('')
+    } else {
+        convert()
+    }
+
+}
 
 </script>
 
