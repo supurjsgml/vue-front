@@ -85,7 +85,9 @@
             <textarea class="camel" readonly v-model="output"></textarea>
         </div>
         <div id="schemaDiv">
-            <button @click="genFile">save</button>
+            <p>
+                <downBt @click="genFile"></downBt>
+            </p>
             <div class="camel-schema-div">
                 <div>
                     <strong>Column</strong>
@@ -138,6 +140,7 @@
 
 import { onMounted, ref } from 'vue';
 import { camelStore } from "~/stores/camel";
+import downBt from "~/components/button/downBt.vue";
 
 const store = camelStore();
 
@@ -326,6 +329,9 @@ function convert() {
         output.value = output1;
     } else if('code_vo' === checked.value) {
         output.value = output1;
+
+        //createPackage 체크 상태일시
+        if (checkBoxDisplay.value) handleChange()
     } else if('code_resultmap' === checked.value) {
         output.value = '<resultMap id="' + document.conf._id.value + '" class="' + document.conf._class.value + '">\n';
         output.value += output1;

@@ -9,7 +9,8 @@ export default defineNuxtConfig({
     enabled: true,
   },
   css: [
-    "@/assets/styles/ui.css"
+    "@/assets/styles/ui.css",
+    "@/assets/styles/docs.css",
   ],
   modules: ["@pinia/nuxt"],
   runtimeConfig: {
