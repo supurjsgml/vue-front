@@ -19,7 +19,7 @@ export default function fetch() {
       headers: {
         Accept: "application/json"
       },
-      timeout: 10000, // 요청 타임아웃 설정 (10초)
+      // timeout: 5000, // 요청 타임아웃 설정 (5초)
       // onRequest({ options }) {
       //   const { accessToken } = "token"
 
