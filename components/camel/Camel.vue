@@ -177,6 +177,7 @@ const inputComment = ref();
 const checked = ref('code_basic');
 const modifierOptions = ref('private');
 const datatypeOptions = ref('String');
+
 const inputData = reactive({
     class: null,
     package: null
