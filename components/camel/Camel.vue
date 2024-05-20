@@ -60,8 +60,8 @@
                                 <input type="checkbox" id="package" name="package" @click="createPackage()" v-model="checkBoxDisplay"/><label for="">createPackage</label>
                             </p>
                             <div v-show="checkBoxDisplay">
-                                ClassName: <input id="ClassName" type="text" name="ClassName" @keyup="to => { inputData.class = to.target.value; createPackage(); }" />&nbsp;
-                                PackageName: <input id="PackageName" type="text" name="PackageName" @keyup="to => { inputData.package = to.target.value; createPackage() }" />&nbsp;
+                                ClassName: <input id="ClassName" type="text" name="ClassName" @keyup="to => { inputData.class = to.target.value; handleChange(); }" />&nbsp;
+                                PackageName: <input id="PackageName" type="text" name="PackageName" @keyup="to => { inputData.package = to.target.value; handleChange(); }" />&nbsp;
                             </div>
                         </div>
                     </div>
@@ -426,6 +426,9 @@ const handleFileUpload = (index: number, event: any) => {
     reader.readAsDataURL(file);
 };
 
+/**
+ * dto 패키지 생성 함수
+ */
 const createPackage = async () => {
     checkBoxDisplay.value = checkBoxDisplay.value
     
@@ -433,7 +436,7 @@ const createPackage = async () => {
     const strArray = new Array()
     
     if (!checkBoxDisplay.value) {
-        strArray.push('package com.app.common.dto'.concat(bar).concat(bar))
+        strArray.push(`package ${inputData.package || 'com.app.common.dto'}`.concat(bar).concat(bar))
         strArray.push('import io.swagger.v3.oas.annotations.media.Schema;'.concat(bar))
         strArray.push('import lombok.AccessLevel;'.concat(bar))
         strArray.push('import lombok.Builder;'.concat(bar))
@@ -453,6 +456,30 @@ const createPackage = async () => {
     }
 
 }
+
+const handleChange = () => {
+    triggerDblClick(document.getElementById('package'))
+}
+
+/**
+ * 더블클릭 이벤트
+ * @param checkbox 
+ */
+const triggerDblClick = (checkbox: any) => {
+    checkbox.click();
+    checkbox.click();
+};
+
+// watch(checkBoxDisplay, (newVal) => {
+//   if (newVal) {
+//     nextTick(() => {
+//       const classNameInput = document.getElementById('ClassName');
+//       if (classNameInput) {
+//         classNameInput.focus();
+//       }
+//     });
+//   }
+// });
 
 </script>
 
