@@ -114,7 +114,7 @@
         </div>
     </div>
     
-    <div>
+    <!-- <div>
         <table class="table">
             <thead>
                 <tr>
@@ -132,7 +132,7 @@
                 </tr>
             </tbody>
         </table>
-    </div>
+    </div> -->
 </template>
 <script setup lang="ts">
 
@@ -171,8 +171,8 @@ const input = ref('USER_ID\nADDR_HOME_STREET\nYOU_LOVE_ME_SO_MUCH\n');
 const output = ref();
 
 // schema data
-const inputType = ref();
-const inputComment = ref();
+const inputType = ref('BIGINT\nVARCHAR\nDOUBLE\n');
+const inputComment = ref('회원ID\n주소\n사룽해요\n');
 
 // default option
 const checked = ref('code_basic');
@@ -373,36 +373,23 @@ function getTableAlias(flg: boolean) {
     return flg ? document.conf.as.value : alias;
 }
 
+/** 
+ * db Type > java Type
+ * @param linesType 
+ * @param i 
+ */
 const convertType = (linesType: Array<string>, i: number) => {
-    let returnVal = '';
-
-    if (linesType && linesType[i]) {
-        const val = linesType[i].replace(/[^A-Za-z]*/g, '').toUpperCase();
-
-        switch (val) {
-            case 'BIGINT':
-                returnVal = 'Long';
-                break;
-
-            case 'INT':
-                returnVal = 'Integer';
-                break;
-
-            case 'INTEGER':
-                returnVal = 'Integer';
-                break;
-
-            case 'DOUBLE':
-                returnVal = 'Double';
-                break;
-        
-            default:
-                returnVal = 'String';
-                break;
-        }
-    }
-    return returnVal;
-}
+    const typeMap = new Map([
+        ['BIGINT', 'Long'],
+        ['INT', 'Integer'],
+        ['INTEGER', 'Integer'],
+        ['DOUBLE', 'Double']
+    ]);
+    
+    const sanitizedType = linesType[i]?.replace(/[^A-Za-z]/g, '').toUpperCase();
+    
+    return typeMap.get(sanitizedType) || 'String';
+};
 
 const convertComment = (linesType: Array<string>, i: number) => {
     let returnVal = '';
@@ -453,8 +440,8 @@ const createPackage = async () => {
         strArray.push(bar('@ToString'))
         strArray.push(bar('@AllArgsConstructor'))
         strArray.push(bar('@NoArgsConstructor(access = AccessLevel.PRIVATE)'))
-        strArray.push(bar(`@Schema(name = "${inputData.class}")`))
-        
+        strArray.push(bar(`@Schema(name = "${inputData.class} DTO", description = "${inputData.class} DTO")`))
+
         strArray.push(bar(`public class ${inputData.class} {`, 2))
     
         strArray.push(output.value.replaceAll('@', '    @').replaceAll('private', '    private'))
