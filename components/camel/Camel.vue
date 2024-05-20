@@ -30,7 +30,7 @@
                 </p>
                 <div id="options">
                     <div v-show="voOptions">
-                        <p>
+                        <p v-show="modifierDatatype">
                             <strong>ModifierDatatype</strong>
                             <br>
                             <select id="modifier" @change="convert()" v-model="modifierOptions">
@@ -52,8 +52,8 @@
                         <p>
                             <strong>Annotation</strong>
                             <br>
-                            <input type="radio" id="schema" @change="convert()" v-model="annotationCheck" value="schema"/><label for="schema">@Schema</label>
-                            <input type="radio" id="column" @change="convert()" v-model="annotationCheck" value="column"/><label for="column">@Column</label>
+                            <input type="radio" id="schema" @change="convert(); modifierDatatype = false; " v-model="annotationCheck" value="schema"/><label for="schema">@Schema</label>
+                            <input type="radio" id="column" @change="convert(); modifierDatatype = true; " v-model="annotationCheck" value="column"/><label for="column">@Column</label>
                         </p>
                         <div>
                             <p>
@@ -165,10 +165,6 @@ const genFile = async () => {
     }
 }
 
-onMounted(() => {
-    convert();
-})
-
 // default data
 const input = ref('USER_ID\nADDR_HOME_STREET\nYOU_LOVE_ME_SO_MUCH\n');
 const output = ref();
@@ -189,10 +185,26 @@ const inputData = reactive({
 
 const annotationCheck = ref();
 const checkBoxDisplay = ref(false);
+const modifierDatatype = ref(true);
 
 const voOptions = ref(false);
 const resultmapOptions = ref(false);
 const tableOptions = ref(false);
+
+onMounted(() => {
+    convert();
+})
+
+watch(
+    () => checked.value, 
+    async (newVal, oldVal) => {
+  if ('code_vo' === newVal) {
+    nextTick(() => {
+        annotationCheck.value = 'schema'
+        modifierDatatype.value = false
+    })
+  }
+})
 
 function convert() {
     let count = 0;
@@ -485,18 +497,6 @@ const triggerDblClick = (checkbox: any) => {
     checkbox.click();
     checkbox.click();
 };
-
-
-// watch(checkBoxDisplay, (newVal) => {
-//   if (newVal) {
-//     nextTick(() => {
-//       const classNameInput = document.getElementById('ClassName');
-//       if (classNameInput) {
-//         classNameInput.focus();
-//       }
-//     });
-//   }
-// });
 
 </script>
 
