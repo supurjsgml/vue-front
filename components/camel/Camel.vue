@@ -471,6 +471,7 @@ const triggerDblClick = (checkbox: any) => {
     checkbox.click();
 };
 
+
 // watch(checkBoxDisplay, (newVal) => {
 //   if (newVal) {
 //     nextTick(() => {
