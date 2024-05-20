@@ -177,10 +177,13 @@ const inputComment = ref();
 const checked = ref('code_basic');
 const modifierOptions = ref('private');
 const datatypeOptions = ref('String');
+<<<<<<< HEAD
 const inputData = reactive({
     class: null,
     package: null
 });
+=======
+>>>>>>> 83aeadfa1e1b6dacd34f04657afa78cbece31215
 
 const annotationCheck = ref();
 const checkBoxDisplay = ref(false);
