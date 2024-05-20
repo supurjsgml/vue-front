@@ -146,6 +146,7 @@ const store = camelStore();
  */
 const genFile = async () => {
     store.data.camelStr = output;
+    store.data.fileNm = inputData.class.concat('.java')
 
     const result = await store.genFile();
     
@@ -154,7 +155,7 @@ const genFile = async () => {
         const link = document.createElement('a');
     
         link.href = url;
-        link.setAttribute('download', 'dto.java'); // 다운로드될 파일의 이름과 확장자를 지정합니다.
+        link.setAttribute('download', store.data.fileNm); // 다운로드될 파일의 이름과 확장자를 지정합니다.
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -179,8 +180,8 @@ const modifierOptions = ref('private');
 const datatypeOptions = ref('String');
 
 const inputData = reactive({
-    class: null,
-    package: null
+    class: 'ApiBodyDTO',
+    package: 'com.app.common.dto'
 });
 
 const annotationCheck = ref();
@@ -437,7 +438,7 @@ const createPackage = async () => {
     const strArray = new Array()
     
     if (!checkBoxDisplay.value) {
-        strArray.push(`package ${inputData.package || 'com.app.common.dto'}`.concat(bar).concat(bar))
+        strArray.push(`package ${inputData.package}`.concat(bar).concat(bar))
         strArray.push('import io.swagger.v3.oas.annotations.media.Schema;'.concat(bar))
         strArray.push('import lombok.AccessLevel;'.concat(bar))
         strArray.push('import lombok.Builder;'.concat(bar))
@@ -446,9 +447,9 @@ const createPackage = async () => {
         strArray.push('import lombok.ToString;'.concat(bar).concat(bar))
         
         strArray.push('@NoArgsConstructor(access = AccessLevel.PRIVATE)'.concat(bar))
-        strArray.push(`public class ${inputData.class || 'ApiBodyDTO'} {`.concat(bar).concat(bar))
+        strArray.push(`public class ${inputData.class} {`.concat(bar).concat(bar))
     
-        strArray.push(output.value.replaceAll('@', '    @').replaceAll('private', '    private '))
+        strArray.push(output.value.replaceAll('@', '    @').replaceAll('private', '    private'))
         strArray.push('}')
 
         output.value = strArray.join('')

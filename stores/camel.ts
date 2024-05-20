@@ -4,7 +4,8 @@ import { defineStore } from 'pinia';
 export const camelStore = defineStore("camel", {
   state: (): camelStateType => ({
     data: {
-      camelStr: ""
+      camelStr: null,
+      fileNm: null
     }
   }),
   getters: {
