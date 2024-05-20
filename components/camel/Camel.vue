@@ -434,20 +434,28 @@ const handleFileUpload = (index: number, event: any) => {
 const createPackage = async () => {
     checkBoxDisplay.value = checkBoxDisplay.value
     
-    const bar = '\n'
     const strArray = new Array()
     
     if (!checkBoxDisplay.value) {
-        strArray.push(`package ${inputData.package}`.concat(bar).concat(bar))
-        strArray.push('import io.swagger.v3.oas.annotations.media.Schema;'.concat(bar))
-        strArray.push('import lombok.AccessLevel;'.concat(bar))
-        strArray.push('import lombok.Builder;'.concat(bar))
-        strArray.push('import lombok.Getter;'.concat(bar))
-        strArray.push('import lombok.Setter;'.concat(bar))
-        strArray.push('import lombok.ToString;'.concat(bar).concat(bar))
+        strArray.push(bar(`package ${inputData.package};`, 2))
+        strArray.push(bar('import io.swagger.v3.oas.annotations.media.Schema;'))
+        strArray.push(bar('import lombok.AccessLevel;'))
+        strArray.push(bar('import lombok.Builder;'))
+        strArray.push(bar('import lombok.Getter;'))
+        strArray.push(bar('import lombok.Setter;'))
+        strArray.push(bar('import lombok.AllArgsConstructor;'))
+        strArray.push(bar('import lombok.NoArgsConstructor;'))
+        strArray.push(bar('import lombok.ToString;', 2))
         
-        strArray.push('@NoArgsConstructor(access = AccessLevel.PRIVATE)'.concat(bar))
-        strArray.push(`public class ${inputData.class} {`.concat(bar).concat(bar))
+        strArray.push(bar('@Getter'))
+        strArray.push(bar('@Setter'))
+        strArray.push(bar('@Builder'))
+        strArray.push(bar('@ToString'))
+        strArray.push(bar('@AllArgsConstructor'))
+        strArray.push(bar('@NoArgsConstructor(access = AccessLevel.PRIVATE)'))
+        strArray.push(bar(`@Schema(name = "${inputData.class}")`))
+        
+        strArray.push(bar(`public class ${inputData.class} {`, 2))
     
         strArray.push(output.value.replaceAll('@', '    @').replaceAll('private', '    private'))
         strArray.push('}')
@@ -457,6 +465,19 @@ const createPackage = async () => {
         convert()
     }
 
+}
+
+/**
+ * 개행문자 append
+ * @param str : 문자열
+ * @param idx : 추가할 개행문자 수
+ */
+const bar = (str: string, idx: number = 1) => {
+    let b = '\n'
+
+    for (let index = 1; index < idx; index++) b += b
+
+    return str.concat(b)
 }
 
 const handleChange = () => {
