@@ -278,9 +278,9 @@ function convert() {
             }
 
             if(count == 0) {
-                output2 += getTableAlias(false) + (before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}\n');
+                output2 += getTableAlias(false) + (before.toUpperCase() + ' = #{' + after + '}\n');
             } else {
-                output2 += ('   AND ' + getTableAlias(false) + before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}\n');
+                output2 += ('   AND ' + getTableAlias(false) + before.toUpperCase() + ' = #{' + after + '}\n');
             }
         } else if('code_insert' === checked.value) {
             tableOptions.value = true;
@@ -293,33 +293,33 @@ function convert() {
             }
 
             if(count == 0) {
-                output2 += ('   #{' + after + ', jdbcType=VARCHAR}');
+                output2 += ('   #{' + after + '}');
             } else {
-                output2 += ('\n          , #{' + after + ', jdbcType=VARCHAR}');
+                output2 += ('\n          , #{' + after + '}');
             }
         } else if('code_update' === checked.value) {
             tableOptions.value = true;
 
             // Update
             if(count == 0) {
-                output1 += getTableAlias(false) + (before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}');
+                output1 += getTableAlias(false) + (before.toUpperCase() + ' = #{' + after + '}');
             } else {
-                output1 += ('\n     , ' + getTableAlias(false) + before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}');
+                output1 += ('\n     , ' + getTableAlias(false) + before.toUpperCase() + ' = #{' + after + '}');
             }
 
             if(count == 0) {
-                output2 += getTableAlias(false) + (before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}\n');
+                output2 += getTableAlias(false) + (before.toUpperCase() + ' = #{' + after + '}\n');
             } else {
-                output2 += ('   AND ' + getTableAlias(false) + before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}\n');
+                output2 += ('   AND ' + getTableAlias(false) + before.toUpperCase() + ' = #{' + after + '}\n');
             }
         } else if('code_delete' === checked.value) {
             tableOptions.value = true;
 
             // Delete
             if(count == 0) {
-                output1 += getTableAlias(false) + (before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}\n');
+                output1 += getTableAlias(false) + (before.toUpperCase() + ' = #{' + after + '}\n');
             } else {
-                output1 += ('   AND ' + getTableAlias(false) + before.toUpperCase() + ' = #{' + after + ', jdbcType=VARCHAR}\n');
+                output1 += ('   AND ' + getTableAlias(false) + before.toUpperCase() + ' = #{' + after + '}\n');
             }
         } else if('code_queryStr' === checked.value) {
             // queryStr
