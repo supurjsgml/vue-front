@@ -11,10 +11,10 @@
                 <p>
                     <strong>Conversion Style</strong>
                     <br>
-                    <input id="code_basic" type="radio" value="code_basic" checked v-model="checked" @change="convert()"/>
-                        <label for="code_basic">Basic</label>&nbsp;
                     <input id="code_vo" type="radio" value="code_vo" v-model="checked" @change="convert()"/>
-                        <label for="code_vo">VO</label>&nbsp;
+                        <label for="code_vo">VO & DTO</label>&nbsp;
+                    <input id="code_basic" type="radio" value="code_basic" v-model="checked" @change="convert()"/>
+                        <label for="code_basic">Basic</label>&nbsp;
                     <input id="code_resultmap" type="radio" value="code_resultmap" v-model="checked" @change="convert()"/>
                         <label for="code_resultmap">ResultMap</label>&nbsp;
                     <input id="code_select" type="radio" value="code_select" v-model="checked" @change="convert()"/>
@@ -151,18 +151,16 @@ const genFile = async () => {
     store.data.camelStr = output;
     store.data.fileNm = inputData.class.concat('.java')
 
-    const result = await store.genFile();
+    // const result = await store.genFile();
     
-    if (0 < result.size) {
-        const url = window.URL.createObjectURL(new Blob([result]));
-        const link = document.createElement('a');
-    
-        link.href = url;
-        link.setAttribute('download', store.data.fileNm); // 다운로드될 파일의 이름과 확장자를 지정합니다.
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
+    const url = window.URL.createObjectURL(new Blob([output.value]));
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.setAttribute('download', store.data.fileNm); // 다운로드될 파일의 이름과 확장자를 지정합니다.
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 // default data
@@ -174,7 +172,7 @@ const inputType = ref('BIGINT\nVARCHAR\nDOUBLE\n');
 const inputComment = ref('회원ID\n주소\n사룽해요\n');
 
 // default option
-const checked = ref('code_basic');
+const checked = ref('code_vo');
 const modifierOptions = ref('private');
 const datatypeOptions = ref('String');
 
@@ -183,9 +181,9 @@ const inputData = reactive({
     package: 'com.app.common.dto'
 });
 
-const annotationCheck = ref();
+const annotationCheck = ref('schema');
 const checkBoxDisplay = ref(false);
-const modifierDatatype = ref(true);
+const modifierDatatype = ref(false);
 
 const voOptions = ref(false);
 const resultmapOptions = ref(false);
