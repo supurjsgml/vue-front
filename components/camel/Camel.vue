@@ -225,7 +225,10 @@ function convert() {
     
     for(let i = 0, maxi = lines.length; i < maxi; i++) {
         let before = lines[i];
-        before = before.toLowerCase().trim();
+
+        if (0 < before.indexOf("_")) {
+            before = before.toLowerCase().trim();
+        }
 
         // skip empty lines
         if(before == '') {
