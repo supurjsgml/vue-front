@@ -11,11 +11,11 @@ http {
 
   server {
     listen <%= ENV["PORT"] %>;
-    server_name vue-front-807ffc6b572e.herokuapp.com;
+    server_name guney.kro.kr;
 
     root /app/output/public; # 정적 파일이 위치한 디렉토리
 
-    location /test {
+    location / {
       return 301 https://guney.kro.kr$request_uri;
     }
 
