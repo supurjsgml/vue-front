@@ -16,7 +16,7 @@ http {
     root /app/output/public; # 정적 파일이 위치한 디렉토리
 
     location / {
-      try_files $uri $uri/ /index.html;
+      return 301 https://guney.kro.kr$request_uri;
     }
 
     location /_nuxt/ {
