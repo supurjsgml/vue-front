@@ -12,17 +12,17 @@ http {
   server {
     listen 80;
 
-    server_name <%= ENV['HEROKU_APP_NAME'] %>.herokuapp.com;
+    server_name vue-front-807ffc6b572e.herokuapp.com;
 
     location / {
-      proxy_pass https://<%= ENV['HOST'] %>;
+      proxy_pass https://vue-front-807ffc6b572e.herokuapp.com;
       proxy_set_header Host $host;
       proxy_set_header X-Real-IP $remote_addr;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
       proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    location /your_custom_path {
+    location / {
       return 301 https://guney.kro.kr$request_uri;
     }
   }
