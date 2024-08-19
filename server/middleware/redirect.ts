@@ -10,7 +10,7 @@ export default defineEventHandler((event: H3Event) => {
   // 리다이렉트 조건 설정
   if (host === 'vue-front-807ffc6b572e.herokuapp.com') {
     // 리다이렉트 설정
-    res.writeHead(301, { Location: 'https://guney.kro.kr' });
+    res.writeHead(301, { Location: process.env.BASE_URL });
     res.end();
   }
 });
