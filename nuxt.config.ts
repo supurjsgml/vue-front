@@ -8,14 +8,18 @@ export default defineNuxtConfig({
   devtools: { 
     enabled: true,
   },
+  
   css: [
     "@/assets/styles/ui.css",
     "@/assets/styles/docs.css",
   ],
+
   modules: ["@pinia/nuxt"],
   runtimeConfig: {
     public: {
       restApi: process.env.BASE_URL,
     },
   },
+  
+  serverMiddleware: ['~/server/middleware/redirect'],
 })
