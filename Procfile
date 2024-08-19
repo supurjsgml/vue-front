@@ -1,2 +1,1 @@
-# web: npm run start
-web: ./start.sh
+web: "nginx -c /app/nginx.conf" "npm run start"
