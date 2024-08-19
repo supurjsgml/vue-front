@@ -1,1 +1,1 @@
-web: nginx -c /app/nginx.conf npm run start
+web: npm run start
