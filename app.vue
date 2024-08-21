@@ -10,7 +10,7 @@
     </div>
 
     <!-- 콘텐츠 영역 -->
-    <div class="content">
+    <!-- <div class="content">
       <NuxtLink to="/">main</NuxtLink>
       >
       <NuxtLink to="/camel">camel</NuxtLink>
@@ -18,7 +18,7 @@
         <NuxtPage />
       </NuxtLayout>
     </div>
-  </div>
+  </div> -->
 </template>
 
 <script lang="ts" setup>
