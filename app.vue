@@ -1,16 +1,16 @@
 <template>
   <div class="container">
     <!-- 왼쪽 광고 영역 -->
-    <div class="ad-container">
+    <!-- <div class="ad-container">
       <ins class="adsbygoogle"
            style="display:inline-block;width:160px;height:600px;"
            data-ad-client="ca-pub-3254218470937690"
            data-ad-slot="1234567890"
            data-ad-format="auto"></ins>
-    </div>
+    </div> -->
 
     <!-- 콘텐츠 영역 -->
-    <!-- <div class="content">
+    <div class="content">
       <NuxtLink to="/">main</NuxtLink>
       >
       <NuxtLink to="/camel">camel</NuxtLink>
@@ -18,7 +18,7 @@
         <NuxtPage />
       </NuxtLayout>
     </div>
-  </div> -->
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -26,18 +26,18 @@ import { useHead } from '#imports'
 
 useHead({
   title: '카멜따리 ~',
-  script: [
-    {
-      async: true,
-      src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3254218470937690',
-      crossorigin: 'anonymous'
-    }
-  ]
+  // script: [
+  //   {
+  //     async: true,
+  //     src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3254218470937690',
+  //     crossorigin: 'anonymous'
+  //   }
+  // ]
 })
 
 onMounted(() => {
   // Google AdSense 초기화
-  (window.adsbygoogle = window.adsbygoogle || []).push({});
+  // (window.adsbygoogle = window.adsbygoogle || []).push({});
 })
 </script>
 
