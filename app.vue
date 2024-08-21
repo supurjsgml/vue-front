@@ -26,6 +26,13 @@ import { useHead } from '#imports'
 
 useHead({
   title: '카멜따리 ~',
+  link: [
+    {
+      rel: 'icon',
+      type: 'image/jpg',
+      href: '/dog.jpg'
+    }
+  ],
   // script: [
   //   {
   //     async: true,
