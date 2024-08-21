@@ -1,5 +1,5 @@
 <template>
-  <Camel></Camel>
+  <Home></Home>
 </template>
 
 <script setup lang="ts">

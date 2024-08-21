@@ -14,7 +14,7 @@ export default defineNuxtConfig({
     "@/assets/styles/docs.css",
   ],
 
-  modules: ["@pinia/nuxt"],
+  modules: ["@pinia/nuxt", "@nuxt/image"],
   runtimeConfig: {
     public: {
       restApi: process.env.REDOC_API_URL,

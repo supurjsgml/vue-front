@@ -1,19 +1,18 @@
 <template>
   <div class="container">
-    <!-- 왼쪽 광고 영역 -->
-    <!-- <div class="ad-container">
-      <ins class="adsbygoogle"
-           style="display:inline-block;width:160px;height:600px;"
-           data-ad-client="ca-pub-3254218470937690"
-           data-ad-slot="1234567890"
-           data-ad-format="auto"></ins>
-    </div> -->
-
+    <!-- 왼쪽 네비게이션 영역 -->
+    <div class="nav-container">
+      <div class="nav-item" @click="toggleMain">
+        <!-- NuxtLink를 버튼 스타일로 꾸밉니다 -->
+        <NuxtLink class="custom-link" to="/">main</NuxtLink>
+        <ChevronRightIcon @click="toggleMain" :class="{ rotated: isMainOpen }" class="icon" />
+      </div>
+      <div class="sub-menu" v-if="isMainOpen">
+        <NuxtLink class="custom-link" to="/camel">camel</NuxtLink>
+      </div>
+    </div>
     <!-- 콘텐츠 영역 -->
     <div class="content">
-      <NuxtLink to="/">main</NuxtLink>
-      >
-      <NuxtLink to="/camel">camel</NuxtLink>
       <NuxtLayout>
         <NuxtPage />
       </NuxtLayout>
@@ -22,52 +21,98 @@
 </template>
 
 <script lang="ts" setup>
+import { ref } from 'vue'
 import { useHead } from '#imports'
+import { ChevronRightIcon } from '@heroicons/vue/24/solid'
 
 useHead({
   title: '카멜따리 ~',
-  // script: [
-  //   {
-  //     async: true,
-  //     src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3254218470937690',
-  //     crossorigin: 'anonymous'
-  //   }
-  // ]
+  link: [
+    {
+      rel: 'icon',
+      type: 'image/jpg',
+      href: '/dog.jpg'
+    }
+  ],
 })
 
-onMounted(() => {
-  // Google AdSense 초기화
-  // (window.adsbygoogle = window.adsbygoogle || []).push({});
-})
+const isMainOpen = ref(true)
+
+function toggleMain(event: Event) {
+  event.stopPropagation()
+  isMainOpen.value = !isMainOpen.value
+}
 </script>
 
 <style scoped>
 .container {
   display: flex;
-  align-items: center; /* 세로 중앙 정렬 */
-  justify-content: center; /* 수평 중앙 정렬 */
-  max-width: 1800px; /* 최대 너비 설정 */
-  margin: 0 auto; /* 자동 좌우 마진으로 중앙 정렬 */
-  padding: 0 20px; /* 좌우 패딩 */
+  align-items: flex-start;
+  justify-content: flex-start;
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-.ad-container {
+.nav-container {
+  width: 160px;
+  margin-top: 11rem;
+}
+
+.nav-item {
   display: flex;
-  justify-content: center;
   align-items: center;
-  width: 160px; /* 광고의 너비와 동일 */
-  height: 100%;
+  justify-content: space-between;
+  padding: 10px;
+  background-color: #2c3e50; /* 네비게이션 항목 배경색 */
+  border-radius: 8px; /* 둥근 모서리 */
+  margin-bottom: 10px; /* 항목 간 간격 */
 }
 
-.adsbygoogle {
-  display: inline-block;
-  width: 160px; /* 광고의 너비 */
-  height: 600px; /* 광고의 높이 */
+.icon {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+  color: #fff; /* 아이콘 색상 */
 }
 
+.rotated {
+  transform: rotate(90deg);
+}
+
+.sub-menu {
+  padding-left: 20px;
+  margin-top: 5px;
+  display: flex;
+  flex-direction: column;
+}
+
+.custom-link {
+  text-decoration: none; /* 밑줄 제거 */
+  color: #fff; /* 링크 글자 색상 */
+  padding: 10px 15px;
+  background-color: #3498db; /* 링크 배경색 */
+  border-radius: 8px; /* 둥근 모서리 */
+  transition: background-color 0.3s ease, color 0.3s ease;
+  display: inline-block; /* 링크를 버튼처럼 보이게 */
+}
+
+.custom-link:hover {
+  background-color: #2980b9; /* hover 시 배경색 변경 */
+  color: #fff; /* hover 시 글자색 변경 */
+}
+
+.sub-menu .custom-link {
+  background-color: #34495e; /* 서브 메뉴 링크 배경색 */
+}
+
+.sub-menu .custom-link:hover {
+  background-color: #2c3e50; /* 서브 메뉴 hover 시 배경색 */
+}
 .content {
-  flex: 1; /* 나머지 공간을 차지 */
-  margin-left: 20px; /* 광고와 콘텐츠 사이 간격 */
-  max-width: calc(100% - 200px); /* 전체 너비에서 광고와 간격을 뺀 값 */
+  flex: 1;
+  margin-left: 20px;
+  max-width: calc(100% - 200px);
 }
 </style>
