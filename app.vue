@@ -110,9 +110,38 @@ function toggleMain(event: Event) {
 .sub-menu .custom-link:hover {
   background-color: #2c3e50; /* 서브 메뉴 hover 시 배경색 */
 }
+
 .content {
   flex: 1;
   margin-left: 20px;
-  max-width: calc(100% - 200px);
+  max-width: calc(90% - 200px);
+}
+
+/* 반응형 스타일 */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nav-container {
+    width: 90%;
+    margin-top: 0;
+  }
+
+  .nav-item {
+    justify-content: space-between;
+    padding: 15px;
+  }
+
+  .sub-menu {
+    padding-left: 0;
+    margin-top: 10px;
+  }
+
+  .content {
+    margin-right: 1%;
+    max-width: 90%;
+  }
 }
 </style>

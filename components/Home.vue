@@ -196,4 +196,42 @@ function onMouseUp() {
     max-width: 33%;
   }
 }
+
+/* 이미지 크기 조정 */
+.responsive-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* 이미지가 부모 요소 안에 맞게 조정 */
+}
+
+.rotated-image {
+    transform: rotate(45deg);
+}
+
+/* 작은 화면 */
+@media (max-width: 600px) {
+  .responsive-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* 화면에 맞춰 이미지 조정 */
+  }
+}
+
+/* 중간 크기 화면 */
+@media (max-width: 1200px) {
+  .responsive-image {
+    max-width: 80%;
+    max-height: 80%;
+    object-fit: contain;
+  }
+}
+
+/* 큰 화면 */
+@media (min-width: 1201px) {
+  .responsive-image {
+    max-width: 60%;
+    max-height: 60%;
+    object-fit: contain;
+  }
+}
 </style>
