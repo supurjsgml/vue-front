@@ -32,7 +32,7 @@ const sizes = `
 `;
 
 const positions = ref<Array<{ left: number, top: number }>>(
-  Array.from({ length: 10 }, () => ({ left: 0, top: 0 }))
+  Array.from({ length: 10 }, () => ({ left: 600, top: 600 }))   // 이미지 퍼지는 시작위치 하드코딩
 );
 
 const draggableElements = ref<HTMLDivElement[]>([]);
