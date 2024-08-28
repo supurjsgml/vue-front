@@ -4,7 +4,7 @@
     <div class="nav-container">
       <div class="nav-item" @click="toggleMain">
         <!-- NuxtLink를 버튼 스타일로 꾸밉니다 -->
-        <NuxtLink class="custom-link" to="/">main</NuxtLink>
+        <NuxtLink class="custom-link" to="/" @click="() => isMainOpen = false">main</NuxtLink>
         <ChevronRightIcon @click="toggleMain" :class="{ rotated: isMainOpen }" class="icon" />
       </div>
       <div class="sub-menu" v-if="isMainOpen">
