@@ -125,7 +125,7 @@ function toggleMain(event: Event) {
   }
 
   .nav-container {
-    width: 90%;
+    width: 96%;
     margin-top: 0;
   }
 
