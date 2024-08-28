@@ -5,6 +5,8 @@
       alt="삼츄"
       :sizes="sizes"
       class="responsive-image rotated-image"
+      draggable="false"
+      @dragstart.prevent
     />
 
     <div
@@ -140,6 +142,7 @@ function onMouseUp() {
     display: flex;
     justify-content: center;
     align-items: center;
+    user-select: none;
 }
 
 .image-container {
