@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeMount } from 'vue';
 
 const sizes = `
   (max-width: 600px) 100vw,
@@ -31,10 +31,29 @@ const sizes = `
   33vw
 `;
 
-const positions = ref<Array<{ left: number, top: number }>>(
-  Array.from({ length: 10 }, () => ({ left: 600, top: 600 }))   // 이미지 퍼지는 시작위치 하드코딩
-);
+onBeforeMount(() => {
+  if (process.client) {
+    const width = window?.innerWidth > 2000 ? (window.innerWidth / 2) / 2 : window.innerWidth / 2;
+    const height = window?.innerHeight / 2;
+  
+    positions.value = Array.from({ length: 10 }, () => ({
+      left: width,
+      top: height,
+    }));
+  }
+});
 
+onMounted(() => {
+  positions.value.forEach((_, index) => {
+    moveRandomly();
+  });
+
+  setInterval(() => {
+    moveRandomly();
+  }, 5000); // 5초마다 위치 변경
+});
+
+const positions = ref(null);
 const draggableElements = ref<HTMLDivElement[]>([]);
 
 const getResponsiveBounds = () => {
@@ -73,16 +92,6 @@ const moveRandomly = () => {
     positions.value[index] = { left: randomX, top: randomY };
   });
 };
-
-onMounted(() => {
-  positions.value.forEach((_, index) => {
-    moveRandomly();
-  });
-
-  setInterval(() => {
-    moveRandomly();
-  }, 5000); // 5초마다 위치 변경
-});
 
 let activeIndex = ref<number | null>(null);
 let startX = 0;
