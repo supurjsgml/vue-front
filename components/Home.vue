@@ -51,7 +51,7 @@ onMounted(() => {
   }, 5000); // 5초마다 위치 변경
 });
 
-const positions = ref(null);
+const positions = ref([]);
 const draggableElements = ref<HTMLDivElement[]>([]);
 
 const getResponsiveBounds = () => {
