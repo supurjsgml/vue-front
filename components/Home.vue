@@ -32,15 +32,13 @@ const sizes = `
 `;
 
 onBeforeMount(() => {
-  if (process.client) {
-    const width = window?.innerWidth > 2000 ? (window.innerWidth / 2) / 2 : window.innerWidth / 2;
-    const height = window?.innerHeight / 2;
-  
-    positions.value = Array.from({ length: 10 }, () => ({
-      left: width,
-      top: height,
-    }));
-  }
+  const width = window.innerWidth > 2000 ? (window.innerWidth / 2) / 2 : window.innerWidth / 2;
+  const height = window.innerHeight / 2;
+
+  positions.value = Array.from({ length: 10 }, () => ({
+    left: width,
+    top: height,
+  }));
 });
 
 onMounted(() => {
