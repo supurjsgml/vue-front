@@ -459,7 +459,7 @@ const createPackage = async () => {
         strArray.push(bar('@ToString'))
         strArray.push(bar('@AllArgsConstructor'))
         strArray.push(bar('@NoArgsConstructor(access = AccessLevel.PRIVATE)'))
-        strArray.push(bar(`@Schema(name = "${inputData.class} DTO", description = "${inputData.class} DTO")`))
+        strArray.push(bar(`@Schema(name = "${inputData.class}", description = "${inputData.class}")`))
 
         strArray.push(bar(`public class ${inputData.class} {`, 2))
     
