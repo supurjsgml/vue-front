@@ -10,6 +10,9 @@
       <div class="sub-menu" v-if="isMainOpen">
         <NuxtLink class="custom-link" to="/camel">camel</NuxtLink>
       </div>
+      <div class="sub-menu" v-if="isMainOpen">
+        <a class="custom-link" target="_blank" :href="useRuntimeConfig().public.restApi">레독레독레독렏도데레ㅐㄷ골에ㅐ클릭하지마!!</a>
+      </div>
     </div>
     <!-- 콘텐츠 영역 -->
     <div class="content">
