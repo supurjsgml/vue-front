@@ -14,7 +14,7 @@
         <NuxtLink class="custom-link" to="/google">googleDownLink</NuxtLink>
       </div>
       <div class="sub-menu" v-if="isMainOpen">
-        <a class="custom-link" target="_blank" :href="useRuntimeConfig().public.restApi">레독레독레독렏도데레ㅐㄷ골에ㅐ클릭하지마!!</a>
+        <a class="custom-link" target="_blank" :href="useRuntimeConfig().public.restApi">redoc swagger</a>
       </div>
     </div>
     <!-- 콘텐츠 영역 -->
