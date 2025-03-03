@@ -143,7 +143,7 @@ function onMouseUp() {
 <style scoped>
 .container {
     position: relative;
-    width: 100vw;
+    width: 100%;
     height: 94vh;
     overflow: hidden;
     display: flex;

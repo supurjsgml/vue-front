@@ -14,15 +14,33 @@
         <NuxtLink class="custom-link" to="/google">googleDownLink</NuxtLink>
       </div>
       <div class="sub-menu" v-if="isMainOpen">
-        <a class="custom-link" target="_blank" :href="useRuntimeConfig().public.restApi">redoc swagger</a>
+        <!-- <a class="custom-link" target="_blank" :href="useRuntimeConfig().public.restApi">redoc swagger</a> -->
       </div>
     </div>
+
     <!-- 콘텐츠 영역 -->
     <div class="content">
       <NuxtLayout>
         <NuxtPage />
       </NuxtLayout>
     </div>
+
+    <!-- 오른쪽 홍보 링크 영역 -->
+    <aside class="sidebar">
+      <ul>
+        <li>
+          <a :href="useRuntimeConfig().public.restApi" target="_blank">
+            <img src="@/assets/styles/img/logo/swaggerLogo.png" alt="Swagger Logo" class="sidebar-logo" />
+          </a>
+        </li>
+        <li>
+          <a href="https://chromewebstore.google.com/detail/%EC%9E%A1%EC%BD%94%EB%A6%AC%EC%95%84-%EC%9D%B4%EB%A0%A5%EC%84%9C-%EA%B0%B1%EC%8B%A0/chjbcemdkiommdpeklplkbfpemefejcp" target="_blank">
+            <img src="@/assets/styles/img/logo/chromeWebStoreLogo.png" alt="Swagger Logo" class="sidebar-logo" />
+          </a>
+        </li>
+      </ul>
+    </aside>
+
   </div>
 </template>
 
@@ -54,25 +72,30 @@ function toggleMain(event: Event) {
 .container {
   display: flex;
   align-items: flex-start;
-  justify-content: flex-start;
+  justify-content: space-between;
   max-width: 1800px;
   margin: 0 auto;
   padding: 20px;
 }
 
 .nav-container {
-  width: 160px;
-  margin-top: 11rem;
+    width: 180px;
+    margin-top: 11rem;
+    background-color: var(--nav-bg);
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--nav-border);
 }
 
 .nav-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px;
-  background-color: #2c3e50; /* 네비게이션 항목 배경색 */
-  border-radius: 8px; /* 둥근 모서리 */
-  margin-bottom: 10px; /* 항목 간 간격 */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: var(--nav-bg);
+    border-radius: 8px;
+    margin-bottom: 10px;
 }
 
 .icon {
@@ -80,7 +103,7 @@ function toggleMain(event: Event) {
   height: 20px;
   transition: transform 0.3s ease;
   cursor: pointer;
-  color: #fff; /* 아이콘 색상 */
+  color: var(--nav-text);
 }
 
 .rotated {
@@ -95,22 +118,31 @@ function toggleMain(event: Event) {
 }
 
 .custom-link {
-  text-decoration: none; /* 밑줄 제거 */
-  color: #fff; /* 링크 글자 색상 */
-  padding: 10px 15px;
-  background-color: #3498db; /* 링크 배경색 */
-  border-radius: 8px; /* 둥근 모서리 */
-  transition: background-color 0.3s ease, color 0.3s ease;
-  display: inline-block; /* 링크를 버튼처럼 보이게 */
+    text-decoration: none;
+    color: var(--nav-text);
+    padding: 10px 15px;
+    background-color: var(--nav-bg);
+    border-radius: 8px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    display: inline-block;
+    text-align: center;
+    font-weight: bold;
+    border: 1px solid var(--nav-border);
 }
 
 .custom-link:hover {
-  background-color: #2980b9; /* hover 시 배경색 변경 */
-  color: #fff; /* hover 시 글자색 변경 */
+    background-color: var(--nav-hover-bg);
+    color: var(--nav-text);
+}
+
+.custom-link.router-link-active {
+    background-color: var(--nav-active-bg);
+    color: var(--nav-active-text);
+    border: none;
 }
 
 .sub-menu .custom-link {
-  background-color: #34495e; /* 서브 메뉴 링크 배경색 */
+  /* background-color: #34495e; 서브 메뉴 링크 배경색 */
 }
 
 .sub-menu .custom-link:hover {
@@ -150,4 +182,38 @@ function toggleMain(event: Event) {
     max-width: 90%;
   }
 }
+
+.sidebar {
+  width: 280px; /* 오른쪽 사이드바 너비 */
+  padding: 20px;
+  border-radius: 10px;
+  color: #fff;
+  position: sticky;
+  top: 20px; /* 스크롤 시 상단 고정 */
+  align-self: flex-start; /* 콘텐츠 높이에 맞추기 */
+}
+
+.sidebar h3 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar li {
+  margin-bottom: 8px;
+}
+
+.sidebar a {
+  color: #58a6ff;
+  text-decoration: none;
+}
+
+.sidebar a:hover {
+  text-decoration: underline;
+}
+
 </style>
