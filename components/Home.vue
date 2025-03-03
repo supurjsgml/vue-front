@@ -209,6 +209,9 @@ function onMouseUp() {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain; /* 이미지가 부모 요소 안에 맞게 조정 */
+    position: absolute;  /* 이미지를 고정 위치로 설정 */
+    z-index: -1;  /* 맨 뒤로 이동 */
+    pointer-events: none; /* 클릭 이벤트 무시 */
 }
 
 .rotated-image {

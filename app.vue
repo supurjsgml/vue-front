@@ -1,20 +1,21 @@
 <template>
   <div class="container">
-    <!-- 왼쪽 네비게이션 영역 -->
-    <div class="nav-container">
+    <!-- 왼쪽 네비게이션 영역 (드래그 가능) -->
+    <div 
+      class="nav-container"
+      ref="navContainer"
+      @mousedown="startDrag"
+      :style="{ transform: `translate(${navPosition.x}px, ${navPosition.y}px)` }"
+    >
       <div class="nav-item" @click="toggleMain">
-        <!-- NuxtLink를 버튼 스타일로 꾸밉니다 -->
-        <NuxtLink class="custom-link" to="/" @click="() => isMainOpen = false">main</NuxtLink>
+        <NuxtLink class="custom-link" to="/" @click="() => isMainOpen = false" @mousedown.stop>main</NuxtLink>
         <ChevronRightIcon @click="toggleMain" :class="{ rotated: isMainOpen }" class="icon" />
       </div>
       <div class="sub-menu" v-if="isMainOpen">
-        <NuxtLink class="custom-link" to="/camel">camel</NuxtLink>
+        <NuxtLink class="custom-link" to="/camel" @mousedown.stop>camel</NuxtLink>
       </div>
       <div class="sub-menu" v-if="isMainOpen">
-        <NuxtLink class="custom-link" to="/google">googleDownLink</NuxtLink>
-      </div>
-      <div class="sub-menu" v-if="isMainOpen">
-        <!-- <a class="custom-link" target="_blank" :href="useRuntimeConfig().public.restApi">redoc swagger</a> -->
+        <NuxtLink class="custom-link" to="/google" @mousedown.stop>googleDownLink</NuxtLink>
       </div>
     </div>
 
@@ -66,6 +67,55 @@ function toggleMain(event: Event) {
   event.stopPropagation()
   isMainOpen.value = !isMainOpen.value
 }
+
+const navContainer = ref<HTMLElement | null>(null)
+const isDragging = ref(false)
+const dragOffset = ref({ x: 0, y: 0 })
+const navPosition = ref({ x: 0, y: 0 }) // 드래그 위치
+
+// 드래그 시작
+function startDrag(event: MouseEvent) {
+  if (!navContainer.value) return
+  isDragging.value = true
+  dragOffset.value = {
+    x: event.clientX - navPosition.value.x,
+    y: event.clientY - navPosition.value.y
+  }
+
+  document.addEventListener("mousemove", onDrag)
+  document.addEventListener("mouseup", stopDrag)
+}
+
+// 드래그 중
+function onDrag(event: MouseEvent) {
+  if (!isDragging.value) return
+
+  // 화면 밖으로 나가지 않도록 제한
+  const maxX = window.innerWidth - 200
+  const maxY = window.innerHeight - 100
+  const minX = 0
+  const minY = 0
+
+  navPosition.value.x = Math.min(maxX, Math.max(minX, event.clientX - dragOffset.value.x))
+  navPosition.value.y = Math.min(maxY, Math.max(minY, event.clientY - dragOffset.value.y))
+}
+
+// 드래그 종료
+function stopDrag() {
+  isDragging.value = false
+  document.removeEventListener("mousemove", onDrag)
+  document.removeEventListener("mouseup", stopDrag)
+}
+
+// 초기 위치 설정
+onMounted(() => {
+  // navPosition.value = { x: 20, y: 100 }
+})
+
+// 이벤트 정리
+onBeforeUnmount(() => {
+  document.removeEventListener("mousemove", startDrag)
+})
 </script>
 
 <style scoped>
@@ -79,6 +129,8 @@ function toggleMain(event: Event) {
 }
 
 .nav-container {
+    position: relative;
+    z-index: 10; /* 이미지보다 앞에 위치 */
     width: 180px;
     margin-top: 11rem;
     background-color: var(--nav-bg);
@@ -118,6 +170,7 @@ function toggleMain(event: Event) {
 }
 
 .custom-link {
+    user-select: none; /* 텍스트 드래그 방지 */
     text-decoration: none;
     color: var(--nav-text);
     padding: 10px 15px;
@@ -139,10 +192,6 @@ function toggleMain(event: Event) {
     background-color: var(--nav-active-bg);
     color: var(--nav-active-text);
     border: none;
-}
-
-.sub-menu .custom-link {
-  /* background-color: #34495e; 서브 메뉴 링크 배경색 */
 }
 
 .sub-menu .custom-link:hover {

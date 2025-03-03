@@ -11525,7 +11525,24 @@ textarea.form-control-lg {
 }
 
 :root {
-    color-scheme: light dark
+    color-scheme: light dark;
+    --nav-bg: #ffffff;  /* 라이트 모드 - 네비게이션 배경 */
+    --nav-border: #e0e0e0;  /* 라이트 모드 - 네비게이션 테두리 */
+    --nav-text: #333;    /* 라이트 모드 - 기본 텍스트 색상 */
+    --nav-hover-bg: #e0e0e0; /* 라이트 모드 - hover 배경 */
+    --nav-active-bg: #3498db; /* 활성화된 링크 배경 */
+    --nav-active-text: #fff;  /* 활성화된 링크 텍스트 */
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --nav-bg: #00000000;  /* 다크 모드 - 네비게이션 배경 */
+        --nav-border: #3a3f47;
+        --nav-text: #ffffff;
+        --nav-hover-bg: #34495e;
+        --nav-active-bg: #2980b9;
+        --nav-active-text: #fff;
+    }
 }
 
 .bd-gutter {
@@ -11707,22 +11724,4 @@ textarea.form-control-lg {
 .py-6 {
     padding-top: 4.5rem !important;
     padding-bottom: 4.5rem !important
-}
-
-:root {
-    --nav-bg: #ffffff;  /* 라이트 모드 - 네비게이션 배경 */
-    --nav-border: #e0e0e0;  /* 라이트 모드 - 네비게이션 테두리 */
-    --nav-text: #333;    /* 라이트 모드 - 기본 텍스트 색상 */
-    --nav-hover-bg: #e0e0e0; /* 라이트 모드 - hover 배경 */
-    --nav-active-bg: #3498db; /* 활성화된 링크 배경 */
-    --nav-active-text: #fff;  /* 활성화된 링크 텍스트 */
-}
-
-[data-bs-theme="dark"] {
-    --nav-bg: #2c3e50;  /* 다크 모드 - 네비게이션 배경 */
-    --nav-border: #3a3f47;  /* 다크 모드 - 네비게이션 테두리 */
-    --nav-text: #ffffff;    /* 다크 모드 - 기본 텍스트 색상 */
-    --nav-hover-bg: #34495e; /* 다크 모드 - hover 배경 */
-    --nav-active-bg: #2980b9; /* 다크 모드 - 활성화된 링크 배경 */
-    --nav-active-text: #fff;  /* 다크 모드 - 활성화된 링크 텍스트 */
 }

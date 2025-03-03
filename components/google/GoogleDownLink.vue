@@ -1,25 +1,27 @@
 <template>
     <div>
-      <h2>사용법</h2>
-          <ol>
-              <p>알아서 잘 변환하라</p>
-          </ol>
-          <form name="conf">
-              <fieldset>
-                  <legend>Configurations</legend>
-                  <p>
-                      <strong>구글파일 링크</strong>
-                      <br>
-                      <textarea style="width: 670px; height: 230px;" @keyup="convertLinks(googleFileLinks)" v-model="googleFileLinks"></textarea>
-                  </p>
-                  <p>
-                      <strong>다운로드 링크</strong>
-                      <br>
-                      <textarea style="width: 670px; height: 230px;" readonly>{{ downloadLinks.join('\n') }}</textarea>
-                      <button class="btn btn-primary" style="margin-left: 10px;" @click.prevent="copyToClipboard">링크복사</button>
-                  </p>
-              </fieldset>
-          </form>
+        <h1>구글 docs 다운로드 링크 변환</h1>
+        <p>홀랠릴랠룰</p>
+        <h2>사용법</h2>
+        <ol>
+            <p>알아서 잘 변환하라</p>
+        </ol>
+        <form name="conf">
+            <fieldset>
+                <legend>Configurations</legend>
+                <p>
+                    <strong>구글파일 링크</strong>
+                    <br>
+                    <textarea style="width: 670px; height: 230px;" @keyup="convertLinks(googleFileLinks)" v-model="googleFileLinks"></textarea>
+                </p>
+                <p>
+                    <strong>다운로드 링크</strong>
+                    <br>
+                    <textarea style="width: 670px; height: 230px;" readonly>{{ downloadLinks.join('\n') }}</textarea>
+                    <button class="btn btn-primary" style="margin-left: 10px;" @click.prevent="copyToClipboard">링크복사</button>
+                </p>
+            </fieldset>
+        </form>
     </div>
   </template>
   
