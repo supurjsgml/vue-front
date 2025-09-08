@@ -371,7 +371,7 @@ function convert() {
         output.value = output1;
     }
 
-    output.value = output.value.replaceAll(' ', '');
+    spaceReplace(checked.value);
     
 }
 
@@ -392,6 +392,12 @@ function getTableAlias(flg: boolean) {
     }
 
     return flg ? document.conf.as.value : alias;
+}
+
+function spaceReplace(key: String) {
+    if('code_basic' === key || 'code_queryStr' === key) {
+        output.value = output.value.replaceAll(' ', '');
+    }
 }
 
 /** 
