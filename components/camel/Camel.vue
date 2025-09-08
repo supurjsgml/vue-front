@@ -370,6 +370,8 @@ function convert() {
     } else if('code_queryStr' === checked.value) {
         output.value = output1;
     }
+
+    output.value = output.value.replaceAll(' ', '');
     
 }
 
