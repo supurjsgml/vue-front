@@ -410,7 +410,9 @@ const convertType = (linesType: Array<string>, i: number) => {
         ['BIGINT', 'Long'],
         ['INT', 'Integer'],
         ['INTEGER', 'Integer'],
-        ['DOUBLE', 'Double']
+        ['DOUBLE', 'Double'],
+        ['DATETIME', 'LocalDateTime'],
+        ['DATE', 'LocalDate']
     ]);
     
     const sanitizedType = linesType[i]?.replace(/[^A-Za-z]/g, '').toUpperCase();
