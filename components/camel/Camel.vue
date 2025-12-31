@@ -326,11 +326,7 @@ function convert() {
             }
         } else if('code_queryStr' === checked.value) {
             // queryStr
-            if(count == 0) {
-                output1 += ("'" + lines[i] + "'\n");
-            } else {
-                output1 += (",'" + lines[i] + ((i + 1) == maxi ? "'" : "'\n"));
-            }
+            output1 += lines[i].trim() + '\n';
         } else {
             output1 += (after + '\n');
         }
@@ -368,7 +364,16 @@ function convert() {
         output.value += ' WHERE ';
         output.value += output1;
     } else if('code_queryStr' === checked.value) {
-        output.value = output1;
+        const unique = [...new Set(
+        output1
+            .split('\n')
+            .map(v => v.trim())
+            .filter(Boolean)
+    )];
+
+    output.value = unique
+        .map((v, i) => (i === 0 ? `'${v}'` : `,'${v}'`))
+        .join('\n');
     }
 
     spaceReplace(checked.value);
