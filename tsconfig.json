@@ -1,4 +1,16 @@
 {
-  // https://nuxt.com/docs/guide/concepts/typescript
-  "extends": "./.nuxt/tsconfig.json"
+  // Nuxt 3 TypeScript 설정 확장
+  "extends": "./.nuxt/tsconfig.json",
+  "compilerOptions": {
+    "target": "ESNext", // 최신 ES 버전 사용
+    "module": "ESNext", // ESM 모듈 방식으로 설정
+    "moduleResolution": "Node", // Node.js 방식의 모듈 해석 사용
+    "outDir": "dist", // 빌드 출력 디렉토리
+    "allowJs": true, // JS 파일도 허용
+    "strict": true, // 엄격한 타입 검사
+    "esModuleInterop": true, // CommonJS 및 ESM 모듈 호환성 추가
+    "skipLibCheck": true, // 라이브러리 체크 건너뛰기 (속도 향상)
+    "forceConsistentCasingInFileNames": true // 대소문자 일관성 유지
+  },
+  "include": ["server.ts"]
 }
