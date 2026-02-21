@@ -59,6 +59,9 @@
                             <p>
                                 <input type="checkbox" id="package" name="package" @click="createPackage()" v-model="checkBoxDisplay"/><label for="">createPackage</label>
                             </p>
+                            <p>
+                                <input type="checkbox" id="jsonproperty" @change="convert()" v-model="jsonpropertyCheck" value="jsonproperty"/><label for="">@JsonProperty</label>
+                            </p>
                             <div v-show="checkBoxDisplay">
                                 ClassName: <input id="ClassName" type="text" name="ClassName" @keyup="to => { inputData.class = to.target.value; handleChange(); }" />&nbsp;
                                 PackageName: <input id="PackageName" type="text" name="PackageName" @keyup="to => { inputData.package = to.target.value; handleChange(); }" />&nbsp;
@@ -183,6 +186,7 @@ const inputData = reactive({
 
 const annotationCheck = ref('schema');
 const checkBoxDisplay = ref(false);
+const jsonpropertyCheck = ref(false);
 const modifierDatatype = ref(false);
 
 const voOptions = ref(false);
@@ -261,6 +265,7 @@ function convert() {
                 basicDiv.style = 'display:none';
                 schemaDiv.style = '';
 
+                output1 += jsonpropertyCheck.value ? bar(`@JsonProperty("${lines[i]}")`) : "";
                 output1 += ('@Schema(description = "' + convertComment(linesComment, i) + '", example = "")\n' + modifier + ' ' + (linesType ? convertType(linesType, i) : datatype) + ' ' + after + ';\n\n');
             } else {
                 output1 += (modifier + ' ' + datatype + ' ' + after + ';\n');
