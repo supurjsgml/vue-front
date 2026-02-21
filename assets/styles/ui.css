@@ -58,3 +58,15 @@
 .sidebar-logo:hover {
   transform: scale(1.05); /* 마우스 호버 시 확대 효과 */
 }
+
+.checkbox-group {
+    display: flex;
+    gap: 20px;          /* 항목(item) 사이의 간격 */
+    align-items: center; /* 세로 중앙 정렬 */
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    gap: 5px;           /* 체크박스와 글자 사이의 간격 */
+}

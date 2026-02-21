@@ -56,11 +56,13 @@
                             <input type="radio" id="column" @change="convert(); modifierDatatype = true; " v-model="annotationCheck" value="column"/><label for="column">@Column</label>
                         </p>
                         <div>
-                            <p>
-                                <input type="checkbox" id="package" name="package" @click="createPackage()" v-model="checkBoxDisplay"/><label for="">createPackage</label>
-                            </p>
-                            <p>
-                                <input type="checkbox" id="jsonproperty" @change="convert()" v-model="jsonpropertyCheck" value="jsonproperty"/><label for="">@JsonProperty</label>
+                            <p class="checkbox-group">
+                                <span class="item">
+                                    <input type="checkbox" id="package" name="package" @click="createPackage()" v-model="checkBoxDisplay"/><label for="">createPackage</label>
+                                </span>
+                                <span class="item">
+                                    <input type="checkbox" id="jsonproperty" @change="convert()" v-model="jsonpropertyCheck" value="jsonproperty"/><label for="">@JsonProperty</label>
+                                </span>
                             </p>
                             <div v-show="checkBoxDisplay">
                                 ClassName: <input id="ClassName" type="text" name="ClassName" @keyup="to => { inputData.class = to.target.value; handleChange(); }" />&nbsp;
@@ -464,6 +466,11 @@ const createPackage = async () => {
     
     if (!checkBoxDisplay.value) {
         strArray.push(bar(`package ${inputData.package};`, 2))
+
+        if (jsonpropertyCheck.value) {
+            strArray.push(bar('import com.fasterxml.jackson.annotation.JsonProperty;'))
+        }
+
         strArray.push(bar('import io.swagger.v3.oas.annotations.media.Schema;'))
         strArray.push(bar('import lombok.AccessLevel;'))
         strArray.push(bar('import lombok.Builder;'))
@@ -472,6 +479,7 @@ const createPackage = async () => {
         strArray.push(bar('import lombok.AllArgsConstructor;'))
         strArray.push(bar('import lombok.NoArgsConstructor;'))
         strArray.push(bar('import lombok.ToString;', 2))
+        
         
         strArray.push(bar('@Getter'))
         strArray.push(bar('@Setter'))
