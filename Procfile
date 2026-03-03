@@ -1,1 +1,1 @@
-web: npm run start  # 플랜B
+web: npm run start
