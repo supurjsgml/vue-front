@@ -20,8 +20,10 @@ jobs:
             - name: Check for changes
               id: changed-files
               run: |
-                # node 프로젝트에 맞춰 감시할 파일 수정 (src, public, package.json 등)
-                if git diff --quiet HEAD^ HEAD -- src public package.json nuxt.config.ts; then
+                # node 프로젝트에 맞춰 감시할 경로 파일 조져
+                if git diff --quiet HEAD^ HEAD -- \
+                  api/ assets/ components/ config/ pages/ public/ server/ stores/ \
+                  app.vue nuxt.config.ts package.json tsconfig.json; then
                   echo "changed=false" >> $GITHUB_OUTPUT
                 else
                   echo "changed=true" >> $GITHUB_OUTPUT
