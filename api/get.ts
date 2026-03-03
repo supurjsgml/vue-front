@@ -9,7 +9,7 @@ export const getAPI = () => {
      *
      */
     async getAlive() {
-      //return await fetchInstance("/api/getUrl", { method: "GET" });
+      return await fetchInstance("/api/getUrl", { method: "GET" });
     }
   }
 }
