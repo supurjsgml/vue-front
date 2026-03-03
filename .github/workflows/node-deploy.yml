@@ -1,0 +1,100 @@
+name: master
+
+on:
+    workflow_dispatch:
+#    push:
+#      branches:
+#        - master
+
+jobs:
+    # 소스 변동 사항 체크 (src, package.json, nuxt.config 등)
+    check:
+        runs-on: ubuntu-latest
+        outputs:
+            changed: ${{ steps.changed-files.outputs.changed }}
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                fetch-depth: 2
+            - name: Check for changes
+              id: changed-files
+              run: |
+                # node 프로젝트에 맞춰 감시할 파일 수정 (src, public, package.json 등)
+                if git diff --quiet HEAD^ HEAD -- src public package.json nuxt.config.ts; then
+                  echo "changed=false" >> $GITHUB_OUTPUT
+                else
+                  echo "changed=true" >> $GITHUB_OUTPUT
+                fi
+              
+    # 빌드
+    build:
+        needs: check
+        if: needs.check.outputs.changed == 'true'
+        runs-on: ubuntu-latest
+        
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+        
+            # Node.js 설정
+            - name: Set up Node.js 22
+              uses: actions/setup-node@v4
+              with:
+                node-version: '22'
+                cache: 'yarn' # yarn 캐시 설정
+        
+            # 패키지 설치
+            - name: Install dependencies
+              run: yarn install --frozen-lockfile
+        
+            # Nuxt 빌드
+            - name: Build Nuxt project
+              run: yarn build
+            
+            # 넉3 업로드
+            - name: Upload Build Artifact
+              uses: actions/upload-artifact@v4
+              with:
+                name: node-app-build
+                path: .output/
+                retention-days: 1
+    
+    # 배포
+    deploy:
+        needs: [check, build]
+        if: needs.check.outputs.changed == 'true'
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              
+            # 빌드한 파일 다운로드
+            - name: Download Build Artifact
+              uses: actions/download-artifact@v4
+              with:
+                name: node-app-build
+                path: .output/
+                
+            # Heroku 배포
+            - name: Deploy to Heroku
+              uses: akhileshns/heroku-deploy@v3.13.15
+              with:
+                heroku_api_key: ${{ secrets.HEROKU_API_KEY_NODE }}
+                heroku_app_name: ${{ secrets.HEROKU_APP_NAME_NODE }}
+                heroku_email: ${{ secrets.HEROKU_EMAIL }}
+                usedocker: false
+                rollbackonhealthcheckfailed: false
+            
+    # 변경사항 없으면 서버만 재시작    
+    restart:
+        needs: check
+        if: needs.check.outputs.changed == 'false'
+        runs-on: ubuntu-latest
+        steps:
+            - name: Install Heroku CLI
+              run: curl https://cli-assets.heroku.com/install.sh | sh
+            - name: Restart Heroku Dynos
+              run: heroku ps:restart -a ${{ secrets.HEROKU_APP_NAME_NODE }}
+              env:
+                  HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY_NODE }}
