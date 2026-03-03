@@ -1,2 +1,1 @@
-web: node .output/server/index.mjs
-# web: npm run start
+web: npm run start  # 플랜B
