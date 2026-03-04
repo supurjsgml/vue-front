@@ -31,12 +31,17 @@
       <ul>
         <li>
           <a :href="useRuntimeConfig().public.restApi" target="_blank">
-            <img src="@/assets/styles/img/logo/swaggerLogo.png" alt="Swagger Logo" class="sidebar-logo" />
+            <img src="@/assets/styles/img/logo/swaggerLogo.png" alt="SwaggerLogo" class="sidebar-logo" />
           </a>
         </li>
         <li>
           <a href="https://chromewebstore.google.com/detail/%EC%9E%A1%EC%BD%94%EB%A6%AC%EC%95%84-%EC%9D%B4%EB%A0%A5%EC%84%9C-%EA%B0%B1%EC%8B%A0/chjbcemdkiommdpeklplkbfpemefejcp" target="_blank">
-            <img src="@/assets/styles/img/logo/chromeWebStoreLogo.png" alt="Swagger Logo" class="sidebar-logo" />
+            <img src="@/assets/styles/img/logo/chromeWebStoreLogo.png" alt="chromeWebStoreLogo" class="sidebar-logo" />
+          </a>
+        </li>
+        <li>
+          <a href="https://supurjsgml.grafana.net/public-dashboards/6db3adcb8b00421589797ad121289dd1" target="_blank">
+            <img src="@/assets/styles/img/logo/grafanaLogo.png" alt="grafanaLogo" class="sidebar-logo" />
           </a>
         </li>
       </ul>
