@@ -22,4 +22,16 @@ export default defineNuxtConfig({
   },
   
   serverMiddleware: ['~/server/middleware/redirect'],
+
+  nitro: {  
+  routeRules: {  
+    '/public/build/**': { proxy: 'https://supurjsgml.grafana.net/public/build/**' },  
+    '/public/img/**': { proxy: 'https://supurjsgml.grafana.net/public/img/**' },  
+    '/public/fonts/**': { proxy: 'https://supurjsgml.grafana.net/public/fonts/**' },  
+    '/public/maps/**': { proxy: 'https://supurjsgml.grafana.net/public/maps/**' },  
+    '/api/public/**': { proxy: 'https://supurjsgml.grafana.net/api/public/**' },  
+    '/api/live/**': { proxy: 'https://supurjsgml.grafana.net/api/live/**' },  
+    '/api/frontend/**': { proxy: 'https://supurjsgml.grafana.net/api/frontend/**' },  
+  }  
+}  ,
 })
