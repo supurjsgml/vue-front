@@ -14,21 +14,21 @@
 // }
 
 export default function fetch() {
-    const fetchInstance = $fetch.create({
-      baseURL: useRuntimeConfig().public.restApi,
-      headers: {
-        Accept: "application/json"
-      },
-      // timeout: 5000, // 요청 타임아웃 설정 (5초)
-      // onRequest({ options }) {
-      //   const { accessToken } = "token"
+  const fetchInstance = $fetch.create({
+    baseURL: "/api/backend", // 백엔드 프록시용으로 기본 URL 변경
+    headers: {
+      Accept: "application/json"
+    },
+    // timeout: 5000, // 요청 타임아웃 설정 (5초)
+    // onRequest({ options }) {
+    //   const { accessToken } = "token"
 
-      //   options.headers = options?.headers ? new Headers(options.headers) : new Headers()
-      //   if (accessToken) {
-      //     options.headers.set("Authorization", accessToken)
-      //   }
-      // }
-    })
+    //   options.headers = options?.headers ? new Headers(options.headers) : new Headers()
+    //   if (accessToken) {
+    //     options.headers.set("Authorization", accessToken)
+    //   }
+    // }
+  })
 
-    return { fetchInstance }
-  }
+  return { fetchInstance }
+}

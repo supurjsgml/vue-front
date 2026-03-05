@@ -43,7 +43,7 @@
           </a>
         </li>
         <li>
-          <a :href="useRuntimeConfig().public.grafanaUrl" target="_blank">
+          <a :href="useRuntimeConfig().public.grafanaUrl.concat('/public-dashboards/6db3adcb8b00421589797ad121289dd1')" target="_blank">
             <img src="@/assets/styles/img/logo/grafanaLogo.png" alt="grafanaLogo" class="sidebar-logo" />
           </a>
         </li>

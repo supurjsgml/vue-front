@@ -4,8 +4,28 @@ import dotenv from 'dotenv'
 // dotenv 파일 로드
 dotenv.config();
 
+// ======================================================= //
+// 1. 그라파나 (Grafana) 관련 리소스 및 API 통신 전용 프록시 설정
+// ======================================================= //
+const grafanaProxyRoutes = {
+  '/public/build/**': { proxy: `${process.env.GRAFANA_URL}/public/build/**` },
+  '/public/img/**': { proxy: `${process.env.GRAFANA_URL}/public/img/**` },
+  '/public/fonts/**': { proxy: `${process.env.GRAFANA_URL}/public/fonts/**` },
+  '/public/maps/**': { proxy: `${process.env.GRAFANA_URL}/public/maps/**` },
+  '/api/public/**': { proxy: `${process.env.GRAFANA_URL}/api/public/**` },
+  '/api/live/**': { proxy: `${process.env.GRAFANA_URL}/api/live/**` },
+  '/api/frontend/**': { proxy: `${process.env.GRAFANA_URL}/api/frontend/**` },
+};
+
+// ======================================================= //
+// 2. 뤼거리 백엔드 API 서버 전용 프록시 설정
+// ======================================================= //
+const backendApiProxyRoutes = {
+  '/api/backend/**': { proxy: `${process.env.REDOC_API_URL}/**` },
+};
+
 export default defineNuxtConfig({
-  devtools: { 
+  devtools: {
     enabled: true,
   },
 
@@ -21,18 +41,13 @@ export default defineNuxtConfig({
       grafanaUrl: process.env.GRAFANA_URL,
     },
   },
-  
+
   serverMiddleware: ['~/server/middleware/redirect'],
 
-  nitro: {  
-  routeRules: {  
-    '/public/build/**': { proxy: 'https://supurjsgml.grafana.net/public/build/**' },  
-    '/public/img/**': { proxy: 'https://supurjsgml.grafana.net/public/img/**' },  
-    '/public/fonts/**': { proxy: 'https://supurjsgml.grafana.net/public/fonts/**' },  
-    '/public/maps/**': { proxy: 'https://supurjsgml.grafana.net/public/maps/**' },  
-    '/api/public/**': { proxy: 'https://supurjsgml.grafana.net/api/public/**' },  
-    '/api/live/**': { proxy: 'https://supurjsgml.grafana.net/api/live/**' },  
-    '/api/frontend/**': { proxy: 'https://supurjsgml.grafana.net/api/frontend/**' },  
-  }  
-}  ,
+  nitro: {
+    routeRules: {
+      ...grafanaProxyRoutes,
+      ...backendApiProxyRoutes,
+    }
+  },
 })

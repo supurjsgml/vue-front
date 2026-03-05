@@ -10,7 +10,9 @@
 </template>  
 
 <script setup lang="ts">  
-const { data: iframeSrc } = useFetch('/api/grafana/iframe-src');
+import { getAPI } from '~/api/get';
+
+const { data: iframeSrc } = useAsyncData('grafanaIframeSrc', () => getAPI().getGrafanaIframeSrc());
 </script>  
 
 <style scoped>  
