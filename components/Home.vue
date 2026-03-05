@@ -1,5 +1,4 @@
 <template>
-  <GrafanaPanel :panel-id="30" height="400" />
   <div class="container">
     <NuxtImg
       src="/samchoo.jpg"

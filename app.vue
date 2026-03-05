@@ -15,6 +15,9 @@
         <NuxtLink class="custom-link" to="/camel" @mousedown.stop>camel</NuxtLink>
       </div>
       <div class="sub-menu" v-if="isMainOpen">
+        <NuxtLink class="custom-link" to="/grafana" @mousedown.stop>구라파나</NuxtLink>
+      </div>
+      <div class="sub-menu" v-if="isMainOpen">
         <NuxtLink class="custom-link" to="/google" @mousedown.stop>googleDownLink</NuxtLink>
       </div>
     </div>
@@ -40,7 +43,7 @@
           </a>
         </li>
         <li>
-          <a href="https://supurjsgml.grafana.net/public-dashboards/6db3adcb8b00421589797ad121289dd1" target="_blank">
+          <a :href="useRuntimeConfig().public.grafanaUrl" target="_blank">
             <img src="@/assets/styles/img/logo/grafanaLogo.png" alt="grafanaLogo" class="sidebar-logo" />
           </a>
         </li>
