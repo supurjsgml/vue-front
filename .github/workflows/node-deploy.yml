@@ -65,7 +65,7 @@ jobs:
                       Procfile
                       yarn.lock
                       .env.prod
-                retention-days: 1 # 아티팩트 깃헙에 1일 동안 보관
+                retention-days: 7 # 아티팩트 깃헙에 7일 동안 보관
     
     # 배포
     deploy:
