@@ -15,7 +15,7 @@
 
 export default function fetch() {
   const fetchInstance = $fetch.create({
-    baseURL: "/api/backend", // 백엔드 프록시용으로 기본 URL 변경
+    baseURL: "/rest", // 백엔드 프록시용으로 기본 URL 변경
     headers: {
       Accept: "application/json"
     },

@@ -21,7 +21,7 @@ const grafanaProxyRoutes = {
 // 2. 뤼거리 백엔드 API 서버 전용 프록시 설정
 // ======================================================= //
 const backendApiProxyRoutes = {
-  '/api/backend/**': { proxy: `${process.env.REDOC_API_URL}/**` },
+  '/rest/**': { proxy: `${process.env.REDOC_API_URL}/**` },
 };
 
 export default defineNuxtConfig({
