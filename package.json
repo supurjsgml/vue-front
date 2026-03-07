@@ -24,7 +24,9 @@
     "vue-router": "^4.5.0"
   },
   "resolutions": {
-    "rollup": "^4.59.0"
+    "rollup": "^4.59.0",
+    "svgo": "^4.0.1",
+    "serialize-javascript": "^7.0.3"
   },
   "devDependencies": {
     "@types/node": "^25.3.3"
