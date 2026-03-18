@@ -15,6 +15,7 @@ const grafanaProxyRoutes = {
   '/api/public/**': { proxy: `${process.env.GRAFANA_URL}/api/public/**` },
   '/api/live/**': { proxy: `${process.env.GRAFANA_URL}/api/live/**` },
   '/api/frontend/**': { proxy: `${process.env.GRAFANA_URL}/api/frontend/**` },
+  '/bootdata/**': { proxy: `${process.env.GRAFANA_URL}/bootdata/**` },
 };
 
 // ======================================================= //
