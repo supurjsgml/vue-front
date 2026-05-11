@@ -1,13 +1,15 @@
 <template>
   <div class="container">
-    <!-- 왼쪽 네비게이션 영역 (드래그 가능) -->
-    <div 
-      class="nav-container"
-      ref="navContainer"
-      @mousedown="startDrag"
-      :style="{ transform: `translate(${navPosition.x}px, ${navPosition.y}px)` }"
-    >
-      <div class="nav-item" @click="toggleMain">
+    <!-- 왼쪽 패널 그룹 -->
+    <div class="left-panel-wrapper">
+      <!-- 메인 네비게이션 영역 (개별 드래그) -->
+      <div 
+        class="nav-container draggable-panel"
+        :class="{ dragging: navIsDragging }"
+        @mousedown="startNavDrag"
+        :style="{ transform: `translate(${navPosition.x}px, ${navPosition.y}px)` }"
+      >
+        <div class="nav-item" @click="toggleMain">
         <NuxtLink class="custom-link" to="/" @click="() => isMainOpen = false" @mousedown.stop>main</NuxtLink>
         <ChevronRightIcon @click="toggleMain" :class="{ rotated: isMainOpen }" class="icon" />
       </div>
@@ -17,10 +19,64 @@
       <div class="sub-menu" v-if="isMainOpen">
         <NuxtLink class="custom-link" to="/grafana" @mousedown.stop>구라파나</NuxtLink>
       </div>
-      <div class="sub-menu" v-if="isMainOpen">
-        <NuxtLink class="custom-link" to="/google" @mousedown.stop>googleDownLink</NuxtLink>
+        <div class="sub-menu" v-if="isMainOpen">
+          <NuxtLink class="custom-link" to="/google" @mousedown.stop>googleDownLink</NuxtLink>
+        </div>
+      </div> <!-- End of nav-container -->
+
+      <!-- Mini Stats Widget (개별 드래그) -->
+      <div 
+        class="mini-stats-widget draggable-panel" 
+        :class="{ dragging: statsIsDragging }"
+        @click="openStatsModalIfNoDrag" 
+        @mousedown.stop="startStatsDrag"
+        :style="{ transform: `translate(${statsPosition.x}px, ${statsPosition.y}px)` }"
+      >
+        <div class="mini-stats-header">
+          <div class="mini-stats-info">
+            <span class="mini-label">주간 방문자 (1주)</span>
+            <span class="mini-value">45,500</span>
+            <span class="mini-value">하드코딩 이지롱 다음 배포때 바ㄲ</span>
+          </div>
+          <div class="trend-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+            12%
+          </div>
+        </div>
+        <div class="sparkline-container">
+          <svg viewBox="0 0 200 50" class="sparkline" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="sparkline-gradient" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#34d399" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#34d399" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path 
+              d="M 0 40 C 30 30, 40 10, 66 20 S 100 45, 133 25 S 180 5, 200 10 L 200 50 L 0 50 Z" 
+              fill="url(#sparkline-gradient)"
+            />
+            <path 
+              d="M 0 40 C 30 30, 40 10, 66 20 S 100 45, 133 25 S 180 5, 200 10" 
+              fill="none" 
+              stroke="#34d399" 
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="sparkline-path"
+            />
+          </svg>
+        </div>
+        <div class="days-row">
+          <span>05</span>
+          <span>06</span>
+          <span>07</span>
+          <span>08</span>
+          <span>09</span>
+          <span>10</span>
+          <span class="today">오늘</span>
+        </div>
       </div>
-    </div>
+    </div> <!-- End of left-panel-wrapper -->
 
     <!-- 콘텐츠 영역 -->
     <div class="content">
@@ -50,6 +106,7 @@
       </ul>
     </aside>
 
+    <StatisticsPanel v-if="showStatsModal" @close="showStatsModal = false" />
   </div>
 </template>
 
@@ -70,63 +127,68 @@ useHead({
 })
 
 const isMainOpen = ref(true)
+const showStatsModal = ref(false)
 
 function toggleMain(event: Event) {
   event.stopPropagation()
   isMainOpen.value = !isMainOpen.value
 }
 
-const navContainer = ref<HTMLElement | null>(null)
-const isDragging = ref(false)
-const dragOffset = ref({ x: 0, y: 0 })
-const navPosition = ref({ x: 0, y: 0 }) // 드래그 위치
+// 커스텀 드래그 훅
+function useDraggable() {
+  const position = ref({ x: 0, y: 0 })
+  const isDragging = ref(false)
+  const dragOffset = ref({ x: 0, y: 0 })
+  const hasMoved = ref(false)
 
-// 드래그 시작
-function startDrag(event: MouseEvent) {
-  if (!navContainer.value) return
-  isDragging.value = true
-  dragOffset.value = {
-    x: event.clientX - navPosition.value.x,
-    y: event.clientY - navPosition.value.y
+  function startDrag(event: MouseEvent) {
+    if (event.button !== 0) return // 왼쪽 클릭만 허용
+    isDragging.value = true
+    hasMoved.value = false
+    dragOffset.value = {
+      x: event.clientX - position.value.x,
+      y: event.clientY - position.value.y
+    }
+
+    const onDrag = (e: MouseEvent) => {
+      if (!isDragging.value) return
+      hasMoved.value = true
+      // 화면 밖으로 나가지 않도록 여유 있게 제한
+      const maxX = window.innerWidth
+      const maxY = window.innerHeight
+      const minX = -window.innerWidth
+      const minY = -window.innerHeight
+
+      position.value.x = Math.min(maxX, Math.max(minX, e.clientX - dragOffset.value.x))
+      position.value.y = Math.min(maxY, Math.max(minY, e.clientY - dragOffset.value.y))
+    }
+
+    const stopDrag = () => {
+      isDragging.value = false
+      document.removeEventListener("mousemove", onDrag)
+      document.removeEventListener("mouseup", stopDrag)
+    }
+
+    document.addEventListener("mousemove", onDrag)
+    document.addEventListener("mouseup", stopDrag)
   }
 
-  document.addEventListener("mousemove", onDrag)
-  document.addEventListener("mouseup", stopDrag)
+  return { position, startDrag, hasMoved, isDragging }
 }
 
-// 드래그 중
-function onDrag(event: MouseEvent) {
-  if (!isDragging.value) return
+const { position: navPosition, startDrag: startNavDrag, isDragging: navIsDragging } = useDraggable()
+const { position: statsPosition, startDrag: startStatsDrag, hasMoved: statsHasMoved, isDragging: statsIsDragging } = useDraggable()
 
-  // 화면 밖으로 나가지 않도록 제한
-  const maxX = window.innerWidth - 200
-  const maxY = window.innerHeight - 100
-  const minX = 0
-  const minY = 0
-
-  navPosition.value.x = Math.min(maxX, Math.max(minX, event.clientX - dragOffset.value.x))
-  navPosition.value.y = Math.min(maxY, Math.max(minY, event.clientY - dragOffset.value.y))
+function openStatsModalIfNoDrag() {
+  if (!statsHasMoved.value) {
+    showStatsModal.value = true
+  }
 }
-
-// 드래그 종료
-function stopDrag() {
-  isDragging.value = false
-  document.removeEventListener("mousemove", onDrag)
-  document.removeEventListener("mouseup", stopDrag)
-}
-
-// 초기 위치 설정
-onMounted(() => {
-  // navPosition.value = { x: 20, y: 100 }
-})
-
-// 이벤트 정리
-onBeforeUnmount(() => {
-  document.removeEventListener("mousemove", startDrag)
-})
 </script>
 
 <style scoped>
+@import url('@/assets/styles/mini-stats.css');
+
 .container {
   display: flex;
   align-items: flex-start;
@@ -136,11 +198,18 @@ onBeforeUnmount(() => {
   padding: 20px;
 }
 
-.nav-container {
+.left-panel-wrapper {
     position: relative;
-    z-index: 10; /* 이미지보다 앞에 위치 */
-    width: 180px;
+    z-index: 10;
+    width: 220px;
     margin-top: 11rem;
+}
+
+.nav-container {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    box-sizing: border-box;
     background-color: var(--nav-bg);
     padding: 10px;
     border-radius: 10px;
@@ -185,10 +254,12 @@ onBeforeUnmount(() => {
     background-color: var(--nav-bg);
     border-radius: 8px;
     transition: background-color 0.3s ease, color 0.3s ease;
-    display: inline-block;
+    display: block;
+    box-sizing: border-box;
     text-align: center;
     font-weight: bold;
     border: 1px solid var(--nav-border);
+    word-break: break-all;
 }
 
 .custom-link:hover {
@@ -219,7 +290,7 @@ onBeforeUnmount(() => {
     align-items: stretch;
   }
 
-  .nav-container {
+  .left-panel-wrapper {
     width: 93%;
     margin-top: 0;
   }
@@ -248,6 +319,14 @@ onBeforeUnmount(() => {
   position: sticky;
   top: 20px; /* 스크롤 시 상단 고정 */
   align-self: flex-start; /* 콘텐츠 높이에 맞추기 */
+  user-select: none; /* 텍스트 선택 방지 */
+  -webkit-user-select: none;
+}
+
+.sidebar-logo {
+  -webkit-user-drag: none; /* 이미지 고스트 드래그 방지 */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .sidebar h3 {
@@ -272,5 +351,4 @@ onBeforeUnmount(() => {
 .sidebar a:hover {
   text-decoration: underline;
 }
-
 </style>
