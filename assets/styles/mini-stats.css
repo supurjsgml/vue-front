@@ -51,7 +51,7 @@
 .mini-value {
   font-size: 1.4rem;
   font-weight: 800;
-  color: #f8fafc;
+  color: var(--nav-text);
 }
 
 .trend-badge {

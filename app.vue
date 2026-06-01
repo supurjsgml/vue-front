@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <canvas ref="rippleCanvas" class="global-ripple-canvas"></canvas>
     <!-- 왼쪽 패널 그룹 -->
     <div class="left-panel-wrapper">
       <!-- 메인 네비게이션 영역 (개별 드래그) -->
@@ -106,14 +107,20 @@
       </ul>
     </aside>
 
+    <!-- 테마 토글 버튼 -->
+    <button class="theme-toggle-btn" @click="toggleTheme" title="테마 변경">
+      <SunIcon v-if="isDarkMode" class="theme-icon" />
+      <MoonIcon v-else class="theme-icon" />
+    </button>
+
     <StatisticsPanel v-if="showStatsModal" @close="showStatsModal = false" />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useHead } from '#imports'
-import { ChevronRightIcon } from '@heroicons/vue/24/solid'
+import { ChevronRightIcon, SunIcon, MoonIcon } from '@heroicons/vue/24/solid'
 
 useHead({
   title: '카멜따리 ~',
@@ -184,10 +191,228 @@ function openStatsModalIfNoDrag() {
     showStatsModal.value = true
   }
 }
+
+// Background canvas state
+const rippleCanvas = ref<HTMLCanvasElement | null>(null);
+let animationFrameId: number;
+
+const mouse = {
+  x: -1000,
+  y: -1000,
+  targetX: -1000,
+  targetY: -1000,
+  radius: 240, // Larger mouse influence radius for full screen
+};
+
+interface GridPoint {
+  x: number;
+  y: number;
+  originX: number;
+  originY: number;
+  vx: number;
+  vy: number;
+}
+
+let points: GridPoint[] = [];
+let cols = 0;
+let rows = 0;
+const spacing = 50; // Grid cell spacing
+
+const initGrid = (width: number, height: number) => {
+  points = [];
+  cols = Math.ceil(width / spacing) + 1;
+  rows = Math.ceil(height / spacing) + 1;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const x = c * spacing;
+      const y = r * spacing;
+      points.push({
+        x,
+        y,
+        originX: x,
+        originY: y,
+        vx: 0,
+        vy: 0,
+      });
+    }
+  }
+};
+
+const handleGlobalMouseMove = (e: MouseEvent) => {
+  if (!rippleCanvas.value) return;
+  const rect = rippleCanvas.value.getBoundingClientRect();
+  mouse.targetX = e.clientX - rect.left;
+  mouse.targetY = e.clientY - rect.top;
+};
+
+const handleGlobalMouseLeave = () => {
+  mouse.targetX = -1000;
+  mouse.targetY = -1000;
+};
+
+const spring = 0.025;
+const damping = 0.92;
+const waveSpeed = 0.001;
+const waveAmp = 5;
+
+const animateBackground = (time: number) => {
+  if (!rippleCanvas.value) return;
+  const canvas = rippleCanvas.value;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  mouse.x += (mouse.targetX - mouse.x) * 0.1;
+  mouse.y += (mouse.targetY - mouse.y) * 0.1;
+
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+
+    // Natural breathing waving motion
+    const waveX = Math.sin(time * waveSpeed + p.originY * 0.01) * 1.5;
+    const waveY = Math.cos(time * waveSpeed + p.originX * 0.01) * waveAmp;
+
+    const targetX = p.originX + waveX;
+    const targetY = p.originY + waveY;
+
+    // Mouse interactive force pushing nodes away
+    const dx = p.x - mouse.x;
+    const dy = p.y - mouse.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist < mouse.radius) {
+      const force = (mouse.radius - dist) / mouse.radius;
+      const angle = Math.atan2(dy, dx);
+      const pushX = Math.cos(angle) * force * 16;
+      const pushY = Math.sin(angle) * force * 16;
+      
+      p.vx += pushX;
+      p.vy += pushY;
+    }
+
+    const ax = (targetX - p.x) * spring;
+    const ay = (targetY - p.y) * spring;
+
+    p.vx += ax;
+    p.vy += ay;
+    p.vx *= damping;
+    p.vy *= damping;
+
+    p.x += p.vx;
+    p.y += p.vy;
+  }
+
+  // Draw delicate grid lines (dark/light adapted)
+  ctx.beginPath();
+  ctx.strokeStyle = isDarkMode.value ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.04)';
+  ctx.lineWidth = 1;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const idx = r * cols + c;
+      const p = points[idx];
+
+      if (c < cols - 1) {
+        const pRight = points[idx + 1];
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(pRight.x, pRight.y);
+      }
+      if (r < rows - 1) {
+        const pBottom = points[idx + cols];
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(pBottom.x, pBottom.y);
+      }
+    }
+  }
+  ctx.stroke();
+
+  // Draw subtle glowing dots on intersections close to the mouse
+  const dotColor = isDarkMode.value ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
+  const glowRGB = isDarkMode.value ? '52, 211, 153' : '5, 150, 105'; // teal-400 vs emerald-600
+
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    const dx = p.x - mouse.x;
+    const dy = p.y - mouse.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist < mouse.radius) {
+      const ratio = 1 - dist / mouse.radius;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 1.2 + ratio * 2, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${glowRGB}, ${0.05 + ratio * 0.35})`;
+      ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 0.8, 0, Math.PI * 2);
+      ctx.fillStyle = dotColor;
+      ctx.fill();
+    }
+  }
+
+  animationFrameId = requestAnimationFrame(animateBackground);
+};
+
+const handleResize = () => {
+  if (!rippleCanvas.value) return;
+  const canvas = rippleCanvas.value;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  initGrid(canvas.width, canvas.height);
+};
+
+// 테마 상태 및 토글 기능
+const isDarkMode = ref(true)
+
+const toggleTheme = () => {
+  isDarkMode.value = !isDarkMode.value
+  const theme = isDarkMode.value ? 'dark' : 'light'
+  document.documentElement.setAttribute('data-bs-theme', theme)
+  localStorage.setItem('theme', theme)
+}
+
+onMounted(() => {
+  // 테마 초기 설정
+  const savedTheme = localStorage.getItem('theme')
+  if (savedTheme) {
+    isDarkMode.value = savedTheme === 'dark'
+  } else {
+    isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+  }
+  document.documentElement.setAttribute('data-bs-theme', isDarkMode.value ? 'dark' : 'light')
+
+  // 캔버스 초기 설정
+  if (rippleCanvas.value) {
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('mousemove', handleGlobalMouseMove);
+    window.addEventListener('mouseleave', handleGlobalMouseLeave);
+    animationFrameId = requestAnimationFrame(animateBackground);
+  }
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+  window.removeEventListener('mousemove', handleGlobalMouseMove);
+  window.removeEventListener('mouseleave', handleGlobalMouseLeave);
+  cancelAnimationFrame(animationFrameId);
+});
 </script>
 
 <style scoped>
 @import url('@/assets/styles/mini-stats.css');
+
+.global-ripple-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: -1;
+}
 
 .container {
   display: flex;
@@ -350,5 +575,64 @@ function openStatsModalIfNoDrag() {
 
 .sidebar a:hover {
   text-decoration: underline;
+}
+
+/* 테마 토글 버튼 스타일 */
+.theme-toggle-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: var(--nav-bg);
+  border: 1px solid var(--nav-border);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  outline: none;
+}
+
+.theme-toggle-btn:hover {
+  transform: scale(1.1) rotate(15deg);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  border-color: #34d399;
+}
+
+.theme-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--nav-text);
+  transition: transform 0.5s ease;
+}
+
+/* 다크/라이트 모드용 CSS 변수 정의 */
+:root, [data-bs-theme="dark"] {
+  --nav-bg: rgba(15, 23, 42, 0.65); /* 반투명 다크 블루 */
+  --nav-border: rgba(255, 255, 255, 0.08);
+  --nav-text: #f8fafc;
+  --nav-hover-bg: rgba(255, 255, 255, 0.08);
+  --nav-active-bg: rgba(52, 211, 153, 0.15);
+  --nav-active-text: #34d399;
+}
+
+[data-bs-theme="light"] {
+  --nav-bg: rgba(248, 250, 252, 0.8); /* 반투명 라이트 그레이 */
+  --nav-border: rgba(15, 23, 42, 0.08);
+  --nav-text: #0f172a;
+  --nav-hover-bg: rgba(0, 0, 0, 0.05);
+  --nav-active-bg: rgba(52, 211, 153, 0.15);
+  --nav-active-text: #059669;
+}
+
+/* 사이드바 글자색 동기화 */
+.sidebar {
+  color: var(--nav-text) !important;
 }
 </style>

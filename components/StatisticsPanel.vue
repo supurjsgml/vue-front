@@ -1,7 +1,40 @@
 <template>
-  <div class="modal-overlay" @click.self="$emit('close')">
-    <div class="modal-content stats-container">
-      <button class="close-btn" @click="$emit('close')">×</button>
+  <div 
+    class="modal-overlay" 
+    @click.self="$emit('close')"
+    @mousemove="handleModalMouseMove"
+  >
+    <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
+      <defs>
+        <filter id="cloth-filter" x="-20%" y="-20%" width="140%" height="140%">
+          <feTurbulence 
+            type="fractalNoise" 
+            baseFrequency="0.002 0.004" 
+            numOctaves="3" 
+            stitchTiles="stitch"
+            result="noise" 
+          />
+          <feOffset :dx="offsetX" :dy="offsetY" in="noise" result="movedNoise" />
+          <feDisplacementMap 
+            in="SourceGraphic" 
+            in2="movedNoise" 
+            :scale="displacementScale" 
+            xChannelSelector="R" 
+            yChannelSelector="G"
+          />
+        </filter>
+      </defs>
+    </svg>
+    <div 
+      class="modal-content stats-container"
+      :style="{ 
+        filter: 'url(#cloth-filter)',
+        transform: `rotateX(${tiltX}deg) rotateY(${tiltY}deg)`
+      }"
+      @click="handleModalClick"
+      @mouseleave="handleModalMouseLeave"
+    >
+      <button class="close-btn" @click.stop="$emit('close')">×</button>
       
       <div class="header-section">
         <h1 class="page-title">내가 한거 아니에요 젬미나이가 한거에요 디자인 몰라요;;</h1>
@@ -61,12 +94,88 @@ const handleKeydown = (e: KeyboardEvent) => {
   }
 };
 
+// Cloth animation state
+const displacementScale = ref(0);
+const offsetX = ref(0);
+const offsetY = ref(0);
+
+// 3D Tilt state
+const tiltX = ref(0);
+const tiltY = ref(0);
+let targetTiltX = 0;
+let targetTiltY = 0;
+
+let lastMouseX = 0;
+let lastMouseY = 0;
+let mouseSpeed = 0;
+let targetScale = 0;
+let currentScale = 0;
+let targetSpeed = 0;
+let currentSpeed = 0;
+let clothFrameId: number;
+let time = 0;
+
+const handleModalMouseMove = (e: MouseEvent) => {
+  const modalEl = document.querySelector('.modal-content') as HTMLElement;
+  if (modalEl) {
+    const rect = modalEl.getBoundingClientRect();
+    // Calculate mouse position relative to modal center (-1 to 1 range)
+    const mouseX = e.clientX - rect.left - rect.width / 2;
+    const mouseY = e.clientY - rect.top - rect.height / 2;
+    
+    // Convert to maximum 16 degrees tilt
+    targetTiltX = -(mouseY / (rect.height / 2)) * 16;
+    targetTiltY = (mouseX / (rect.width / 2)) * 16;
+  }
+};
+
+const handleModalMouseLeave = () => {
+  targetTiltX = 0;
+  targetTiltY = 0;
+};
+
+const handleModalClick = () => {
+  // Reset offsets on click to prevent float precision bugs
+  offsetX.value = 0;
+  offsetY.value = 0;
+  
+  // Adjusted settings: slightly lowered for a balanced, premium cloth wave
+  targetScale = 120;
+  targetSpeed = 20;
+};
+
+const animateCloth = () => {
+  time += 0.04;
+  
+  // Smooth spring physics for 3D tilt
+  tiltX.value += (targetTiltX - tiltX.value) * 0.1;
+  tiltY.value += (targetTiltY - tiltY.value) * 0.1;
+
+  // Smooth spring physics for SVG displacement scale and speed
+  currentScale += (targetScale - currentScale) * 0.1;
+  currentSpeed += (targetSpeed - currentSpeed) * 0.1;
+
+  displacementScale.value = currentScale;
+  
+  // Keep offsets wrapped to avoid precision loss in browser GPU rendering
+  offsetX.value = (offsetX.value + currentSpeed * 2.8) % 1000;
+  offsetY.value = (offsetY.value + currentSpeed * 1.8) % 1000;
+
+  // Slowly decelerate back to 0 (balanced, organic cloth decay)
+  targetScale += (0 - targetScale) * 0.035;
+  targetSpeed += (0 - targetSpeed) * 0.04;
+
+  clothFrameId = requestAnimationFrame(animateCloth);
+};
+
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown);
+  clothFrameId = requestAnimationFrame(animateCloth);
 });
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown);
+  cancelAnimationFrame(clothFrameId);
 });
 
 // Dummy data for visualization
@@ -103,7 +212,7 @@ const yAxisTicks = computed(() => {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(8, 10, 20, 0.7);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
@@ -111,6 +220,8 @@ const yAxisTicks = computed(() => {
   align-items: center;
   z-index: 9999;
   animation: fadeInModal 0.3s ease-out;
+  overflow: hidden;
+  perspective: 1200px; /* Enable 3D space */
 }
 
 .modal-content {
@@ -123,6 +234,11 @@ const yAxisTicks = computed(() => {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.1);
   animation: scaleUpModal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-origin: center;
+  will-change: filter, transform;
+  z-index: 2;
+  transform-style: preserve-3d;
+  transition: transform 0.1s ease-out;
 }
 
 .close-btn {
