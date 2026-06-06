@@ -513,11 +513,27 @@ onUnmounted(() => {
   .container {
     flex-direction: column;
     align-items: stretch;
+    padding: 15px;
   }
 
   .left-panel-wrapper {
-    width: 93%;
+    width: 100%;
     margin-top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
+  /* 반응형 상태에서 드래그 가능 패널들을 일반 문서 흐름(static/relative)으로 복원 */
+  .nav-container,
+  .mini-stats-widget {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important; /* 드래그 위치 초기화 */
+    width: 100% !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
   }
 
   .nav-item {
@@ -531,8 +547,30 @@ onUnmounted(() => {
   }
 
   .content {
-    margin-right: 1%;
-    max-width: 90%;
+    margin-left: 0;
+    margin-right: 0;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  /* 사이드바 가로 배치로 변경 */
+  .sidebar {
+    width: 100%;
+    position: static;
+    padding: 15px 0;
+    margin-top: 30px;
+    border-top: 1px solid var(--nav-border);
+  }
+
+  .sidebar ul {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    margin: 0;
+  }
+
+  .sidebar li {
+    margin-bottom: 0;
   }
 }
 
