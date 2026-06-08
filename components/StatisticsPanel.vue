@@ -48,7 +48,7 @@
             <span class="live-badge"><span class="dot"></span>Live</span>
           </div>
           <div class="total-visits">
-            <span class="label">Total Visits</span>
+            <span class="label">페이지별 누적 통계</span>
             <span class="value">{{ totalVisits.toLocaleString() }}</span>
           </div>
         </div>
@@ -65,7 +65,7 @@
               class="bar-group"
             >
               <div class="bar-container">
-                <div class="bar-tooltip">{{ stat.visits.toLocaleString() }} visits</div>
+                <div class="bar-tooltip">{{ stat.visits.toLocaleString() }}</div>
                 <div 
                   class="bar" 
                   :style="{ height: `${(stat.visits / maxVisits) * 100}%`, animationDelay: `${index * 0.15}s`, background: `linear-gradient(180deg, ${stat.color} 0%, transparent 100%)` }"
@@ -85,6 +85,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { getAPI } from '~/api/get';
 
 const emit = defineEmits(['close']);
 
@@ -171,6 +172,7 @@ const animateCloth = () => {
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown);
   clothFrameId = requestAnimationFrame(animateCloth);
+  fetchPageStats();
 });
 
 onUnmounted(() => {
@@ -178,14 +180,41 @@ onUnmounted(() => {
   cancelAnimationFrame(clothFrameId);
 });
 
-// Dummy data for visualization
+// 페이지 색상 매핑
+const pageColors: Record<string, string> = {
+  Main: '#00f2fe',
+  Camel: '#4facfe',
+  Grafana: '#f093fb',
+  Google: '#f5576c',
+  Stats: '#5ee7df'
+};
+
 const pageStats = ref([
-  { name: 'Main', visits: 12450, color: '#00f2fe' },
-  { name: 'Camel', visits: 8230, color: '#4facfe' },
-  { name: 'Grafana', visits: 15300, color: '#f093fb' },
-  { name: 'Google', visits: 6420, color: '#f5576c' },
-  { name: 'Stats', visits: 3100, color: '#5ee7df' }
+  { name: 'Main', visits: 0, color: '#00f2fe' },
+  { name: 'Camel', visits: 0, color: '#4facfe' },
+  { name: 'Grafana', visits: 0, color: '#f093fb' },
+  { name: 'Google', visits: 0, color: '#f5576c' },
+  { name: 'Stats', visits: 0, color: '#5ee7df' }
 ]);
+
+const fetchPageStats = async () => {
+  try {
+    const api = getAPI();
+    const res = await api.getPageStats();
+    if (res && res.success && res.data) {
+      const data = res.data;
+      pageStats.value = Object.keys(data).map(key => {
+        return {
+          name: key,
+          visits: data[key] || 0,
+          color: pageColors[key] || '#ffffff'
+        };
+      });
+    }
+  } catch (error) {
+    console.error('Failed to fetch page statistics:', error);
+  }
+};
 
 const totalVisits = computed(() => {
   return pageStats.value.reduce((acc, curr) => acc + curr.visits, 0);

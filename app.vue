@@ -119,8 +119,8 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useHead } from '#imports'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useHead, useRoute } from '#imports'
 import { ChevronRightIcon, SunIcon, MoonIcon } from '@heroicons/vue/24/solid'
 import { getAPI } from '~/api/get'
 
@@ -195,20 +195,38 @@ const fetchStats = async () => {
   }
 }
 
-const recordHit = async () => {
-  // 동일 세션 내 중복 카운팅 방지 (sessionStorage 활용)
+const route = useRoute()
+
+const getPageNameByPath = (path: string): string => {
+  if (path === '/') return 'Main';
+  if (path.startsWith('/camel')) return 'Camel';
+  if (path.startsWith('/grafana')) return 'Grafana';
+  if (path.startsWith('/google')) return 'Google';
+  return 'Main';
+}
+
+const recordHit = async (forcePageName?: string) => {
+  const pageName = forcePageName || getPageNameByPath(route.path);
   const todayStr = new Date().toISOString().slice(0, 10);
   const sessionKey = `visited_${todayStr}`;
-  if (!sessionStorage.getItem(sessionKey)) {
-    try {
-      const api = getAPI();
-      await api.incrementVisitor();
+  
+  const isNewSession = !sessionStorage.getItem(sessionKey);
+  
+  try {
+    const api = getAPI();
+    await api.incrementVisitor(pageName, isNewSession);
+    if (isNewSession) {
       sessionStorage.setItem(sessionKey, 'true');
-    } catch (error) {
-      console.error('Failed to record visitor hit:', error);
     }
+  } catch (error) {
+    console.error('Failed to record visitor hit:', error);
   }
 }
+
+// SPA 라우트 이동 감지하여 페이지뷰 기록
+watch(() => route.path, () => {
+  recordHit();
+})
 
 function toggleMain(event: Event) {
   event.stopPropagation()

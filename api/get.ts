@@ -29,8 +29,18 @@ export const getAPI = () => {
     /**
      * 방문자 수 증가시키기 (POST)
      */
-    async incrementVisitor() {
-      return await fetchInstance("/api/front/hit", { method: "POST" });
+    async incrementVisitor(pageName: string, isNewSession: boolean) {
+      return await fetchInstance("/api/front/hit", { 
+        method: "POST", 
+        body: { pageName, isNewSession } 
+      });
+    },
+
+    /**
+     * 페이지별 누적 방문자 수 데이터 가져오기 (GET)
+     */
+    async getPageStats() {
+      return await fetchInstance("/api/front/pageStats", { method: "GET" });
     }
   }
 }
