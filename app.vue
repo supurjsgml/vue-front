@@ -208,15 +208,30 @@ const getPageNameByPath = (path: string): string => {
 const recordHit = async (forcePageName?: string) => {
   const pageName = forcePageName || getPageNameByPath(route.path);
   const todayStr = new Date().toISOString().slice(0, 10);
-  const sessionKey = `visited_${todayStr}`;
   
-  const isNewSession = !sessionStorage.getItem(sessionKey);
+  // 1. 일자별 전체 방문자 체크 (하루 단위 세션 키)
+  const dailySessionKey = `visited_daily_${todayStr}`;
+  const isNewSession = !sessionStorage.getItem(dailySessionKey);
+  
+  // 2. 페이지별 방문 체크 (세션 내 해당 페이지 방문 여부)
+  const pageSessionKey = `visited_page_${pageName}`;
+  const isNewPageVisit = !sessionStorage.getItem(pageSessionKey);
+  
+  // 신규 전체 세션 방문도 아니고, 새로운 페이지 방문도 아니면 API 호출하지 않음
+  if (!isNewSession && !isNewPageVisit) {
+    return;
+  }
   
   try {
     const api = getAPI();
-    await api.incrementVisitor(pageName, isNewSession);
+    // 새로운 페이지 방문일 때만 pageName을 전송, 전체 신규 세션일 때만 isNewSession을 true로 전송
+    await api.incrementVisitor(isNewPageVisit ? pageName : '', isNewSession);
+    
     if (isNewSession) {
-      sessionStorage.setItem(sessionKey, 'true');
+      sessionStorage.setItem(dailySessionKey, 'true');
+    }
+    if (isNewPageVisit) {
+      sessionStorage.setItem(pageSessionKey, 'true');
     }
   } catch (error) {
     console.error('Failed to record visitor hit:', error);
@@ -465,8 +480,8 @@ const toggleTheme = () => {
   localStorage.setItem('theme', theme)
 }
 
-onMounted(() => {
-  recordHit();
+onMounted(async () => {
+  await recordHit();
   fetchStats();
   // 테마 초기 설정
   const savedTheme = localStorage.getItem('theme')
