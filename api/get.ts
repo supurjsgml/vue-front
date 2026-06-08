@@ -17,6 +17,20 @@ export const getAPI = () => {
      */
     async getGrafanaIframeSrc() {
       return await $fetch("/api/grafana/iframe-src", { method: "GET" });
+    },
+
+    /**
+     * 대시보드 미니 통계 위젯 데이터 가져오기
+     */
+    async getDashboardStats() {
+      return await fetchInstance("/api/front/dashboardStats", { method: "GET" });
+    },
+
+    /**
+     * 방문자 수 증가시키기 (POST)
+     */
+    async incrementVisitor() {
+      return await fetchInstance("/api/front/hit", { method: "POST" });
     }
   }
 }
