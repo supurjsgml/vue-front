@@ -23,14 +23,14 @@ export const getAPI = () => {
      * 대시보드 미니 통계 위젯 데이터 가져오기
      */
     async getDashboardStats() {
-      return await fetchInstance("/api/front/dashboardStats", { method: "GET" });
+      return await $fetch("/api/front/dashboardStats", { method: "GET" });
     },
 
     /**
      * 방문자 수 증가시키기 (POST)
      */
     async incrementVisitor(pageName: string, isNewSession: boolean) {
-      return await fetchInstance("/api/front/hit", { 
+      return await $fetch("/api/front/hit", { 
         method: "POST", 
         body: { pageName, isNewSession } 
       });
@@ -40,7 +40,7 @@ export const getAPI = () => {
      * 페이지별 누적 방문자 수 데이터 가져오기 (GET)
      */
     async getPageStats() {
-      return await fetchInstance("/api/front/pageStats", { method: "GET" });
+      return await $fetch("/api/front/pageStats", { method: "GET" });
     }
   }
 }

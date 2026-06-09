@@ -37,6 +37,9 @@ export default defineNuxtConfig({
 
   modules: ["@pinia/nuxt", "@nuxt/image"],
   runtimeConfig: {
+    redisRestUrl: process.env.REDIS_HOST,
+    redisRestToken: process.env.REDIS_TOKEN,
+    redisTtl: process.env.REDIS_TTL,
     public: {
       restApi: process.env.REDOC_API_URL,
       grafanaUrl: process.env.GRAFANA_URL,
