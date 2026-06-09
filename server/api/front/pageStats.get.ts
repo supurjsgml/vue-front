@@ -27,14 +27,13 @@ export default defineEventHandler(async (event): Promise<any> => {
     }
 
     const result = response?.result || []
-    
+
     // Initialize visits structure matching PageVisitsDTO keys (exactly matching casing)
     const pageVisits = {
       Main: 0,
       Camel: 0,
       Grafana: 0,
-      Google: 0,
-      Stats: 0
+      Google: 0
     }
 
     if (Array.isArray(result)) {

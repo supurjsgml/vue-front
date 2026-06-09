@@ -185,16 +185,14 @@ const pageColors: Record<string, string> = {
   Main: '#00f2fe',
   Camel: '#4facfe',
   Grafana: '#f093fb',
-  Google: '#f5576c',
-  Stats: '#5ee7df'
+  Google: '#f5576c'
 };
 
 const pageStats = ref([
   { name: 'Main', visits: 0, color: '#00f2fe' },
   { name: 'Camel', visits: 0, color: '#4facfe' },
   { name: 'Grafana', visits: 0, color: '#f093fb' },
-  { name: 'Google', visits: 0, color: '#f5576c' },
-  { name: 'Stats', visits: 0, color: '#5ee7df' }
+  { name: 'Google', visits: 0, color: '#f5576c' }
 ]);
 
 const fetchPageStats = async () => {
