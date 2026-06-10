@@ -26,8 +26,14 @@ const backendApiProxyRoutes = {
 };
 
 export default defineNuxtConfig({
+  compatibilityDate: '2026-06-10',
+
   devtools: {
     enabled: true,
+  },
+
+  experimental: {
+    appManifest: false,
   },
 
   css: [
