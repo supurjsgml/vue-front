@@ -1,72 +1,244 @@
-.camel{
-    width: 48.5%;
-    height: 650px;
+/* Global Typography & Layout */
+body {
+  font-family: 'Outfit', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom Premium Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.05);
+}
+[data-bs-theme="dark"] ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.2);
+  border-radius: 9999px;
+}
+[data-bs-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 211, 153, 0.5);
+}
+
+/* Base Form Controls & Styles */
+.sidebar-logo {
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+  display: block;
+  margin: 0 auto 15px;
+  border-radius: 12px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.sidebar-logo:hover {
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+}
+
+/* Grid & Textareas for Converter */
+.camel {
+  height: 520px;
 }
 
 .camel-schema-div {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* 반응형 그리드 설정 */
-    grid-gap: 20px; /* 간격 설정 */
-
-    .camel-schema-tex {
-        width: 96%;
-        height: 350px;
-    }
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-gap: 20px;
 }
 
+.camel-schema-tex {
+  width: 100%;
+  height: 250px;
+}
+
+/* Table styling if any */
 .table {
-    border-collapse: separate; /* 셀 경계를 분리하여 구분선을 만듭니다. */
-    border-spacing: 0; /* 셀 경계 사이의 간격을 없앱니다. */
-    width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--nav-border);
 }
 
 .table th,
 .table td {
-  border: 1px solid #dddddd; /* 각 셀에 경계를 만듭니다. */
-  padding: 10px;
+  padding: 14px;
   text-align: left;
 }
 
 .table th {
-  background-color: #7286d5; /* 테이블 헤더 배경색 */
-  font-weight: bold; /* 헤더 글꼴을 굵게 지정합니다. */
+  background-color: rgba(52, 211, 153, 0.1);
+  font-weight: 700;
+  color: var(--nav-active-text);
+  border-bottom: 1px solid var(--nav-border);
 }
 
 .table td {
-  background-color: #ffffff; /* 테이블 내용 배경색 */
+  background-color: rgba(255, 255, 255, 0.02);
+  color: var(--nav-text);
 }
 
-/* 짝수 행과 홀수 행에 대해 다른 배경색 적용 */
-.table tr:nth-child(even) {
-  background-color: #f9f9f9;
+.table tr:nth-child(even) td {
+  background-color: rgba(255, 255, 255, 0.04);
 }
 
-.table tr:nth-child(odd) {
-  background-color: #e6e6e6;
+/* Global Dark/Light Mode CSS Variables */
+:root, [data-bs-theme="dark"] {
+  --nav-bg: rgba(15, 23, 42, 0.65);
+  --nav-border: rgba(255, 255, 255, 0.08);
+  --nav-text: #f8fafc;
+  --nav-hover-bg: rgba(255, 255, 255, 0.06);
+  --nav-active-bg: rgba(52, 211, 153, 0.12);
+  --nav-active-text: #34d399;
+
+  /* Card and editor dark mode variables */
+  --card-bg: rgba(30, 41, 59, 0.45);
+  --card-header-bg: rgba(255, 255, 255, 0.02);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --textarea-bg: rgba(15, 23, 42, 0.25);
+  --textarea-text: #f1f5f9;
+  --textarea-output-bg: rgba(8, 10, 20, 0.5);
+  --input-bg: rgba(15, 23, 42, 0.6);
+  --chip-bg: rgba(255, 255, 255, 0.03);
+  --switch-bg: rgba(255, 255, 255, 0.05);
 }
 
-.sidebar-logo {
-  width: 100%; /* 부모 요소의 너비를 가득 채움 */
-  max-width: 200px; /* 최대 너비 제한 */
-  height: auto; /* 가로 비율 유지 */
-  display: block;
-  margin: 0 auto 15px; /* 중앙 정렬 + 하단 여백 */
-  border-radius: 8px; /* 둥근 모서리 */
-  transition: transform 0.3s ease-in-out;
+[data-bs-theme="light"] {
+  --nav-bg: rgba(248, 250, 252, 0.75);
+  --nav-border: rgba(15, 23, 42, 0.06);
+  --nav-text: #0f172a;
+  --nav-hover-bg: rgba(15, 23, 42, 0.04);
+  --nav-active-bg: rgba(52, 211, 153, 0.10);
+  --nav-active-text: #059669;
+
+  /* Card and editor light mode variables */
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --card-header-bg: rgba(15, 23, 42, 0.02);
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --textarea-bg: rgba(255, 255, 255, 0.65);
+  --textarea-text: #0f172a;
+  --textarea-output-bg: rgba(248, 250, 252, 0.65);
+  --input-bg: rgba(255, 255, 255, 0.95);
+  --chip-bg: rgba(15, 23, 42, 0.03);
+  --switch-bg: rgba(15, 23, 42, 0.05);
 }
 
-.sidebar-logo:hover {
-  transform: scale(1.05); /* 마우스 호버 시 확대 효과 */
+/* ======================================================= */
+/* Premium Code Editor & Card Styling (Global Layout)     */
+/* ======================================================= */
+.editor-grid {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 24px;
 }
 
-.checkbox-group {
-    display: flex;
-    gap: 20px;          /* 항목(item) 사이의 간격 */
-    align-items: center; /* 세로 중앙 정렬 */
+.editor-card {
+  flex: 1;
+  background: var(--card-bg);
+  border: 1px solid var(--nav-border);
+  border-radius: 16px; /* Cohesive rounded corners */
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
-.item {
-    display: flex;
-    align-items: center;
-    gap: 5px;           /* 체크박스와 글자 사이의 간격 */
+.editor-card:hover {
+  border-color: rgba(52, 211, 153, 0.3);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25), 0 0 15px rgba(52, 211, 153, 0.05);
+}
+
+.editor-card:focus-within {
+  border-color: var(--nav-active-text);
+  box-shadow: 0 0 0 1px var(--nav-active-text), 
+              0 0 25px rgba(52, 211, 153, 0.18),
+              0 15px 45px rgba(0, 0, 0, 0.3);
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background: var(--card-header-bg);
+  border-bottom: 1px solid var(--nav-border);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.code-textarea {
+  flex: 1 1 auto;
+  overflow: auto;
+  width: 100%;
+  padding: 18px;
+  background: transparent; /* Seamless blend inside editor-card */
+  border: none; /* Discard internal borders to prevent double-bordering */
+  color: var(--textarea-text);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  min-height: 250px;
+  box-sizing: border-box;
+  transition: background-color 0.3s ease;
+}
+
+.code-textarea:focus {
+  background: rgba(15, 23, 42, 0.15); /* Sleek backdrop highlight on edit focus */
+}
+
+[data-bs-theme="light"] .code-textarea:focus {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.output-area {
+  background: var(--textarea-output-bg) !important;
+  color: var(--textarea-text);
+  margin: 0;
+  border-radius: 0;
+}
+
+/* Premium Scrollbars inside the textareas */
+.code-textarea::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.code-textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.code-textarea::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  transition: all 0.3s ease;
+}
+
+[data-bs-theme="light"] .code-textarea::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.12);
+}
+
+.code-textarea::-webkit-scrollbar-thumb:hover {
+  background: var(--nav-active-text);
 }

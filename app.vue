@@ -7,7 +7,7 @@
       <div 
         class="nav-container draggable-panel"
         :class="{ dragging: navIsDragging }"
-        @mousedown="startNavDrag"
+        @mousedown.stop="startNavDrag"
         :style="{ transform: `translate(${navPosition.x}px, ${navPosition.y}px)` }"
       >
         <div class="nav-item" @click="toggleMain">
@@ -131,6 +131,10 @@ useHead({
       rel: 'icon',
       type: 'image/jpg',
       href: '/dog.jpg'
+    },
+    {
+      rel: 'stylesheet',
+      href: 'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap'
     }
   ],
 })
@@ -529,44 +533,69 @@ onUnmounted(() => {
   justify-content: space-between;
   max-width: 1800px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 30px;
+  gap: 30px;
 }
 
 .left-panel-wrapper {
-    position: relative;
-    z-index: 10;
-    width: 220px;
-    margin-top: 11rem;
+  position: relative;
+  z-index: 10;
+  width: 240px;
+  margin-top: 11rem;
 }
 
 .nav-container {
-    position: absolute;
-    top: 0;
-    width: 100%;
-    box-sizing: border-box;
-    background-color: var(--nav-bg);
-    padding: 10px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    border: 1px solid var(--nav-border);
+  position: absolute;
+  top: 0;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--nav-bg);
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--nav-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.nav-container.dragging {
+  cursor: grabbing;
+  transition: none !important;
 }
 
 .nav-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px;
-    background-color: var(--nav-bg);
-    border-radius: 8px;
-    margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background-color: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  border: 1px solid var(--nav-border);
+  transition: all 0.3s ease;
+}
+
+.nav-item:hover {
+  border-color: rgba(52, 211, 153, 0.3);
+  background-color: var(--nav-hover-bg);
 }
 
 .icon {
-  width: 20px;
-  height: 20px;
-  transition: transform 0.3s ease;
+  width: 18px;
+  height: 18px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   color: var(--nav-text);
+  opacity: 0.8;
+}
+
+.icon:hover {
+  opacity: 1;
+  color: #34d399;
 }
 
 .rotated {
@@ -574,47 +603,56 @@ onUnmounted(() => {
 }
 
 .sub-menu {
-  padding-left: 20px;
-  margin-top: 5px;
+  padding-left: 14px;
+  margin-top: 6px;
   display: flex;
   flex-direction: column;
+  gap: 6px;
 }
 
 .custom-link {
-    user-select: none; /* 텍스트 드래그 방지 */
-    text-decoration: none;
-    color: var(--nav-text);
-    padding: 10px 15px;
-    background-color: var(--nav-bg);
-    border-radius: 8px;
-    transition: background-color 0.3s ease, color 0.3s ease;
-    display: block;
-    box-sizing: border-box;
-    text-align: center;
-    font-weight: bold;
-    border: 1px solid var(--nav-border);
-    word-break: break-all;
+  user-select: none;
+  text-decoration: none;
+  color: var(--nav-text);
+  padding: 10px 14px;
+  background-color: rgba(255, 255, 255, 0.01);
+  border-radius: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: block;
+  box-sizing: border-box;
+  text-align: center;
+  font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  border: 1px solid var(--nav-border);
+  word-break: break-all;
 }
 
 .custom-link:hover {
-    background-color: var(--nav-hover-bg);
-    color: var(--nav-text);
+  background-color: var(--nav-hover-bg);
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52, 211, 153, 0.15);
 }
 
 .custom-link.router-link-active {
-    background-color: var(--nav-active-bg);
-    color: var(--nav-active-text);
-    border: none;
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.2) 0%, rgba(96, 165, 250, 0.2) 100%);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  box-shadow: 0 4px 15px rgba(52, 211, 153, 0.25);
 }
 
 .sub-menu .custom-link:hover {
-  background-color: #2c3e50; /* 서브 메뉴 hover 시 배경색 */
+  background-color: rgba(52, 211, 153, 0.1);
+  color: #34d399;
 }
 
 .content {
   flex: 1;
   margin-left: 20px;
-  max-width: calc(90% - 200px);
+  max-width: calc(90% - 240px);
 }
 
 /* 반응형 스타일 */
@@ -623,6 +661,7 @@ onUnmounted(() => {
     flex-direction: column;
     align-items: stretch;
     padding: 15px;
+    gap: 15px;
   }
 
   .left-panel-wrapper {
@@ -634,25 +673,24 @@ onUnmounted(() => {
     margin-bottom: 20px;
   }
 
-  /* 반응형 상태에서 드래그 가능 패널들을 일반 문서 흐름(static/relative)으로 복원 */
   .nav-container,
   .mini-stats-widget {
     position: relative !important;
     top: auto !important;
     left: auto !important;
-    transform: none !important; /* 드래그 위치 초기화 */
+    transform: none !important;
     width: 100% !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
   }
 
   .nav-item {
     justify-content: space-between;
-    padding: 15px;
+    padding: 14px;
   }
 
   .sub-menu {
     padding-left: 0;
-    margin-top: 10px;
+    margin-top: 8px;
   }
 
   .content {
@@ -662,7 +700,6 @@ onUnmounted(() => {
     width: 100%;
   }
 
-  /* 사이드바 가로 배치로 변경 */
   .sidebar {
     width: 100%;
     position: static;
@@ -684,24 +721,29 @@ onUnmounted(() => {
 }
 
 .sidebar {
-  width: 280px; /* 오른쪽 사이드바 너비 */
+  width: 280px;
   padding: 20px;
-  border-radius: 10px;
-  color: #fff;
+  border-radius: 16px;
   position: sticky;
-  top: 20px; /* 스크롤 시 상단 고정 */
-  align-self: flex-start; /* 콘텐츠 높이에 맞추기 */
-  user-select: none; /* 텍스트 선택 방지 */
+  top: 20px;
+  align-self: flex-start;
+  user-select: none;
   -webkit-user-select: none;
+  background: var(--nav-bg);
+  border: 1px solid var(--nav-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .sidebar-logo {
-  -webkit-user-drag: none; /* 이미지 고스트 드래그 방지 */
+  -webkit-user-drag: none;
   user-select: none;
   -webkit-user-select: none;
 }
 
 .sidebar h3 {
+  font-family: 'Outfit', sans-serif;
   font-size: 1.2rem;
   margin-bottom: 10px;
 }
@@ -709,10 +751,14 @@ onUnmounted(() => {
 .sidebar ul {
   list-style: none;
   padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 .sidebar li {
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
 .sidebar a {
@@ -759,26 +805,6 @@ onUnmounted(() => {
   transition: transform 0.5s ease;
 }
 
-/* 다크/라이트 모드용 CSS 변수 정의 */
-:root, [data-bs-theme="dark"] {
-  --nav-bg: rgba(15, 23, 42, 0.65); /* 반투명 다크 블루 */
-  --nav-border: rgba(255, 255, 255, 0.08);
-  --nav-text: #f8fafc;
-  --nav-hover-bg: rgba(255, 255, 255, 0.08);
-  --nav-active-bg: rgba(52, 211, 153, 0.15);
-  --nav-active-text: #34d399;
-}
-
-[data-bs-theme="light"] {
-  --nav-bg: rgba(248, 250, 252, 0.8); /* 반투명 라이트 그레이 */
-  --nav-border: rgba(15, 23, 42, 0.08);
-  --nav-text: #0f172a;
-  --nav-hover-bg: rgba(0, 0, 0, 0.05);
-  --nav-active-bg: rgba(52, 211, 153, 0.15);
-  --nav-active-text: #059669;
-}
-
-/* 사이드바 글자색 동기화 */
 .sidebar {
   color: var(--nav-text) !important;
 }
