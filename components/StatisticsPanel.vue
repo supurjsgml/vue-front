@@ -37,7 +37,7 @@
       <button class="close-btn" @click.stop="$emit('close')">×</button>
       
       <div class="header-section">
-        <h1 class="page-title">내가 한거 아니에요 젬미나이가 한거에요 디자인 몰라요;;</h1>
+        <h1 class="page-title">내가 한거 아니에요 쥄놔이가 한거에요 디자인 몰라요;;</h1>
         <p class="page-subtitle">Real-time visualization of page visits and traffic</p>
       </div>
       
