@@ -73,7 +73,7 @@ export default defineEventHandler(async (event): Promise<any> => {
       data: {
         label: "주간 방문자 (1주)",
         value: total.toLocaleString('en-US'),
-        description: "낄낄낄",
+        description: "껄껄",
         trend: trend,
         trendDirection: trendDirection,
         sparklineValues: sparklineValues,
