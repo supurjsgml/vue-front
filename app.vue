@@ -6,7 +6,8 @@
         v-if="showGlobalDog"
         class="global-dog-container"
         :style="globalDogContainerStyle"
-        @click="onDogClick"
+        @mousedown.stop="startGlobalDogDrag"
+        @mouseenter="onDogHover"
       >
         <NuxtImg
           src="/dog.jpg"
@@ -578,15 +579,18 @@ const gvx = ref(1.8);
 const gvy = ref(1.4);
 const gRotation = ref(0);
 const gRotationSpeed = ref(0.4);
+const gBounceCount = ref(0);
 
 const showSpeechBubble = ref(false);
 const bubbleText = ref('끄어억!');
 let bubbleTimer: any = null;
 
-const onDogClick = () => {
+const onDogHover = () => {
+  if (gIsDragging.value) return;
+  
   const messages = [
     '끄어어억...',
-    '끄어억! 살려',
+    '끄어억! 살려주;.세.',
     '끄어',
     '끄어억멍!!',
     '💤',
@@ -604,6 +608,90 @@ const onDogClick = () => {
   }, 5000);
 };
 
+// Speech bubble persists for 5s, mouseleave handler is removed
+
+const gIsDragging = ref(false);
+let lastMouseX = 0;
+let lastMouseY = 0;
+let lastDragTime = 0;
+let dragHasMoved = false;
+
+const startGlobalDogDrag = (event: MouseEvent) => {
+  if (event.button !== 0) return; // Only allow left-clicks
+  
+  gIsDragging.value = true;
+  dragHasMoved = false;
+  
+  const initialMouseX = event.clientX;
+  const initialMouseY = event.clientY;
+  const initialDogX = gx.value;
+  const initialDogY = gy.value;
+  
+  lastMouseX = event.clientX;
+  lastMouseY = event.clientY;
+  lastDragTime = performance.now();
+  
+  const onDrag = (e: MouseEvent) => {
+    if (!gIsDragging.value) return;
+    
+    dragHasMoved = true;
+    
+    const dx = e.clientX - initialMouseX;
+    const dy = e.clientY - initialMouseY;
+    
+    const viewWidth = window.innerWidth;
+    const viewHeight = window.innerHeight;
+    
+    gx.value = Math.min(viewWidth - globalDogWidth.value, Math.max(0, initialDogX + dx));
+    gy.value = Math.min(viewHeight - globalDogHeight.value, Math.max(0, initialDogY + dy));
+    
+    const currentTime = performance.now();
+    const dt = currentTime - lastDragTime;
+    
+    if (dt > 10) {
+      const distMouseX = e.clientX - lastMouseX;
+      const distMouseY = e.clientY - lastMouseY;
+      
+      const instVx = distMouseX / (dt / 16.67);
+      const instVy = distMouseY / (dt / 16.67);
+      
+      gvx.value = gvx.value * 0.4 + instVx * 0.6;
+      gvy.value = gvy.value * 0.4 + instVy * 0.6;
+      
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+      lastDragTime = currentTime;
+    }
+  };
+  
+  const stopDrag = () => {
+    gIsDragging.value = false;
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('mouseup', stopDrag);
+    
+    gBounceCount.value = 0; // Reset bounce count on release
+    
+    const speed = Math.sqrt(gvx.value * gvx.value + gvy.value * gvy.value);
+    const maxSpeed = 8;
+    const minSpeed = 1.2;
+    
+    if (speed > maxSpeed) {
+      const ratio = maxSpeed / speed;
+      gvx.value *= ratio;
+      gvy.value *= ratio;
+    } else if (speed < minSpeed) {
+      const angle = Math.random() * Math.PI * 2;
+      gvx.value = Math.cos(angle) * minSpeed;
+      gvy.value = Math.sin(angle) * minSpeed;
+    }
+    
+    // Speech bubble is now hover-based, no need for click trigger here
+  };
+  
+  document.addEventListener('mousemove', onDrag);
+  document.addEventListener('mouseup', stopDrag);
+};
+
 const globalDogContainerStyle = computed(() => {
   return {
     position: 'fixed' as const,
@@ -614,7 +702,7 @@ const globalDogContainerStyle = computed(() => {
     display: showGlobalDog.value ? 'block' : 'none',
     zIndex: 0,
     pointerEvents: 'auto' as const,
-    cursor: 'pointer' as const
+    cursor: gIsDragging.value ? 'grabbing' : 'grab'
   };
 });
 
@@ -641,6 +729,11 @@ let gAngleOffset = 0;
 
 const animateGlobalDog = () => {
   if (!showGlobalDog.value) return;
+  if (gIsDragging.value) {
+    gRotation.value = (gRotation.value + gRotationSpeed.value) % 360;
+    gAnimationFrameId = requestAnimationFrame(animateGlobalDog);
+    return;
+  }
 
   const viewWidth = window.innerWidth;
   const viewHeight = window.innerHeight;
@@ -676,6 +769,18 @@ const animateGlobalDog = () => {
     gRotationSpeed.value = -gRotationSpeed.value * 1.05;
     if (Math.abs(gRotationSpeed.value) > 1.5) {
       gRotationSpeed.value = Math.sign(gRotationSpeed.value) * 1.0;
+    }
+    
+    gBounceCount.value++;
+    if (gBounceCount.value >= 5) {
+      const currentSpeed = Math.sqrt(gvx.value * gvx.value + gvy.value * gvy.value);
+      if (currentSpeed > 0) {
+        const targetSpeed = 1.6;
+        const ratio = targetSpeed / currentSpeed;
+        gvx.value *= ratio;
+        gvy.value *= ratio;
+      }
+      gBounceCount.value = 0;
     }
   }
   
@@ -963,6 +1068,16 @@ onUnmounted(() => {
   margin-left: 20px;
   position: relative;
   z-index: 1;
+  pointer-events: none;
+}
+
+.content :deep(.converter-header),
+.content :deep(.glass-card),
+.content :deep(.editor-card),
+.content :deep(.download-bar),
+.content :deep(iframe),
+.content :deep(.draggable) {
+  pointer-events: auto;
 }
 
 /* 반응형 스타일 */
