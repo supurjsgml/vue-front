@@ -96,17 +96,118 @@
   display: flex;
   justify-content: space-between;
   width: 100%;
-  margin-top: 4px;
-  padding: 0 2px;
+  margin-top: 8px;
+  padding: 0 4px;
   box-sizing: border-box;
 }
 
 .days-row span {
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   color: #64748b;
   font-weight: 600;
+  position: relative;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.days-row span:hover,
+.days-row span.active {
+  color: var(--nav-text);
+  background: rgba(52, 211, 153, 0.1);
 }
 
 .days-row span.today {
   color: #34d399;
+}
+
+/* Sparkline dots styling */
+.sparkline-dot {
+  opacity: 0;
+  transform-origin: center;
+  transition: opacity 0.25s ease, r 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.mini-stats-widget:hover .sparkline-dot {
+  opacity: 0.35;
+}
+
+.sparkline-dot.active,
+.mini-stats-widget:hover .sparkline-dot.active {
+  opacity: 1;
+  r: 5.5;
+  fill: #34d399;
+  stroke: #ffffff;
+}
+
+[data-bs-theme="dark"] .sparkline-dot.active,
+[data-bs-theme="dark"] .mini-stats-widget:hover .sparkline-dot.active {
+  stroke: #0f172a;
+}
+
+/* CSS Tooltip on days hover */
+.days-row span::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-2px);
+  background: rgba(15, 23, 42, 0.95);
+  color: #ffffff;
+  padding: 4px 8px;
+  font-size: 0.65rem;
+  font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+  font-weight: 700;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+  z-index: 10;
+}
+
+[data-bs-theme="light"] .days-row span::after {
+  background: rgba(255, 255, 255, 0.98);
+  color: #0f172a;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.05);
+}
+
+/* Tooltip Arrow */
+.days-row span::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(2px);
+  border-width: 4px 4px 0;
+  border-style: solid;
+  border-color: rgba(15, 23, 42, 0.95) transparent transparent;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 10;
+}
+
+[data-bs-theme="light"] .days-row span::before {
+  border-color: rgba(255, 255, 255, 0.98) transparent transparent;
+}
+
+/* Slide up animations on hover or active */
+.days-row span:hover::after,
+.days-row span.active::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-6px);
+}
+
+.days-row span:hover::before,
+.days-row span.active::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(-2px);
 }

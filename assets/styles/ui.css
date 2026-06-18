@@ -1,4 +1,7 @@
-/* Global Typography & Layout */
+html, body {
+  overflow-x: hidden;
+}
+
 body {
   font-family: 'Outfit', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;

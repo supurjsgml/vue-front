@@ -1,6 +1,28 @@
 <template>
   <div class="container">
     <canvas ref="rippleCanvas" class="global-ripple-canvas"></canvas>
+    <ClientOnly>
+      <div
+        v-if="showGlobalDog"
+        class="global-dog-container"
+        :style="globalDogContainerStyle"
+        @click="onDogClick"
+      >
+        <NuxtImg
+          src="/dog.jpg"
+          alt="견희"
+          class="global-bouncing-dog"
+          :style="globalDogImgStyle"
+          draggable="false"
+          @dragstart.prevent
+        />
+        <Transition name="fade-bubble">
+          <div v-if="showSpeechBubble" class="speech-bubble">
+            {{ bubbleText }}
+          </div>
+        </Transition>
+      </div>
+    </ClientOnly>
     <!-- 왼쪽 패널 그룹 -->
     <div class="left-panel-wrapper">
       <!-- 메인 네비게이션 영역 (개별 드래그) -->
@@ -66,13 +88,31 @@
               stroke-linejoin="round"
               class="sparkline-path"
             />
+            <!-- Interactive Dots on the Sparkline -->
+            <circle
+              v-for="(pt, index) in sparklinePoints"
+              :key="index"
+              :cx="pt.x"
+              :cy="pt.y"
+              r="4"
+              fill="#34d399"
+              stroke="#ffffff"
+              stroke-width="1.5"
+              class="sparkline-dot"
+              :class="{ active: hoveredIndex === index }"
+              @mouseenter="hoveredIndex = index"
+              @mouseleave="hoveredIndex = null"
+            />
           </svg>
         </div>
         <div class="days-row">
           <span 
             v-for="(day, index) in statsData.days" 
             :key="index"
-            :class="{ today: day === '오늘' }"
+            :class="{ today: day === '오늘', active: hoveredIndex === index }"
+            :data-tooltip="statsData.sparklineValues && statsData.sparklineValues[index] !== undefined ? `${statsData.sparklineValues[index]}명` : '0명'"
+            @mouseenter="hoveredIndex = index"
+            @mouseleave="hoveredIndex = null"
           >
             {{ day }}
           </span>
@@ -185,6 +225,25 @@ const sparklinePaths = computed(() => {
     line: linePath,
     fill: fillPath
   };
+})
+
+const hoveredIndex = ref<number | null>(null)
+
+const sparklinePoints = computed(() => {
+  const values = statsData.value.sparklineValues || [];
+  if (values.length === 0) return [];
+  
+  const width = 200;
+  const height = 50;
+  const maxVal = Math.max(...values, 10);
+  const minVal = 0;
+  const range = maxVal - minVal;
+  
+  return values.map((val, index) => {
+    const x = (index / (values.length - 1)) * width;
+    const y = height - (val / range) * (height - 10) - 5;
+    return { x, y, val };
+  });
 })
 
 const fetchStats = async () => {
@@ -506,11 +565,168 @@ onMounted(async () => {
   }
 });
 
+const showGlobalDog = computed(() => {
+  return route.path !== '/';
+});
+
+const globalDogWidth = ref(180);
+const globalDogHeight = ref(180);
+
+const gx = ref(100);
+const gy = ref(100);
+const gvx = ref(1.8);
+const gvy = ref(1.4);
+const gRotation = ref(0);
+const gRotationSpeed = ref(0.4);
+
+const showSpeechBubble = ref(false);
+const bubbleText = ref('끄어억!');
+let bubbleTimer: any = null;
+
+const onDogClick = () => {
+  const messages = [
+    '끄어어억...',
+    '끄어억! 살려',
+    '끄어',
+    '끄어억멍!!',
+    '💤',
+    '끼이이이ㄱㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣ'
+  ];
+  const randomIndex = Math.floor(Math.random() * messages.length);
+  bubbleText.value = messages[randomIndex];
+  showSpeechBubble.value = true;
+
+  if (bubbleTimer) {
+    clearTimeout(bubbleTimer);
+  }
+  bubbleTimer = setTimeout(() => {
+    showSpeechBubble.value = false;
+  }, 5000);
+};
+
+const globalDogContainerStyle = computed(() => {
+  return {
+    position: 'fixed' as const,
+    left: `${gx.value}px`,
+    top: `${gy.value}px`,
+    width: `${globalDogWidth.value}px`,
+    height: `${globalDogHeight.value}px`,
+    display: showGlobalDog.value ? 'block' : 'none',
+    zIndex: 0,
+    pointerEvents: 'auto' as const,
+    cursor: 'pointer' as const
+  };
+});
+
+const globalDogImgStyle = computed(() => {
+  return {
+    transform: `rotate(${gRotation.value}deg)`,
+    width: '100%',
+    height: '100%',
+    objectFit: 'contain' as const,
+    borderRadius: '50%',
+    background: 'rgba(255, 255, 255, 0.05)',
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
+    padding: '10px',
+    boxSizing: 'border-box' as const,
+    border: '2px solid rgba(52, 211, 153, 0.3)',
+    boxShadow: '0 8px 25px rgba(52, 211, 153, 0.2), 0 4px 10px rgba(0, 0, 0, 0.3)',
+    display: 'block'
+  };
+});
+
+let gAnimationFrameId: number;
+let gAngleOffset = 0;
+
+const animateGlobalDog = () => {
+  if (!showGlobalDog.value) return;
+
+  const viewWidth = window.innerWidth;
+  const viewHeight = window.innerHeight;
+
+  gx.value += gvx.value;
+  gy.value += gvy.value;
+  
+  gRotation.value = (gRotation.value + gRotationSpeed.value) % 360;
+  
+  let bounced = false;
+  
+  if (gx.value < 0) {
+    gx.value = 0;
+    gvx.value = Math.abs(gvx.value);
+    bounced = true;
+  } else if (gx.value + globalDogWidth.value > viewWidth) {
+    gx.value = viewWidth - globalDogWidth.value;
+    gvx.value = -Math.abs(gvx.value);
+    bounced = true;
+  }
+  
+  if (gy.value < 0) {
+    gy.value = 0;
+    gvy.value = Math.abs(gvy.value);
+    bounced = true;
+  } else if (gy.value + globalDogHeight.value > viewHeight) {
+    gy.value = viewHeight - globalDogHeight.value;
+    gvy.value = -Math.abs(gvy.value);
+    bounced = true;
+  }
+  
+  if (bounced) {
+    gRotationSpeed.value = -gRotationSpeed.value * 1.05;
+    if (Math.abs(gRotationSpeed.value) > 1.5) {
+      gRotationSpeed.value = Math.sign(gRotationSpeed.value) * 1.0;
+    }
+  }
+  
+  gAnimationFrameId = requestAnimationFrame(animateGlobalDog);
+};
+
+const updateGlobalDogDimensions = () => {
+  if (!process.client) return;
+  const size = window.innerWidth > 768 ? 180 : 120;
+  globalDogWidth.value = size;
+  globalDogHeight.value = size;
+};
+
+const toggleGlobalDogAnimation = (isActive: boolean) => {
+  if (!process.client) return;
+  if (isActive) {
+    const viewWidth = window.innerWidth;
+    const viewHeight = window.innerHeight;
+    gx.value = Math.random() * (viewWidth - globalDogWidth.value);
+    gy.value = Math.random() * (viewHeight - globalDogHeight.value);
+
+    const initialAngle = Math.random() * Math.PI * 2;
+    const initialSpeed = 1.4;
+    gvx.value = Math.cos(initialAngle) * initialSpeed;
+    gvy.value = Math.sin(initialAngle) * initialSpeed;
+
+    updateGlobalDogDimensions();
+    window.addEventListener('resize', updateGlobalDogDimensions);
+    
+    cancelAnimationFrame(gAnimationFrameId);
+    gAnimationFrameId = requestAnimationFrame(animateGlobalDog);
+  } else {
+    window.removeEventListener('resize', updateGlobalDogDimensions);
+    cancelAnimationFrame(gAnimationFrameId);
+  }
+};
+
+watch(showGlobalDog, (newVal) => {
+  if (process.client) {
+    toggleGlobalDogAnimation(newVal);
+  }
+}, { immediate: true });
+
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize);
   window.removeEventListener('mousemove', handleGlobalMouseMove);
   window.removeEventListener('mouseleave', handleGlobalMouseLeave);
   cancelAnimationFrame(animationFrameId);
+
+  window.removeEventListener('resize', updateGlobalDogDimensions);
+  cancelAnimationFrame(gAnimationFrameId);
 });
 </script>
 
@@ -525,6 +741,98 @@ onUnmounted(() => {
   height: 100vh;
   pointer-events: none;
   z-index: -1;
+}
+
+.global-dog-container {
+  position: fixed !important;
+  z-index: 0;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.global-bouncing-dog {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Speech bubble styling */
+.speech-bubble {
+  position: absolute;
+  bottom: 115%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #34d399;
+  color: #0f172a;
+  padding: 8px 14px;
+  border-radius: 16px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(52, 211, 153, 0.3), 0 4px 8px rgba(0, 0, 0, 0.15);
+  font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+  pointer-events: none;
+  z-index: 100;
+  user-select: none;
+}
+
+[data-bs-theme="dark"] .speech-bubble {
+  background: rgba(15, 23, 42, 0.95);
+  border-color: #34d399;
+  color: #f8fafc;
+  box-shadow: 0 8px 25px rgba(52, 211, 153, 0.4), 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* Speech bubble arrows */
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 8px;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.95) transparent transparent transparent;
+}
+
+[data-bs-theme="dark"] .speech-bubble::after {
+  border-color: rgba(15, 23, 42, 0.95) transparent transparent transparent;
+}
+
+.speech-bubble::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 10px;
+  border-style: solid;
+  border-color: #34d399 transparent transparent transparent;
+}
+
+/* Cute bounce transitions for bubble */
+.fade-bubble-enter-active {
+  animation: bubble-bounce 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.fade-bubble-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.fade-bubble-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -10px) scale(0.9);
+}
+
+@keyframes bubble-bounce {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 15px) scale(0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
 }
 
 .container {
@@ -651,8 +959,10 @@ onUnmounted(() => {
 
 .content {
   flex: 1;
+  min-width: 0; /* Allows content area to shrink below its default content size */
   margin-left: 20px;
-  max-width: calc(90% - 240px);
+  position: relative;
+  z-index: 1;
 }
 
 /* 반응형 스타일 */
@@ -723,6 +1033,7 @@ onUnmounted(() => {
 .sidebar {
   width: 280px;
   padding: 20px;
+  box-sizing: border-box; /* Ensures padding does not increase the sidebar's width */
   border-radius: 16px;
   position: sticky;
   top: 20px;
@@ -734,6 +1045,7 @@ onUnmounted(() => {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  z-index: 1;
 }
 
 .sidebar-logo {
