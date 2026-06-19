@@ -1,7 +1,12 @@
 <template>
   <div class="container">
     <canvas ref="rippleCanvas" class="global-ripple-canvas"></canvas>
-    <ClientOnly>
+    
+    <!-- 배경 고정 블랙홀 위젯 -->
+    <WidgetBlackHole class="black-hole-bg-widget" />
+    
+    <div class="main-ui-wrapper" :style="containerWarpStyle">
+      <ClientOnly>
       <div
         v-if="showGlobalDog"
         class="global-dog-container"
@@ -28,6 +33,7 @@
     <div class="left-panel-wrapper">
       <!-- 메인 네비게이션 영역 (개별 드래그) -->
       <div 
+        tabindex="0"
         class="nav-container draggable-panel"
         :class="{ dragging: navIsDragging }"
         @mousedown.stop="startNavDrag"
@@ -50,6 +56,7 @@
 
       <!-- Mini Stats Widget (개별 드래그) -->
       <div 
+        tabindex="0"
         class="mini-stats-widget draggable-panel" 
         :class="{ dragging: statsIsDragging }"
         @click="openStatsModalIfNoDrag" 
@@ -148,6 +155,7 @@
         </li>
       </ul>
     </aside>
+    </div>
 
     <!-- 테마 토글 버튼 -->
     <button class="theme-toggle-btn" @click="toggleTheme" title="테마 변경">
@@ -156,6 +164,7 @@
     </button>
 
     <StatisticsPanel v-if="showStatsModal" @close="showStatsModal = false" />
+    <div class="big-bang-overlay" :style="bigBangOverlayStyle"></div>
   </div>
 </template>
 
@@ -179,6 +188,122 @@ useHead({
     }
   ],
 })
+
+// 블랙홀 종말 및 빅뱅 상태 동기화 관리
+const animationTick = ref(0);
+const bhPhase = ref('idle');
+const bhProgress = ref(0);
+const windowHeight = ref(1000);
+
+if (process.client) {
+  windowHeight.value = window.innerHeight;
+  window.addEventListener('resize', () => {
+    windowHeight.value = window.innerHeight;
+  });
+}
+
+// 실시간 동기화 위상 연산
+const updateBlackHolePhase = () => {
+  const loopTime = 40000;
+  const t = Date.now() % loopTime;
+
+  if (t < 25000) {
+    bhPhase.value = 'grow';
+    bhProgress.value = t / 25000;
+  } else if (t < 27500) {
+    bhPhase.value = 'collapse';
+    bhProgress.value = (t - 25000) / 2500;
+  } else if (t < 29000) {
+    bhPhase.value = 'bigbang';
+    bhProgress.value = (t - 27500) / 1500;
+  } else if (t < 34000) {
+    bhPhase.value = 'recover';
+    bhProgress.value = (t - 29000) / 5000;
+  } else {
+    bhPhase.value = 'idle';
+    bhProgress.value = (t - 34000) / 6000;
+  }
+};
+
+const containerWarpStyle = computed(() => {
+  // Vue 리액티비티 의존성 등록
+  const tick = animationTick.value;
+  
+  updateBlackHolePhase();
+  const phase = bhPhase.value;
+  const prog = bhProgress.value;
+  const h = windowHeight.value;
+
+  // 블랙홀의 중심 (X = 250, Y = h - 250)
+  const originX = 250;
+  const originY = h - 250;
+
+  if (phase === 'grow') {
+    // 성장기: 미세한 요동
+    const shake = Math.sin(Date.now() * 0.04) * (prog * 1.5);
+    return {
+      transformOrigin: `${originX}px ${originY}px`,
+      transform: `translate(${shake}px, ${shake}px)`,
+    };
+  } else if (phase === 'collapse') {
+    // 붕괴기: 블랙홀로 순식간에 회전하며 스케일 0으로 수축
+    const scale = Math.max(0, 1.0 - prog);
+    const rotate = -prog * 360;
+    return {
+      transformOrigin: `${originX}px ${originY}px`,
+      transform: `scale(${scale}) rotate(${rotate}deg)`,
+      filter: `blur(${prog * 15}px) contrast(${1.0 + prog * 3.0})`,
+      transition: 'none',
+    };
+  } else if (phase === 'bigbang') {
+    // 빅뱅: 격렬한 쉐이크 바운스백
+    const scale = prog * 1.15;
+    const shake = (Math.random() - 0.5) * 40 * (1.0 - prog);
+    return {
+      transformOrigin: `${originX}px ${originY}px`,
+      transform: `scale(${Math.min(1.0, scale)}) translate(${shake}px, ${shake}px)`,
+      filter: 'none',
+      transition: 'transform 0.08s ease-out',
+    };
+  } else if (phase === 'recover') {
+    // 복구기: 부드럽게 고정
+    return {
+      transformOrigin: `${originX}px ${originY}px`,
+      transform: 'scale(1.0)',
+      filter: 'none',
+      transition: 'transform 0.5s ease-out',
+    };
+  }
+  
+  return {};
+});
+
+const bigBangOverlayStyle = computed(() => {
+  const phase = bhPhase.value;
+  const prog = bhProgress.value;
+
+  if (phase === 'bigbang') {
+    const opacity = 1.0 - prog;
+    return {
+      display: 'block',
+      backgroundColor: '#ffffff',
+      opacity: opacity,
+      zIndex: 9999,
+    };
+  } else if (phase === 'recover') {
+    return {
+      display: 'block',
+      backgroundColor: '#ffffff',
+      opacity: Math.max(0, 0.2 - prog) * 5.0,
+      pointerEvents: 'none' as const,
+      zIndex: 9999,
+    };
+  }
+
+  return {
+    display: 'none',
+  };
+});
 
 const isMainOpen = ref(true)
 const showStatsModal = ref(false)
@@ -321,11 +446,22 @@ function useDraggable() {
 
   function startDrag(event: MouseEvent) {
     if (event.button !== 0) return // 왼쪽 클릭만 허용
+    
+    // 텍스트 드래그 선택이 발생하는 기본 이벤트를 차단하고 포커스를 활성화합니다.
+    event.preventDefault()
+    if (event.currentTarget instanceof HTMLElement) {
+      event.currentTarget.focus()
+    }
+    
     isDragging.value = true
     hasMoved.value = false
     dragOffset.value = {
       x: event.clientX - position.value.x,
       y: event.clientY - position.value.y
+    }
+    
+    if (process.client) {
+      document.body.classList.add('dragging-active')
     }
 
     const onDrag = (e: MouseEvent) => {
@@ -343,6 +479,9 @@ function useDraggable() {
 
     const stopDrag = () => {
       isDragging.value = false
+      if (process.client) {
+        document.body.classList.remove('dragging-active')
+      }
       document.removeEventListener("mousemove", onDrag)
       document.removeEventListener("mouseup", stopDrag)
     }
@@ -433,10 +572,16 @@ const animateBackground = (time: number) => {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
+  // 리액티비티 갱신 트리거
+  animationTick.value++;
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   mouse.x += (mouse.targetX - mouse.x) * 0.1;
   mouse.y += (mouse.targetY - mouse.y) * 0.1;
+
+  const bhCenterX = 250;
+  const bhCenterY = canvas.height - 250;
 
   for (let i = 0; i < points.length; i++) {
     const p = points[i];
@@ -447,6 +592,35 @@ const animateBackground = (time: number) => {
 
     const targetX = p.originX + waveX;
     const targetY = p.originY + waveY;
+
+    // 블랙홀의 시공간 왜곡(중력 당김) 계산
+    const bhDx = bhCenterX - p.x;
+    const bhDy = bhCenterY - p.y;
+    const bhDist = Math.sqrt(bhDx * bhDx + bhDy * bhDy);
+    
+    let gravityX = 0;
+    let gravityY = 0;
+    if (bhDist > 20) {
+      let pullPower = 4500;
+      const phase = bhPhase.value;
+      const prog = bhProgress.value;
+
+      if (phase === 'grow') {
+        pullPower = 4500 + prog * 65000; // 최대 15배 강력하게 빨아들임
+      } else if (phase === 'collapse') {
+        pullPower = 69500 + prog * 180000; // 우주 붕괴 시 완전 수축 유도
+      } else if (phase === 'bigbang') {
+        pullPower = -25000 * (1.0 - prog); // 대폭발 팽창 시 반발력 발생
+      } else if (phase === 'recover') {
+        pullPower = 4500 * prog;
+      }
+
+      const limit = phase === 'collapse' ? 90 : 25;
+      const pull = Math.min(limit, pullPower / (bhDist * bhDist));
+      const bhAngle = Math.atan2(bhDy, bhDx);
+      gravityX = Math.cos(bhAngle) * pull;
+      gravityY = Math.sin(bhAngle) * pull;
+    }
 
     // Mouse interactive force pushing nodes away
     const dx = p.x - mouse.x;
@@ -466,8 +640,8 @@ const animateBackground = (time: number) => {
     const ax = (targetX - p.x) * spring;
     const ay = (targetY - p.y) * spring;
 
-    p.vx += ax;
-    p.vy += ay;
+    p.vx += ax + gravityX;
+    p.vy += ay + gravityY;
     p.vx *= damping;
     p.vy *= damping;
 
@@ -580,6 +754,8 @@ const gvy = ref(1.4);
 const gRotation = ref(0);
 const gRotationSpeed = ref(0.4);
 const gBounceCount = ref(0);
+const globalDogScale = ref(1.0);
+const isSuckedIn = ref(false);
 
 const showSpeechBubble = ref(false);
 const bubbleText = ref('끄어억!');
@@ -594,7 +770,7 @@ const onDogHover = () => {
     '끄어',
     '끄어억멍!!',
     '💤',
-    '끼이이이ㄱㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣ'
+    '끼이이이ㄱㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣ',
   ];
   const randomIndex = Math.floor(Math.random() * messages.length);
   bubbleText.value = messages[randomIndex];
@@ -700,9 +876,11 @@ const globalDogContainerStyle = computed(() => {
     width: `${globalDogWidth.value}px`,
     height: `${globalDogHeight.value}px`,
     display: showGlobalDog.value ? 'block' : 'none',
-    zIndex: 0,
+    zIndex: 100,
     pointerEvents: 'auto' as const,
-    cursor: gIsDragging.value ? 'grabbing' : 'grab'
+    cursor: gIsDragging.value ? 'grabbing' : 'grab',
+    transform: `scale(${globalDogScale.value})`,
+    transition: gIsDragging.value ? 'none' : 'transform 0.1s ease'
   };
 });
 
@@ -729,6 +907,125 @@ let gAngleOffset = 0;
 
 const animateGlobalDog = () => {
   if (!showGlobalDog.value) return;
+
+  const dogCenterX = gx.value + globalDogWidth.value / 2;
+  const dogCenterY = gy.value + globalDogHeight.value / 2;
+
+  // 배경 고정 블랙홀 중심 좌표 계산
+  const bhCenterX = 250;
+  const bhCenterY = window.innerHeight - 250;
+
+  if (!gIsDragging.value) {
+    const dx = bhCenterX - dogCenterX;
+    const dy = bhCenterY - dogCenterY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    // 대종말 위상에 따른 견희 강제 삼킴 및 복구 연동
+    const phase = bhPhase.value;
+    const prog = bhProgress.value;
+
+    if (phase === 'collapse') {
+      isSuckedIn.value = true;
+      gx.value += (bhCenterX - globalDogWidth.value / 2 - gx.value) * 0.3;
+      gy.value += (bhCenterY - globalDogHeight.value / 2 - gy.value) * 0.3;
+      globalDogScale.value = Math.max(0, globalDogScale.value - 0.1);
+      gRotation.value += 25;
+      gAnimationFrameId = requestAnimationFrame(animateGlobalDog);
+      return;
+    }
+
+    if (phase === 'bigbang') {
+      isSuckedIn.value = false;
+      globalDogScale.value = 0; // 빅뱅 폭발 시 잠시 숨김
+      gAnimationFrameId = requestAnimationFrame(animateGlobalDog);
+      return;
+    }
+
+    if (phase === 'recover') {
+      // 폭발 후 우주 창조 시점에 서서히 스케일 업
+      globalDogScale.value = prog;
+    }
+
+    if (isSuckedIn.value) {
+      // 1단계: 사건의 지평선 내부로 나선 회전하며 축소 흡수
+      gx.value += (bhCenterX - globalDogWidth.value / 2 - gx.value) * 0.15;
+      gy.value += (bhCenterY - globalDogHeight.value / 2 - gy.value) * 0.15;
+      globalDogScale.value = Math.max(0, globalDogScale.value - 0.05);
+      gRotationSpeed.value = gRotationSpeed.value * 1.1 + 0.8;
+
+      if (globalDogScale.value <= 0.02) {
+        // 2단계: 완전히 빨려 들어간 뒤 맵의 모서리(랜덤)로 순간 이동 및 재생성
+        isSuckedIn.value = false;
+        globalDogScale.value = 1.0;
+        gRotationSpeed.value = 0.4;
+
+        const viewWidth = window.innerWidth;
+        const viewHeight = window.innerHeight;
+        const corners = [
+          { x: 50, y: 50 },
+          { x: viewWidth - globalDogWidth.value - 50, y: 50 },
+          { x: 50, y: viewHeight - globalDogHeight.value - 50 },
+          { x: viewWidth - globalDogWidth.value - 50, y: viewHeight - globalDogHeight.value - 50 }
+        ];
+        const randomCorner = corners[Math.floor(Math.random() * corners.length)];
+        gx.value = randomCorner.x;
+        gy.value = randomCorner.y;
+
+        const initialAngle = Math.random() * Math.PI * 2;
+        const initialSpeed = 1.4;
+        gvx.value = Math.cos(initialAngle) * initialSpeed;
+        gvy.value = Math.sin(initialAngle) * initialSpeed;
+
+        bubbleText.value = '살려주세요 살려주세요 살려주세요어억!!!!';
+        showSpeechBubble.value = true;
+        if (bubbleTimer) clearTimeout(bubbleTimer);
+        bubbleTimer = setTimeout(() => {
+          showSpeechBubble.value = false;
+        }, 5000);
+      }
+
+      gRotation.value = (gRotation.value + gRotationSpeed.value) % 360;
+      gAnimationFrameId = requestAnimationFrame(animateGlobalDog);
+      return;
+    } else if (dist < 65) {
+      // 아주 근접할 시 흡수 프로세스 트리거
+      isSuckedIn.value = true;
+      showSpeechBubble.value = true;
+      if (bubbleTimer) clearTimeout(bubbleTimer);
+    } else {
+      // 성장기에 따라 견희의 최대 끌어당김 반경을 확장 (280px -> 최대 500px)
+      const range = 280 + (phase === 'grow' ? prog * 220 : 0);
+      
+      if (dist < range) {
+        const pullForce = (range - dist) / range;
+        const angle = Math.atan2(dy, dx);
+        const pullScale = 0.35 + (phase === 'grow' ? prog * 2.5 : 0);
+        
+        gvx.value += Math.cos(angle) * pullForce * pullScale;
+        gvy.value += Math.sin(angle) * pullForce * pullScale;
+
+        // 최대 속도 제어
+        const currentSpeed = Math.sqrt(gvx.value * gvx.value + gvy.value * gvy.value);
+        if (currentSpeed > 6.0) {
+          gvx.value = (gvx.value / currentSpeed) * 6.0;
+          gvy.value = (gvy.value / currentSpeed) * 6.0;
+        }
+
+        // 회전 속도 급증
+        gRotationSpeed.value = gRotationSpeed.value * 0.95 + Math.sign(gRotationSpeed.value) * pullForce * 1.8;
+
+        if (Math.random() < 0.02) {
+          bubbleText.value = Math.random() < 0.5 ? '어어.. 끌려들어간다!' : '끄어어어억! 살려줘!';
+          showSpeechBubble.value = true;
+          if (bubbleTimer) clearTimeout(bubbleTimer);
+          bubbleTimer = setTimeout(() => {
+            showSpeechBubble.value = false;
+          }, 1500);
+        }
+      }
+    }
+  }
+
   if (gIsDragging.value) {
     gRotation.value = (gRotation.value + gRotationSpeed.value) % 360;
     gAnimationFrameId = requestAnimationFrame(animateGlobalDog);
@@ -941,12 +1238,16 @@ onUnmounted(() => {
 }
 
 .container {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
   max-width: 1800px;
   margin: 0 auto;
   padding: 30px;
+}
+
+.main-ui-wrapper {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 100%;
   gap: 30px;
 }
 
@@ -1083,9 +1384,12 @@ onUnmounted(() => {
 /* 반응형 스타일 */
 @media (max-width: 768px) {
   .container {
+    padding: 15px;
+  }
+
+  .main-ui-wrapper {
     flex-direction: column;
     align-items: stretch;
-    padding: 15px;
     gap: 15px;
   }
 
@@ -1234,5 +1538,25 @@ onUnmounted(() => {
 
 .sidebar {
   color: var(--nav-text) !important;
+}
+
+.black-hole-bg-widget {
+  position: fixed !important;
+  bottom: 150px;
+  left: 150px;
+  width: 200px;
+  height: 200px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.big-bang-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  mix-blend-mode: screen;
 }
 </style>
