@@ -153,9 +153,9 @@
             <div class="editor-card">
                 <div class="editor-header">
                     <span>Camel Output</span>
-                    <button class="btn-copy-floating" @click.prevent="copyOutput">Copy</button>
+                    <button class="btn-copy-floating" @click.prevent="copyOutput($event)">Copy</button>
                 </div>
-                <pre class="code-textarea camel output-area" v-html="highlightedCode"></pre>
+                <pre tabindex="0" class="code-textarea camel output-area" v-html="highlightedCode" @keydown.ctrl.a.prevent="selectAllText" @keydown.meta.a.prevent="selectAllText" @mousedown="focusPre" @click="focusPre"></pre>
             </div>
         </div>
 
@@ -180,18 +180,36 @@
             <div class="editor-card output-card-large">
                 <div class="editor-header">
                     <span>Generated Java DTO/VO Code</span>
-                    <button class="btn-copy-floating" @click.prevent="copyOutput">Copy</button>
+                    <button class="btn-copy-floating" @click.prevent="copyOutput($event)">Copy</button>
                 </div>
-                <pre class="code-textarea output-area-large" v-html="highlightedCode"></pre>
+                <pre tabindex="0" class="code-textarea output-area-large" v-html="highlightedCode" @keydown.ctrl.a.prevent="selectAllText" @keydown.meta.a.prevent="selectAllText" @mousedown="focusPre" @click="focusPre"></pre>
             </div>
         </div>
     </div>
 </template>
 <script setup lang="ts">
 
-import { onMounted, ref, computed, reactive, watch, nextTick } from 'vue';
+import { onMounted, onUnmounted, ref, computed, reactive, watch, nextTick } from 'vue';
 import { camelStore } from "~/stores/camel";
 import downBt from "~/components/button/downBt.vue";
+
+const selectAllText = (event: KeyboardEvent) => {
+    const target = event.currentTarget as HTMLElement;
+    if (!target) return;
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(target);
+    if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+};
+
+const focusPre = (event: MouseEvent) => {
+    (event.currentTarget as HTMLElement).focus();
+};
+
+let globalKeydownHandler: ((e: KeyboardEvent) => void) | null = null;
 
 // HTML escaping helper
 function escapeHtml(text: string): string {
@@ -273,12 +291,12 @@ const genFile = async () => {
     document.body.removeChild(link);
 }
 
-const copyOutput = () => {
+const copyOutput = (event: MouseEvent) => {
     if (!output.value) return;
     navigator.clipboard.writeText(output.value).then(() => {
-        alert('변환된 결과가 클립보드에 복사되었습니다.');
+        showCopyToast(event, '클립보드에 복사 되었습니다.');
     }).catch(err => {
-        alert('클립보드 복사에 실패했습니다: ' + err);
+        showCopyToast(event, '실패 했찌롱 : ' + err);
     });
 }
 
@@ -325,7 +343,37 @@ const tableOptions = ref(false);
 
 onMounted(() => {
     convert();
-})
+    
+    globalKeydownHandler = (event: KeyboardEvent) => {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
+            const selection = window.getSelection();
+            if (selection && selection.rangeCount > 0) {
+                const anchorNode = selection.anchorNode;
+                if (anchorNode) {
+                    let node: Node | null = anchorNode;
+                    while (node) {
+                        if (node instanceof HTMLElement && (node.classList.contains('output-area') || node.classList.contains('output-area-large'))) {
+                            event.preventDefault();
+                            const range = document.createRange();
+                            range.selectNodeContents(node);
+                            selection.removeAllRanges();
+                            selection.addRange(range);
+                            return;
+                        }
+                        node = node.parentNode;
+                    }
+                }
+            }
+        }
+    };
+    window.addEventListener('keydown', globalKeydownHandler);
+});
+
+onUnmounted(() => {
+    if (globalKeydownHandler) {
+        window.removeEventListener('keydown', globalKeydownHandler);
+    }
+});
 
 watch(
     () => checked.value, 
@@ -1003,5 +1051,9 @@ const triggerDblClick = (checkbox: any) => {
 .output-area :deep(.token-variable),
 .output-area-large :deep(.token-variable) {
   color: var(--token-variable);
+}
+.output-area:focus,
+.output-area-large:focus {
+  outline: none;
 }
 </style>

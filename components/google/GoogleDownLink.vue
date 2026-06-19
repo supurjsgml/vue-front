@@ -27,7 +27,7 @@
                 <div class="editor-card">
                     <div class="editor-header">
                         <span>다운로드 링크</span>
-                        <button class="btn-copy-floating" @click.prevent="copyToClipboard">링크복사</button>
+                        <button class="btn-copy-floating" @click.prevent="copyToClipboard($event)">링크복사</button>
                     </div>
                     <textarea class="code-textarea output-area" readonly placeholder="변환된 링크가 여기에 표시됩니다...">{{ downloadLinks.join('\n') }}</textarea>
                 </div>
@@ -61,12 +61,13 @@ function convertLinks(param: string) {
 }
 
 // 클립보드로 복사
-function copyToClipboard() {
+function copyToClipboard(event: MouseEvent) {
     const text = downloadLinks.value.join('\n');
+    if (!text) return;
     navigator.clipboard.writeText(text).then(() => {
-        alert('다운로드 링크가 클립보드에 복사되었습니다.');
+        showCopyToast(event, '복사 완료!');
     }).catch(err => {
-        alert('복사에 실패했습니다: ' + err);
+        showCopyToast(event, '복사 실패: ' + err);
     });
 }
 

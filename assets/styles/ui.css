@@ -245,3 +245,35 @@ body {
 .code-textarea::-webkit-scrollbar-thumb:hover {
   background: var(--nav-active-text);
 }
+
+/* Copy floating tooltip */
+.copy-tooltip-floating {
+  padding: 6px 14px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  color: #34d399;
+  border-radius: 8px;
+  font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), 0 0 10px rgba(52, 211, 153, 0.15);
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 4px) scale(0.95) !important;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.copy-tooltip-floating.visible {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1) !important;
+}
+
+[data-bs-theme="light"] .copy-tooltip-floating {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(5, 150, 105, 0.4);
+  color: #059669;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1), 0 0 10px rgba(5, 150, 105, 0.1);
+}
+
