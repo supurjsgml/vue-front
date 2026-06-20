@@ -31,7 +31,7 @@
 
     <div class="main-ui-wrapper" :style="containerWarpStyle">
       <!-- 왼쪽 패널 그룹 -->
-      <div class="left-panel-wrapper" :style="leftPanelWarpStyle">
+      <div class="left-panel-wrapper" :class="{ 'is-collapsing': bhPhase === 'collapse' }" :style="leftPanelWarpStyle">
       <!-- 메인 네비게이션 영역 (개별 드래그) -->
       <div 
         tabindex="0"
@@ -130,14 +130,14 @@
     </div> <!-- End of left-panel-wrapper -->
 
     <!-- 콘텐츠 영역 -->
-    <div class="content" :style="contentWarpStyle">
+    <div class="content" :class="{ 'is-collapsing': bhPhase === 'collapse' }" :style="contentWarpStyle">
       <NuxtLayout>
         <NuxtPage />
       </NuxtLayout>
     </div>
 
     <!-- 오른쪽 홍보 링크 영역 -->
-    <aside class="sidebar" :style="sidebarWarpStyle">
+    <aside class="sidebar" :class="{ 'is-collapsing': bhPhase === 'collapse' }" :style="sidebarWarpStyle">
       <ul>
         <li>
           <a :href="useRuntimeConfig().public.restApi" target="_blank">
@@ -159,7 +159,7 @@
     </div>
 
     <!-- 테마 토글 버튼 -->
-    <button class="theme-toggle-btn" :style="themeWarpStyle" @click="toggleTheme" title="테마 변경">
+    <button class="theme-toggle-btn" :class="{ 'is-collapsing': bhPhase === 'collapse' }" :style="themeWarpStyle" @click="toggleTheme" title="테마 변경">
       <SunIcon v-if="isDarkMode" class="theme-icon" />
       <MoonIcon v-else class="theme-icon" />
     </button>
@@ -221,20 +221,41 @@ const updateBlackHolePhase = () => {
   } else if (t < 42000) {
     bhPhase.value = 'bigbang';
     bhProgress.value = (t - 40000) / 2000;
-  } else if (t < 46000) {
+  } else if (t < 50000) {
     bhPhase.value = 'recover';
-    bhProgress.value = (t - 42000) / 4000; // 8초에서 4초로 단축
+    bhProgress.value = (t - 42000) / 8000;
   } else {
     bhPhase.value = 'idle';
-    bhProgress.value = (t - 46000) / 14000; // 대기 시간 14초로 조정하여 루프 총 60초 유지
+    bhProgress.value = (t - 50000) / 10000;
   }
 };
 
 const containerStyle = computed(() => {
   if (!isMounted.value) return {};
+  const phase = bhPhase.value;
+  const prog = bhProgress.value;
   const h = windowHeight.value;
+  const w = windowWidth.value;
+
+  const bhCenterY = h - 250;
+
+  if (phase === 'collapse') {
+    const initialRadius = 170;
+    const targetRadius = Math.sqrt(w * w + h * h) + 200;
+    const currentRadius = initialRadius + (targetRadius - initialRadius) * prog;
+    const innerRadius = Math.max(0, currentRadius - 70);
+    const outerRadius = currentRadius + 70;
+
+    return {
+      '--bh-y': `${bhCenterY}px`,
+      '--bh-mask-radius-inner': `${innerRadius}px`,
+      '--bh-mask-radius-outer': `${outerRadius}px`,
+    };
+  }
   return {
     '--bh-y': `${h - 250}px`,
+    '--bh-mask-radius-inner': `0px`,
+    '--bh-mask-radius-outer': `0px`,
   };
 });
 
@@ -248,7 +269,6 @@ const leftPanelWarpStyle = computed(() => {
   const phase = bhPhase.value;
   const prog = bhProgress.value;
   const h = windowHeight.value;
-  const tick = animationTick.value;
 
   const dx = 250 - 170;
   const dy = (h - 250) - 450;
@@ -256,46 +276,27 @@ const leftPanelWarpStyle = computed(() => {
   if (phase === 'collapse') {
     const localBhX = 250 - leftRect.value.left;
     const localBhY = (h - 250) - leftRect.value.top;
-
-    const speed = 0.15;
-    const shift = 0;
-    const angleX = Math.sin(tick * speed + shift) * prog * 10;
-    const angleY = Math.cos(tick * speed * 0.8 + shift) * prog * 10;
-
-    // 흡입 모션 연산
-    const suckStart = 0.55;
-    const suckProg = prog >= suckStart ? (prog - suckStart) / (1.0 - suckStart) : 0;
-    const scaleMult = 1.0 - suckProg;
-    const scaleX = (1.0 + Math.sin(tick * speed * 1.2 + shift) * prog * 0.08) * scaleMult;
-    const scaleY = (1.0 + Math.cos(tick * speed * 1.1 + shift) * prog * 0.08) * scaleMult;
-
-    const pullX = localBhX * Math.pow(suckProg, 1.8);
-    const pullY = localBhY * Math.pow(suckProg, 1.8);
-    const translateX = Math.cos(tick * speed * 1.5 + shift) * prog * 12 + pullX;
-    const translateY = Math.sin(tick * speed * 1.3 + shift) * prog * 12 + pullY;
-
-    const spiralRotate = suckProg * 90 * (shift % 2 === 0 ? 1 : -1);
-
     return {
       pointerEvents: 'none' as const,
       transition: 'none',
       '--local-bh-x': `${localBhX}px`,
       '--local-bh-y': `${localBhY}px`,
-      transform: `translate3d(${translateX}px, ${translateY}px, 0) rotate(${spiralRotate}deg) skew(${angleX}deg, ${angleY}deg) scale(${scaleX}, ${scaleY})`,
-      opacity: 1.0 - suckProg,
-      willChange: 'transform, opacity',
     };
   } else if (phase === 'bigbang') {
     return { opacity: 0, filter: 'blur(12px)', pointerEvents: 'none' as const };
   } else if (phase === 'recover') {
-    // 제자리에서 페이드인 + 블러 해제 (회전/이동/스케일 삭제)
     const localProg = Math.min(1.0, Math.max(0, (prog - 0.4) / 0.6));
     const invProg = 1.0 - localProg;
+    const tx = dx * invProg;
+    const ty = dy * invProg;
+    const scale = localProg;
+    const rotate = -invProg * 360;
 
     return {
+      transform: `translate(${tx}px, ${ty}px) scale(${scale}) rotate(${rotate}deg)`,
       opacity: localProg,
       filter: `blur(${invProg * 8}px)`,
-      transition: 'opacity 0.5s ease-out, filter 0.5s ease-out'
+      transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease-out'
     };
   }
   return {};
@@ -308,7 +309,6 @@ const contentWarpStyle = computed(() => {
   const prog = bhProgress.value;
   const h = windowHeight.value;
   const w = windowWidth.value;
-  const tick = animationTick.value;
 
   const dx = 250 - (w / 2);
   const dy = (h - 250) - (h / 2);
@@ -316,46 +316,27 @@ const contentWarpStyle = computed(() => {
   if (phase === 'collapse') {
     const localBhX = 250 - contentRect.value.left;
     const localBhY = (h - 250) - contentRect.value.top;
-
-    const speed = 0.15;
-    const shift = 1.2;
-    const angleX = Math.sin(tick * speed + shift) * prog * 10;
-    const angleY = Math.cos(tick * speed * 0.8 + shift) * prog * 10;
-
-    // 흡입 모션 연산
-    const suckStart = 0.80;
-    const suckProg = prog >= suckStart ? (prog - suckStart) / (1.0 - suckStart) : 0;
-    const scaleMult = 1.0 - suckProg;
-    const scaleX = (1.0 + Math.sin(tick * speed * 1.2 + shift) * prog * 0.08) * scaleMult;
-    const scaleY = (1.0 + Math.cos(tick * speed * 1.1 + shift) * prog * 0.08) * scaleMult;
-
-    const pullX = localBhX * Math.pow(suckProg, 1.8);
-    const pullY = localBhY * Math.pow(suckProg, 1.8);
-    const translateX = Math.cos(tick * speed * 1.5 + shift) * prog * 12 + pullX;
-    const translateY = Math.sin(tick * speed * 1.3 + shift) * prog * 12 + pullY;
-
-    const spiralRotate = suckProg * 90 * (shift % 2 === 0 ? 1 : -1);
-
     return {
       pointerEvents: 'none' as const,
       transition: 'none',
       '--local-bh-x': `${localBhX}px`,
       '--local-bh-y': `${localBhY}px`,
-      transform: `translate3d(${translateX}px, ${translateY}px, 0) rotate(${spiralRotate}deg) skew(${angleX}deg, ${angleY}deg) scale(${scaleX}, ${scaleY})`,
-      opacity: 1.0 - suckProg,
-      willChange: 'transform, opacity',
     };
   } else if (phase === 'bigbang') {
     return { opacity: 0, filter: 'blur(12px)', pointerEvents: 'none' as const };
   } else if (phase === 'recover') {
-    // 제자리에서 페이드인 + 블러 해제 (회전/이동/스케일 삭제)
     const localProg = Math.min(1.0, Math.max(0, (prog - 0.2) / 0.6));
     const invProg = 1.0 - localProg;
+    const tx = dx * invProg;
+    const ty = dy * invProg;
+    const scale = localProg;
+    const rotate = -invProg * 270;
 
     return {
+      transform: `translate(${tx}px, ${ty}px) scale(${scale}) rotate(${rotate}deg)`,
       opacity: localProg,
       filter: `blur(${invProg * 8}px)`,
-      transition: 'opacity 0.5s ease-out, filter 0.5s ease-out'
+      transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease-out'
     };
   }
   return {};
@@ -368,7 +349,6 @@ const sidebarWarpStyle = computed(() => {
   const prog = bhProgress.value;
   const h = windowHeight.value;
   const w = windowWidth.value;
-  const tick = animationTick.value;
 
   const dx = 250 - (w - 140);
   const dy = (h - 250) - 250;
@@ -376,46 +356,27 @@ const sidebarWarpStyle = computed(() => {
   if (phase === 'collapse') {
     const localBhX = 250 - sidebarRect.value.left;
     const localBhY = (h - 250) - sidebarRect.value.top;
-
-    const speed = 0.15;
-    const shift = 2.4;
-    const angleX = Math.sin(tick * speed + shift) * prog * 10;
-    const angleY = Math.cos(tick * speed * 0.8 + shift) * prog * 10;
-
-    // 흡입 모션 연산
-    const suckStart = 0.72;
-    const suckProg = prog >= suckStart ? (prog - suckStart) / (1.0 - suckStart) : 0;
-    const scaleMult = 1.0 - suckProg;
-    const scaleX = (1.0 + Math.sin(tick * speed * 1.2 + shift) * prog * 0.08) * scaleMult;
-    const scaleY = (1.0 + Math.cos(tick * speed * 1.1 + shift) * prog * 0.08) * scaleMult;
-
-    const pullX = localBhX * Math.pow(suckProg, 1.8);
-    const pullY = localBhY * Math.pow(suckProg, 1.8);
-    const translateX = Math.cos(tick * speed * 1.5 + shift) * prog * 12 + pullX;
-    const translateY = Math.sin(tick * speed * 1.3 + shift) * prog * 12 + pullY;
-
-    const spiralRotate = suckProg * 90 * (shift % 2 === 0 ? 1 : -1);
-
     return {
       pointerEvents: 'none' as const,
       transition: 'none',
       '--local-bh-x': `${localBhX}px`,
       '--local-bh-y': `${localBhY}px`,
-      transform: `translate3d(${translateX}px, ${translateY}px, 0) rotate(${spiralRotate}deg) skew(${angleX}deg, ${angleY}deg) scale(${scaleX}, ${scaleY})`,
-      opacity: 1.0 - suckProg,
-      willChange: 'transform, opacity',
     };
   } else if (phase === 'bigbang') {
     return { opacity: 0, filter: 'blur(12px)', pointerEvents: 'none' as const };
   } else if (phase === 'recover') {
-    // 제자리에서 페이드인 + blur 해제 (회전/이동/스케일 삭제)
     const localProg = Math.min(1.0, Math.max(0, prog / 0.5));
     const invProg = 1.0 - localProg;
+    const tx = dx * invProg;
+    const ty = dy * invProg;
+    const scale = localProg;
+    const rotate = -invProg * 180;
 
     return {
+      transform: `translate(${tx}px, ${ty}px) scale(${scale}) rotate(${rotate}deg)`,
       opacity: localProg,
       filter: `blur(${invProg * 8}px)`,
-      transition: 'opacity 0.5s ease-out, filter 0.5s ease-out'
+      transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease-out'
     };
   }
   return {};
@@ -427,7 +388,6 @@ const themeWarpStyle = computed(() => {
   const phase = bhPhase.value;
   const prog = bhProgress.value;
   const h = windowHeight.value;
-  const tick = animationTick.value;
 
   const dx = 250 - themeRect.value.left;
   const dy = (h - 250) - themeRect.value.top;
@@ -435,46 +395,27 @@ const themeWarpStyle = computed(() => {
   if (phase === 'collapse') {
     const localBhX = 250 - themeRect.value.left;
     const localBhY = (h - 250) - themeRect.value.top;
-
-    const speed = 0.15;
-    const shift = 3.6;
-    const angleX = Math.sin(tick * speed + shift) * prog * 10;
-    const angleY = Math.cos(tick * speed * 0.8 + shift) * prog * 10;
-
-    // 흡입 모션 연산
-    const suckStart = 0.65;
-    const suckProg = prog >= suckStart ? (prog - suckStart) / (1.0 - suckStart) : 0;
-    const scaleMult = 1.0 - suckProg;
-    const scaleX = (1.0 + Math.sin(tick * speed * 1.2 + shift) * prog * 0.08) * scaleMult;
-    const scaleY = (1.0 + Math.cos(tick * speed * 1.1 + shift) * prog * 0.08) * scaleMult;
-
-    const pullX = localBhX * Math.pow(suckProg, 1.8);
-    const pullY = localBhY * Math.pow(suckProg, 1.8);
-    const translateX = Math.cos(tick * speed * 1.5 + shift) * prog * 12 + pullX;
-    const translateY = Math.sin(tick * speed * 1.3 + shift) * prog * 12 + pullY;
-
-    const spiralRotate = suckProg * 90 * (shift % 2 === 0 ? 1 : -1);
-
     return {
       pointerEvents: 'none' as const,
       transition: 'none',
       '--local-bh-x': `${localBhX}px`,
       '--local-bh-y': `${localBhY}px`,
-      transform: `translate3d(${translateX}px, ${translateY}px, 0) rotate(${spiralRotate}deg) skew(${angleX}deg, ${angleY}deg) scale(${scaleX}, ${scaleY})`,
-      opacity: 1.0 - suckProg,
-      willChange: 'transform, opacity',
     };
   } else if (phase === 'bigbang') {
     return { opacity: 0, filter: 'blur(12px)', pointerEvents: 'none' as const };
   } else if (phase === 'recover') {
-    // 제자리에서 페이드인 + 블러 해제 (회전/이동/스케일 삭제)
     const localProg = Math.min(1.0, Math.max(0, prog / 0.5));
     const invProg = 1.0 - localProg;
+    const tx = dx * invProg;
+    const ty = dy * invProg;
+    const scale = localProg;
+    const rotate = -invProg * 180;
 
     return {
+      transform: `translate(${tx}px, ${ty}px) scale(${scale}) rotate(${rotate}deg)`,
       opacity: localProg,
       filter: `blur(${invProg * 8}px)`,
-      transition: 'opacity 0.5s ease-out, filter 0.5s ease-out'
+      transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease-out'
     };
   }
   return {};
@@ -756,8 +697,6 @@ interface FragmentParticle {
   y: number;
   startX: number;
   startY: number;
-  lastX?: number; // 실시간 잔상용 이전 좌표
-  lastY?: number; // 실시간 잔상용 이전 좌표
   color: string;
   size: number;
   angle: number;
@@ -842,8 +781,6 @@ const spawnDustParticles = (group: 'left' | 'content' | 'sidebar' | 'theme', rec
       y: ry,
       startX: rx,
       startY: ry,
-      lastX: rx,
-      lastY: ry,
       color: color,
       size: size,
       angle: 0,
@@ -1034,7 +971,7 @@ const animateBackground = (time: number) => {
     }
   } else {
     collapseTriggered = false;
-    if (phase !== 'bigbang' && phase !== 'recover') {
+    if (phase !== 'bigbang') {
       uiFragments.length = 0;
     }
   }
@@ -1042,12 +979,7 @@ const animateBackground = (time: number) => {
   if (uiFragments.length > 0) {
     for (let i = 0; i < uiFragments.length; i++) {
       const p = uiFragments[i];
-      // recover 단계에서는 복원 물리 연산을 위해 비활성화되었던 입자들도 전부 처리함
-      if (!p.active && phase !== 'recover') continue;
-
-      // 이전 프레임 좌표 기록 (실시간 잔상용)
-      p.lastX = p.x;
-      p.lastY = p.y;
+      if (!p.active) continue;
 
       if (phase === 'collapse') {
         if (!p.activated) {
@@ -1098,56 +1030,19 @@ const animateBackground = (time: number) => {
             p.active = false;
           }
         }
-      } else if (phase === 'recover') {
-        // 복구 페이즈: 나노입자들이 원래 위치로 역나선 조립
-        p.active = true; // 비활성화되었던 입자들도 복원 단계를 위해 강제 활성화
-        const assembleProg = Math.min(1.0, prog * 1.3); // 약 3초(77%) 시점에 조립 완료되도록 설정
-        const invProg = 1.0 - assembleProg;
-        
-        // 각 입자의 각도 및 반경을 원래 위치로 수렴시키면서 나선 회전(1바퀴 반 정도) 가미
-        const angleOffset = invProg * Math.PI * 3.0 * (p.angularSpeed > 0 ? 1 : -1);
-        const spiralX = bhCenterX + Math.cos(p.angle + angleOffset) * p.radius;
-        const spiralY = bhCenterY + Math.sin(p.angle + angleOffset) * p.radius;
-        
-        p.x = p.startX * assembleProg + spiralX * invProg;
-        p.y = p.startY * assembleProg + spiralY * invProg;
-        p.opacity = Math.min(1.0, assembleProg * 2.0); // 조립되면서 서서히 선명해짐
       }
 
       if (p.activated && p.active && p.opacity > 0) {
-        if (p.lastX !== undefined && p.lastY !== undefined) {
-          const dx = p.x - p.lastX;
-          const dy = p.y - p.lastY;
-          const travel = Math.sqrt(dx * dx + dy * dy);
-
-          // 1.2px 이상 움직였을 경우에만 빛의 잔상 꼬리 렌더링 (Comet Trail)
-          if (travel > 1.2) {
-            // 주 꼬리선
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p.x - dx * 1.5, p.y - dy * 1.5);
-            ctx.strokeStyle = p.color.replace('opacity', (p.opacity * 0.75).toFixed(2));
-            ctx.lineWidth = p.size;
-            ctx.lineCap = 'round';
-            ctx.stroke();
-
-            // 부드러운 오라 빛 번짐 효과
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p.x - dx * 1.5, p.y - dy * 1.5);
-            ctx.strokeStyle = p.color.replace('opacity', (p.opacity * 0.22).toFixed(2));
-            ctx.lineWidth = p.size * 2.5;
-            ctx.lineCap = 'round';
-            ctx.stroke();
-          }
+        if (p.size > 3.5) {
+          // Draw a soft outer glow for large chunks
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * 1.8, 0, Math.PI * 2);
+          ctx.fillStyle = p.color.replace('opacity', (p.opacity * 0.15).toFixed(2));
+          ctx.fill();
         }
-
-        // 중심 광원 코어 렌더링 (폭발/조립 시 백색 발광 처리)
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = phase === 'bigbang' || phase === 'recover'
-          ? `rgba(255, 255, 255, ${p.opacity.toFixed(2)})`
-          : p.color.replace('opacity', p.opacity.toFixed(2));
+        ctx.fillStyle = p.color.replace('opacity', p.opacity.toFixed(2));
         ctx.fill();
       }
     }
@@ -1591,6 +1486,11 @@ onUnmounted(() => {
 
 <style scoped>
 @import url('@/assets/styles/mini-stats.css');
+
+.is-collapsing {
+  mask-image: radial-gradient(circle at 250px var(--bh-y), transparent var(--bh-mask-radius-inner, 0px), black var(--bh-mask-radius-outer, 0px));
+  -webkit-mask-image: radial-gradient(circle at 250px var(--bh-y), transparent var(--bh-mask-radius-inner, 0px), black var(--bh-mask-radius-outer, 0px));
+}
 
 .global-ripple-canvas {
   position: fixed;
