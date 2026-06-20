@@ -1,33 +1,25 @@
 <template>
   <div class="container" :style="containerStyle">
-    <canvas ref="rippleCanvas" class="global-ripple-canvas"></canvas>
+    <!-- 배경 그리드 및 파편 시뮬레이션 컴포넌트 -->
+    <WidgetBackgroundGrid 
+      :bhPhase="bhPhase" 
+      :bhProgress="bhProgress" 
+      :animationTick="animationTick" 
+      :isDarkMode="isDarkMode" 
+      :leftRect="leftRect"
+      :contentRect="contentRect"
+      :sidebarRect="sidebarRect"
+      :themeRect="themeRect"
+    />
     
     <!-- 배경 고정 블랙홀 위젯 -->
     <WidgetBlackHole class="black-hole-bg-widget" />
     
-    <ClientOnly>
-      <div
-        v-if="showGlobalDog"
-        class="global-dog-container"
-        :style="globalDogContainerStyle"
-        @mousedown.stop="startGlobalDogDrag"
-        @mouseenter="onDogHover"
-      >
-        <NuxtImg
-          src="/dog.jpg"
-          alt="견희"
-          class="global-bouncing-dog"
-          :style="globalDogImgStyle"
-          draggable="false"
-          @dragstart.prevent
-        />
-        <Transition name="fade-bubble">
-          <div v-if="showSpeechBubble" class="speech-bubble">
-            {{ bubbleText }}
-          </div>
-        </Transition>
-      </div>
-    </ClientOnly>
+    <!-- 견희 캐릭터 위젯 -->
+    <WidgetGlobalDog 
+      :bhPhase="bhPhase" 
+      :bhProgress="bhProgress" 
+    />
 
     <div class="main-ui-wrapper" :style="containerWarpStyle">
       <!-- 왼쪽 패널 그룹 -->
@@ -46,6 +38,9 @@
       </div>
       <div class="sub-menu" v-if="isMainOpen">
         <NuxtLink class="custom-link" to="/camel" @mousedown.stop>camel</NuxtLink>
+      </div>
+      <div class="sub-menu" v-if="isMainOpen">
+        <NuxtLink class="custom-link" to="/translate" @mousedown.stop>번역쓰</NuxtLink>
       </div>
       <div class="sub-menu" v-if="isMainOpen">
         <NuxtLink class="custom-link" to="/grafana" @mousedown.stop>구라파나</NuxtLink>
@@ -591,6 +586,7 @@ const route = useRoute()
 const getPageNameByPath = (path: string): string => {
   if (path === '/') return 'Main';
   if (path.startsWith('/camel')) return 'Camel';
+  if (path.startsWith('/translate')) return 'Translate';
   if (path.startsWith('/grafana')) return 'Grafana';
   if (path.startsWith('/google')) return 'Google';
   return 'Main';
@@ -639,61 +635,6 @@ function toggleMain(event: Event) {
   isMainOpen.value = !isMainOpen.value
 }
 
-// 커스텀 드래그 훅
-function useDraggable() {
-  const position = ref({ x: 0, y: 0 })
-  const isDragging = ref(false)
-  const dragOffset = ref({ x: 0, y: 0 })
-  const hasMoved = ref(false)
-
-  function startDrag(event: MouseEvent) {
-    if (event.button !== 0) return // 왼쪽 클릭만 허용
-    
-    // 텍스트 드래그 선택이 발생하는 기본 이벤트를 차단하고 포커스를 활성화합니다.
-    event.preventDefault()
-    if (event.currentTarget instanceof HTMLElement) {
-      event.currentTarget.focus()
-    }
-    
-    isDragging.value = true
-    hasMoved.value = false
-    dragOffset.value = {
-      x: event.clientX - position.value.x,
-      y: event.clientY - position.value.y
-    }
-    
-    if (process.client) {
-      document.body.classList.add('dragging-active')
-    }
-
-    const onDrag = (e: MouseEvent) => {
-      if (!isDragging.value) return
-      hasMoved.value = true
-      // 화면 밖으로 나가지 않도록 여유 있게 제한
-      const maxX = window.innerWidth
-      const maxY = window.innerHeight
-      const minX = -window.innerWidth
-      const minY = -window.innerHeight
-
-      position.value.x = Math.min(maxX, Math.max(minX, e.clientX - dragOffset.value.x))
-      position.value.y = Math.min(maxY, Math.max(minY, e.clientY - dragOffset.value.y))
-    }
-
-    const stopDrag = () => {
-      isDragging.value = false
-      if (process.client) {
-        document.body.classList.remove('dragging-active')
-      }
-      document.removeEventListener("mousemove", onDrag)
-      document.removeEventListener("mouseup", stopDrag)
-    }
-
-    document.addEventListener("mousemove", onDrag)
-    document.addEventListener("mouseup", stopDrag)
-  }
-
-  return { position, startDrag, hasMoved, isDragging }
-}
 
 const { position: navPosition, startDrag: startNavDrag, isDragging: navIsDragging } = useDraggable()
 const { position: statsPosition, startDrag: startStatsDrag, hasMoved: statsHasMoved, isDragging: statsIsDragging } = useDraggable()
@@ -703,466 +644,62 @@ function openStatsModalIfNoDrag() {
     showStatsModal.value = true
   }
 }
+const leftRect = ref({ left: 0, top: 0, width: 0, height: 0 })
+const contentRect = ref({ left: 0, top: 0, width: 0, height: 0 })
+const sidebarRect = ref({ left: 0, top: 0, width: 0, height: 0 })
+const themeRect = ref({ left: 0, top: 0, width: 0, height: 0 })
 
-// Background canvas state
-const rippleCanvas = ref<HTMLCanvasElement | null>(null);
-let animationFrameId: number;
-
-const mouse = {
-  x: -1000,
-  y: -1000,
-  targetX: -1000,
-  targetY: -1000,
-  radius: 240, // Larger mouse influence radius for full screen
-};
-
-interface GridPoint {
-  x: number;
-  y: number;
-  originX: number;
-  originY: number;
-  vx: number;
-  vy: number;
+const getActualRect = (selector: string, defaultRect: any) => {
+  if (!process.client) return defaultRect
+  const parent = document.querySelector(selector)
+  if (!parent) return defaultRect
+  
+  const children = parent.children
+  if (children.length === 0) {
+    const r = parent.getBoundingClientRect()
+    return { left: r.left, top: r.top, width: r.width, height: r.height }
+  }
+  
+  let minLeft = Infinity
+  let minTop = Infinity
+  let maxRight = -Infinity
+  let maxBottom = -Infinity
+  let hasValidChild = false
+  
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i]
+    const rect = child.getBoundingClientRect()
+    if (rect.width > 0 && rect.height > 0) {
+      hasValidChild = true
+      if (rect.left < minLeft) minLeft = rect.left
+      if (rect.top < minTop) minTop = rect.top
+      if (rect.right > maxRight) maxRight = rect.right
+      if (rect.bottom > maxBottom) maxBottom = rect.bottom
+    }
+  }
+  
+  if (!hasValidChild) {
+    const r = parent.getBoundingClientRect()
+    return { left: r.left, top: r.top, width: r.width, height: r.height }
+  }
+  
+  return {
+    left: minLeft,
+    top: minTop,
+    width: maxRight - minLeft,
+    height: maxBottom - minTop
+  }
 }
 
-let points: GridPoint[] = [];
-let cols = 0;
-let rows = 0;
-const spacing = 50; // Grid cell spacing
-
-const initGrid = (width: number, height: number) => {
-  points = [];
-  cols = Math.ceil(width / spacing) + 1;
-  rows = Math.ceil(height / spacing) + 1;
-
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const x = c * spacing;
-      const y = r * spacing;
-      points.push({
-        x,
-        y,
-        originX: x,
-        originY: y,
-        vx: 0,
-        vy: 0,
-      });
-    }
-  }
-};
-
-interface FragmentParticle {
-  x: number;
-  y: number;
-  startX: number;
-  startY: number;
-  lastX?: number; // 실시간 잔상용 이전 좌표
-  lastY?: number; // 실시간 잔상용 이전 좌표
-  color: string;
-  size: number;
-  angle: number;
-  radius: number;
-  angularSpeed: number;
-  speed: number;
-  opacity: number;
-  active: boolean;
-  threshold: number;
-  activated: boolean;
-  group: 'left' | 'content' | 'sidebar' | 'theme';
+const updateRects = () => {
+  if (!process.client) return
+  leftRect.value = getActualRect('.left-panel-wrapper', { left: 50, top: 150, width: 240, height: 600 })
+  contentRect.value = getActualRect('.content', { left: 320, top: 100, width: windowWidth.value - 640, height: windowHeight.value - 200 })
+  sidebarRect.value = getActualRect('.sidebar', { left: windowWidth.value - 300, top: 80, width: 250, height: 500 })
+  
+  const themeEl = document.querySelector('.theme-toggle-btn')
+  themeRect.value = themeEl ? themeEl.getBoundingClientRect() : { left: windowWidth.value - 65, top: 20, width: 45, height: 45 }
 }
-
-const uiFragments: FragmentParticle[] = [];
-let collapseTriggered = false;
-
-const leftRect = ref({ left: 0, top: 0, width: 0, height: 0 });
-const contentRect = ref({ left: 0, top: 0, width: 0, height: 0 });
-const sidebarRect = ref({ left: 0, top: 0, width: 0, height: 0 });
-const themeRect = ref({ left: 0, top: 0, width: 0, height: 0 });
-
-const spawnDustParticles = (group: 'left' | 'content' | 'sidebar' | 'theme', rect: { left: number, top: number, width: number, height: number }) => {
-  if (rect.width <= 0 || rect.height <= 0) return;
-  
-  let count = 250;
-  let baseColors: string[] = [];
-  
-  if (group === 'left') {
-    count = 800;
-    baseColors = [
-      'rgba(52, 211, 153, opacity)',  // emerald
-      'rgba(255, 255, 255, opacity)', // white dust
-      'rgba(30, 41, 59, opacity)'     // slate
-    ];
-  } else if (group === 'content') {
-    count = 1600;
-    baseColors = [
-      'rgba(96, 165, 250, opacity)',  // blue
-      'rgba(248, 250, 252, opacity)', // white text
-      'rgba(15, 23, 42, opacity)'     // slate-900
-    ];
-  } else if (group === 'sidebar') {
-    count = 600;
-    baseColors = [
-      'rgba(251, 191, 36, opacity)',  // gold
-      'rgba(255, 255, 255, opacity)', // white
-      'rgba(30, 41, 59, opacity)'     // slate
-    ];
-  } else if (group === 'theme') {
-    count = 150;
-    baseColors = [
-      'rgba(251, 191, 36, opacity)',  // amber
-      'rgba(253, 224, 71, opacity)',  // yellow
-      'rgba(255, 255, 255, opacity)'
-    ];
-  }
-  
-  for (let i = 0; i < count; i++) {
-    const rx = rect.left + Math.random() * rect.width;
-    const ry = rect.top + Math.random() * rect.height;
-    
-    // threshold from top-right to bottom-left:
-    const threshold = ((rect.left + rect.width - rx) / rect.width + (ry - rect.top) / rect.height) / 2;
-    const color = baseColors[Math.floor(Math.random() * baseColors.length)];
-    
-    // Volumetric size distribution:
-    // 60% small dust (0.6 - 1.8px)
-    // 30% medium chunks (1.8 - 3.5px)
-    // 10% large/thick debris (3.5 - 7.5px)
-    const rand = Math.random();
-    let size = 1.0;
-    if (rand < 0.60) {
-      size = Math.random() * 1.2 + 0.6;
-    } else if (rand < 0.90) {
-      size = Math.random() * 1.7 + 1.8;
-    } else {
-      size = Math.random() * 4.0 + 3.5;
-    }
-    
-    uiFragments.push({
-      x: rx,
-      y: ry,
-      startX: rx,
-      startY: ry,
-      lastX: rx,
-      lastY: ry,
-      color: color,
-      size: size,
-      angle: 0,
-      radius: 0,
-      angularSpeed: (Math.random() * 0.022 + 0.012) * (Math.random() < 0.5 ? 1 : -1),
-      speed: Math.random() * 2.0 + 0.8,
-      opacity: 1.0,
-      active: true,
-      threshold: threshold,
-      activated: false,
-      group: group
-    });
-  }
-};
-
-const handleGlobalMouseMove = (e: MouseEvent) => {
-  if (!rippleCanvas.value) return;
-  const rect = rippleCanvas.value.getBoundingClientRect();
-  mouse.targetX = e.clientX - rect.left;
-  mouse.targetY = e.clientY - rect.top;
-};
-
-const handleGlobalMouseLeave = () => {
-  mouse.targetX = -1000;
-  mouse.targetY = -1000;
-};
-
-const spring = 0.025;
-const damping = 0.92;
-const waveSpeed = 0.001;
-const waveAmp = 5;
-
-const animateBackground = (time: number) => {
-  if (!rippleCanvas.value) return;
-  const canvas = rippleCanvas.value;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
-  // 리액티비티 및 페이즈 갱신 트리거
-  updateBlackHolePhase();
-  animationTick.value++;
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  mouse.x += (mouse.targetX - mouse.x) * 0.1;
-  mouse.y += (mouse.targetY - mouse.y) * 0.1;
-
-  const bhCenterX = 250;
-  const bhCenterY = canvas.height - 250;
-
-  for (let i = 0; i < points.length; i++) {
-    const p = points[i];
-
-    // Natural breathing waving motion
-    const waveX = Math.sin(time * waveSpeed + p.originY * 0.01) * 1.5;
-    const waveY = Math.cos(time * waveSpeed + p.originX * 0.01) * waveAmp;
-
-    const targetX = p.originX + waveX;
-    const targetY = p.originY + waveY;
-
-    // 블랙홀의 시공간 왜곡(중력 당김) 계산
-    const bhDx = bhCenterX - p.x;
-    const bhDy = bhCenterY - p.y;
-    const bhDist = Math.sqrt(bhDx * bhDx + bhDy * bhDy);
-    
-    let gravityX = 0;
-    let gravityY = 0;
-    if (bhDist > 20) {
-      let pullPower = 4500;
-      const phase = bhPhase.value;
-      const prog = bhProgress.value;
-
-      if (phase === 'grow') {
-        pullPower = 4500 + prog * 65000; // 최대 15배 강력하게 빨아들임
-      } else if (phase === 'collapse') {
-        pullPower = 69500 + prog * 180000; // 우주 붕괴 시 완전 수축 유도
-      } else if (phase === 'bigbang') {
-        pullPower = -25000 * (1.0 - prog); // 대폭발 팽창 시 반발력 발생
-      } else if (phase === 'recover') {
-        pullPower = 4500 * prog;
-      }
-
-      const limit = phase === 'collapse' ? 90 : 25;
-      const pull = Math.min(limit, pullPower / (bhDist * bhDist));
-      const bhAngle = Math.atan2(bhDy, bhDx);
-      gravityX = Math.cos(bhAngle) * pull;
-      gravityY = Math.sin(bhAngle) * pull;
-    }
-
-    // Mouse interactive force pushing nodes away
-    const dx = p.x - mouse.x;
-    const dy = p.y - mouse.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    if (dist < mouse.radius) {
-      const force = (mouse.radius - dist) / mouse.radius;
-      const angle = Math.atan2(dy, dx);
-      const pushX = Math.cos(angle) * force * 16;
-      const pushY = Math.sin(angle) * force * 16;
-      
-      p.vx += pushX;
-      p.vy += pushY;
-    }
-
-    const ax = (targetX - p.x) * spring;
-    const ay = (targetY - p.y) * spring;
-
-    p.vx += ax + gravityX;
-    p.vy += ay + gravityY;
-    p.vx *= damping;
-    p.vy *= damping;
-
-    p.x += p.vx;
-    p.y += p.vy;
-  }
-
-  // Draw delicate grid lines (dark/light adapted)
-  ctx.beginPath();
-  ctx.strokeStyle = isDarkMode.value ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.04)';
-  ctx.lineWidth = 1;
-
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const idx = r * cols + c;
-      const p = points[idx];
-
-      if (c < cols - 1) {
-        const pRight = points[idx + 1];
-        ctx.moveTo(p.x, p.y);
-        ctx.lineTo(pRight.x, pRight.y);
-      }
-      if (r < rows - 1) {
-        const pBottom = points[idx + cols];
-        ctx.moveTo(p.x, p.y);
-        ctx.lineTo(pBottom.x, pBottom.y);
-      }
-    }
-  }
-  ctx.stroke();
-
-  // Draw subtle glowing dots on intersections close to the mouse
-  const dotColor = isDarkMode.value ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
-  const glowRGB = isDarkMode.value ? '52, 211, 153' : '5, 150, 105'; // teal-400 vs emerald-600
-
-  for (let i = 0; i < points.length; i++) {
-    const p = points[i];
-    const dx = p.x - mouse.x;
-    const dy = p.y - mouse.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    if (dist < mouse.radius) {
-      const ratio = 1 - dist / mouse.radius;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 1.2 + ratio * 2, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${glowRGB}, ${0.05 + ratio * 0.35})`;
-      ctx.fill();
-    } else {
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 0.8, 0, Math.PI * 2);
-      ctx.fillStyle = dotColor;
-      ctx.fill();
-    }
-  }
-
-  // --- 컴포넌트 점진적 분쇄용 파편(Fragment Particles) 연출 시뮬레이션 ---
-  const phase = bhPhase.value;
-  const prog = bhProgress.value;
-
-  if (phase === 'collapse') {
-    if (!collapseTriggered) {
-      const leftEl = document.querySelector('.left-panel-wrapper');
-      const contentEl = document.querySelector('.content');
-      const sidebarEl = document.querySelector('.sidebar');
-      const themeEl = document.querySelector('.theme-toggle-btn');
-
-      leftRect.value = leftEl ? leftEl.getBoundingClientRect() : { left: 50, top: 150, width: 240, height: 600 };
-      contentRect.value = contentEl ? contentEl.getBoundingClientRect() : { left: 320, top: 100, width: canvas.width - 640, height: canvas.height - 200 };
-      sidebarRect.value = sidebarEl ? sidebarEl.getBoundingClientRect() : { left: canvas.width - 300, top: 80, width: 250, height: 500 };
-      themeRect.value = themeEl ? themeEl.getBoundingClientRect() : { left: canvas.width - 65, top: 20, width: 45, height: 45 };
-
-      uiFragments.length = 0;
-      spawnDustParticles('left', leftRect.value);
-      spawnDustParticles('content', contentRect.value);
-      spawnDustParticles('sidebar', sidebarRect.value);
-      spawnDustParticles('theme', themeRect.value);
-
-      collapseTriggered = true;
-    }
-  } else {
-    collapseTriggered = false;
-    if (phase !== 'bigbang' && phase !== 'recover') {
-      uiFragments.length = 0;
-    }
-  }
-
-  if (uiFragments.length > 0) {
-    for (let i = 0; i < uiFragments.length; i++) {
-      const p = uiFragments[i];
-      // recover 단계에서는 복원 물리 연산을 위해 비활성화되었던 입자들도 전부 처리함
-      if (!p.active && phase !== 'recover') continue;
-
-      // 이전 프레임 좌표 기록 (실시간 잔상용)
-      p.lastX = p.x;
-      p.lastY = p.y;
-
-      if (phase === 'collapse') {
-        if (!p.activated) {
-          const dx = p.startX - bhCenterX;
-          const dy = p.startY - bhCenterY;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          
-          const targetRadius = Math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height) + 200;
-          const currentRadius = 170 + (targetRadius - 170) * prog;
-
-          if (currentRadius + 70 >= dist) {
-            p.activated = true;
-            p.radius = dist;
-            p.angle = Math.atan2(dy, dx);
-          }
-        }
-
-        if (p.activated) {
-          const speedMult = 1.5 + prog * 6.0;
-          const gravityPull = Math.min(8.0, 200 / Math.max(p.radius, 12));
-          
-          p.radius -= p.speed * speedMult * gravityPull * 1.2;
-          p.angle += p.angularSpeed * speedMult * gravityPull * 2.5;
-
-          p.x = bhCenterX + Math.cos(p.angle) * p.radius;
-          p.y = bhCenterY + Math.sin(p.angle) * p.radius;
-
-          // Smoothly fade out near the event horizon (under 60px radius)
-          if (p.radius < 60) {
-            p.opacity = Math.max(0, p.radius / 60);
-          }
-
-          if (p.radius < 12 || p.opacity <= 0) {
-            p.active = false;
-          }
-        }
-      } else if (phase === 'bigbang') {
-        if (p.activated) {
-          const speedMult = 8.0 * (1.0 - prog);
-          p.radius += p.speed * speedMult;
-          p.angle += p.angularSpeed * 0.5;
-
-          p.x = bhCenterX + Math.cos(p.angle) * p.radius;
-          p.y = bhCenterY + Math.sin(p.angle) * p.radius;
-          p.opacity = Math.max(0, 1.0 - prog);
-
-          if (p.opacity <= 0) {
-            p.active = false;
-          }
-        }
-      } else if (phase === 'recover') {
-        // 복구 페이즈: 나노입자들이 원래 위치로 역나선 조립
-        p.active = true; // 비활성화되었던 입자들도 복원 단계를 위해 강제 활성화
-        const assembleProg = Math.min(1.0, prog * 1.3); // 약 3초(77%) 시점에 조립 완료되도록 설정
-        const invProg = 1.0 - assembleProg;
-        
-        // 각 입자의 각도 및 반경을 원래 위치로 수렴시키면서 나선 회전(1바퀴 반 정도) 가미
-        const angleOffset = invProg * Math.PI * 3.0 * (p.angularSpeed > 0 ? 1 : -1);
-        const spiralX = bhCenterX + Math.cos(p.angle + angleOffset) * p.radius;
-        const spiralY = bhCenterY + Math.sin(p.angle + angleOffset) * p.radius;
-        
-        p.x = p.startX * assembleProg + spiralX * invProg;
-        p.y = p.startY * assembleProg + spiralY * invProg;
-        p.opacity = Math.min(1.0, assembleProg * 2.0); // 조립되면서 서서히 선명해짐
-      }
-
-      if (p.activated && p.active && p.opacity > 0) {
-        if (p.lastX !== undefined && p.lastY !== undefined) {
-          const dx = p.x - p.lastX;
-          const dy = p.y - p.lastY;
-          const travel = Math.sqrt(dx * dx + dy * dy);
-
-          // 1.2px 이상 움직였을 경우에만 빛의 잔상 꼬리 렌더링 (Comet Trail)
-          if (travel > 1.2) {
-            // 주 꼬리선
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p.x - dx * 1.5, p.y - dy * 1.5);
-            ctx.strokeStyle = p.color.replace('opacity', (p.opacity * 0.75).toFixed(2));
-            ctx.lineWidth = p.size;
-            ctx.lineCap = 'round';
-            ctx.stroke();
-
-            // 부드러운 오라 빛 번짐 효과
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p.x - dx * 1.5, p.y - dy * 1.5);
-            ctx.strokeStyle = p.color.replace('opacity', (p.opacity * 0.22).toFixed(2));
-            ctx.lineWidth = p.size * 2.5;
-            ctx.lineCap = 'round';
-            ctx.stroke();
-          }
-        }
-
-        // 중심 광원 코어 렌더링 (폭발/조립 시 백색 발광 처리)
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = phase === 'bigbang' || phase === 'recover'
-          ? `rgba(255, 255, 255, ${p.opacity.toFixed(2)})`
-          : p.color.replace('opacity', p.opacity.toFixed(2));
-        ctx.fill();
-      }
-    }
-  }
-
-  animationFrameId = requestAnimationFrame(animateBackground);
-};
-
-const handleResize = () => {
-  if (!rippleCanvas.value) return;
-  const canvas = rippleCanvas.value;
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  initGrid(canvas.width, canvas.height);
-};
 
 // 테마 상태 및 토글 기능
 const isDarkMode = ref(true)
@@ -1174,11 +711,24 @@ const toggleTheme = () => {
   localStorage.setItem('theme', theme)
 }
 
+let phaseAnimationFrameId = 0;
+const runPhaseLoop = () => {
+  updateBlackHolePhase();
+  animationTick.value++;
+  
+  // 붕괴/빅뱅/복구 시에는 패널이 트랜스폼으로 인해 일그러지므로 원본의 안정한 레이아웃 좌표 유지를 위해 갱신 정지
+  if (bhPhase.value === 'idle' || bhPhase.value === 'grow') {
+    updateRects();
+  }
+  
+  phaseAnimationFrameId = requestAnimationFrame(runPhaseLoop);
+};
+
 onMounted(async () => {
   isMounted.value = true;
   await recordHit();
   fetchStats();
-  // 테마 초기 설정
+  
   const savedTheme = localStorage.getItem('theme')
   if (savedTheme) {
     isDarkMode.value = savedTheme === 'dark'
@@ -1187,512 +737,21 @@ onMounted(async () => {
   }
   document.documentElement.setAttribute('data-bs-theme', isDarkMode.value ? 'dark' : 'light')
 
-  // 캔버스 초기 설정
-  if (rippleCanvas.value) {
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('mousemove', handleGlobalMouseMove);
-    window.addEventListener('mouseleave', handleGlobalMouseLeave);
-    animationFrameId = requestAnimationFrame(animateBackground);
-  }
-});
-
-const showGlobalDog = computed(() => {
-  return route.path !== '/';
-});
-
-const globalDogWidth = ref(180);
-const globalDogHeight = ref(180);
-
-const gx = ref(100);
-const gy = ref(100);
-const gvx = ref(1.8);
-const gvy = ref(1.4);
-const gRotation = ref(0);
-const gRotationSpeed = ref(0.4);
-const gBounceCount = ref(0);
-const globalDogScale = ref(1.0);
-const isSuckedIn = ref(false);
-
-const showSpeechBubble = ref(false);
-const bubbleText = ref('끄어억!');
-let bubbleTimer: any = null;
-
-const onDogHover = () => {
-  if (gIsDragging.value) return;
-  
-  const messages = [
-    '끄어어억...',
-    '끄어억! 살려주;.세.',
-    '끄어',
-    '끄어억멍!!',
-    '💤',
-    '끼이이이ㄱㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣㅣ',
-  ];
-  const randomIndex = Math.floor(Math.random() * messages.length);
-  bubbleText.value = messages[randomIndex];
-  showSpeechBubble.value = true;
-
-  if (bubbleTimer) {
-    clearTimeout(bubbleTimer);
-  }
-  bubbleTimer = setTimeout(() => {
-    showSpeechBubble.value = false;
-  }, 5000);
-};
-
-// Speech bubble persists for 5s, mouseleave handler is removed
-
-const gIsDragging = ref(false);
-let lastMouseX = 0;
-let lastMouseY = 0;
-let lastDragTime = 0;
-let dragHasMoved = false;
-
-const startGlobalDogDrag = (event: MouseEvent) => {
-  if (event.button !== 0) return; // Only allow left-clicks
-  
-  gIsDragging.value = true;
-  dragHasMoved = false;
-  
-  const initialMouseX = event.clientX;
-  const initialMouseY = event.clientY;
-  const initialDogX = gx.value;
-  const initialDogY = gy.value;
-  
-  lastMouseX = event.clientX;
-  lastMouseY = event.clientY;
-  lastDragTime = performance.now();
-  
-  const onDrag = (e: MouseEvent) => {
-    if (!gIsDragging.value) return;
-    
-    dragHasMoved = true;
-    
-    const dx = e.clientX - initialMouseX;
-    const dy = e.clientY - initialMouseY;
-    
-    const viewWidth = window.innerWidth;
-    const viewHeight = window.innerHeight;
-    
-    gx.value = Math.min(viewWidth - globalDogWidth.value, Math.max(0, initialDogX + dx));
-    gy.value = Math.min(viewHeight - globalDogHeight.value, Math.max(0, initialDogY + dy));
-    
-    const currentTime = performance.now();
-    const dt = currentTime - lastDragTime;
-    
-    if (dt > 10) {
-      const distMouseX = e.clientX - lastMouseX;
-      const distMouseY = e.clientY - lastMouseY;
-      
-      const instVx = distMouseX / (dt / 16.67);
-      const instVy = distMouseY / (dt / 16.67);
-      
-      gvx.value = gvx.value * 0.4 + instVx * 0.6;
-      gvy.value = gvy.value * 0.4 + instVy * 0.6;
-      
-      lastMouseX = e.clientX;
-      lastMouseY = e.clientY;
-      lastDragTime = currentTime;
-    }
-  };
-  
-  const stopDrag = () => {
-    gIsDragging.value = false;
-    document.removeEventListener('mousemove', onDrag);
-    document.removeEventListener('mouseup', stopDrag);
-    
-    gBounceCount.value = 0; // Reset bounce count on release
-    
-    const speed = Math.sqrt(gvx.value * gvx.value + gvy.value * gvy.value);
-    const maxSpeed = 8;
-    const minSpeed = 1.2;
-    
-    if (speed > maxSpeed) {
-      const ratio = maxSpeed / speed;
-      gvx.value *= ratio;
-      gvy.value *= ratio;
-    } else if (speed < minSpeed) {
-      const angle = Math.random() * Math.PI * 2;
-      gvx.value = Math.cos(angle) * minSpeed;
-      gvy.value = Math.sin(angle) * minSpeed;
-    }
-    
-    // Speech bubble is now hover-based, no need for click trigger here
-  };
-  
-  document.addEventListener('mousemove', onDrag);
-  document.addEventListener('mouseup', stopDrag);
-};
-
-const globalDogContainerStyle = computed(() => {
-  return {
-    position: 'fixed' as const,
-    left: `${gx.value}px`,
-    top: `${gy.value}px`,
-    width: `${globalDogWidth.value}px`,
-    height: `${globalDogHeight.value}px`,
-    display: showGlobalDog.value ? 'block' : 'none',
-    zIndex: 100,
-    pointerEvents: 'auto' as const,
-    cursor: gIsDragging.value ? 'grabbing' : 'grab',
-    transform: `scale(${globalDogScale.value})`,
-    transition: gIsDragging.value ? 'none' : 'transform 0.1s ease'
-  };
-});
-
-const globalDogImgStyle = computed(() => {
-  return {
-    transform: `rotate(${gRotation.value}deg)`,
-    width: '100%',
-    height: '100%',
-    objectFit: 'contain' as const,
-    borderRadius: '50%',
-    background: 'rgba(255, 255, 255, 0.05)',
-    backdropFilter: 'blur(8px)',
-    WebkitBackdropFilter: 'blur(8px)',
-    padding: '10px',
-    boxSizing: 'border-box' as const,
-    border: '2px solid rgba(52, 211, 153, 0.3)',
-    boxShadow: '0 8px 25px rgba(52, 211, 153, 0.2), 0 4px 10px rgba(0, 0, 0, 0.3)',
-    display: 'block'
-  };
-});
-
-let gAnimationFrameId: number;
-let gAngleOffset = 0;
-
-const animateGlobalDog = () => {
-  if (!showGlobalDog.value) return;
-
-  const dogCenterX = gx.value + globalDogWidth.value / 2;
-  const dogCenterY = gy.value + globalDogHeight.value / 2;
-
-  // 배경 고정 블랙홀 중심 좌표 계산
-  const bhCenterX = 250;
-  const bhCenterY = window.innerHeight - 250;
-
-  if (!gIsDragging.value) {
-    const dx = bhCenterX - dogCenterX;
-    const dy = bhCenterY - dogCenterY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    // 대종말 위상에 따른 견희 강제 삼킴 및 복구 연동
-    const phase = bhPhase.value;
-    const prog = bhProgress.value;
-
-    if (phase === 'collapse') {
-      isSuckedIn.value = true;
-      gx.value += (bhCenterX - globalDogWidth.value / 2 - gx.value) * 0.3;
-      gy.value += (bhCenterY - globalDogHeight.value / 2 - gy.value) * 0.3;
-      globalDogScale.value = Math.max(0, globalDogScale.value - 0.1);
-      gRotation.value += 25;
-      gAnimationFrameId = requestAnimationFrame(animateGlobalDog);
-      return;
-    }
-
-    if (phase === 'bigbang') {
-      isSuckedIn.value = false;
-      globalDogScale.value = 0; // 빅뱅 폭발 시 잠시 숨김
-      gAnimationFrameId = requestAnimationFrame(animateGlobalDog);
-      return;
-    }
-
-    if (phase === 'recover') {
-      // 폭발 후 우주 창조 시점에 서서히 스케일 업
-      globalDogScale.value = prog;
-    }
-
-    if (isSuckedIn.value) {
-      // 1단계: 사건의 지평선 내부로 나선 회전하며 축소 흡수
-      gx.value += (bhCenterX - globalDogWidth.value / 2 - gx.value) * 0.15;
-      gy.value += (bhCenterY - globalDogHeight.value / 2 - gy.value) * 0.15;
-      globalDogScale.value = Math.max(0, globalDogScale.value - 0.05);
-      gRotationSpeed.value = gRotationSpeed.value * 1.1 + 0.8;
-
-      if (globalDogScale.value <= 0.02) {
-        // 2단계: 완전히 빨려 들어간 뒤 맵의 모서리(랜덤)로 순간 이동 및 재생성
-        isSuckedIn.value = false;
-        globalDogScale.value = 1.0;
-        gRotationSpeed.value = 0.4;
-
-        const viewWidth = window.innerWidth;
-        const viewHeight = window.innerHeight;
-        const corners = [
-          { x: 50, y: 50 },
-          { x: viewWidth - globalDogWidth.value - 50, y: 50 },
-          { x: 50, y: viewHeight - globalDogHeight.value - 50 },
-          { x: viewWidth - globalDogWidth.value - 50, y: viewHeight - globalDogHeight.value - 50 }
-        ];
-        const randomCorner = corners[Math.floor(Math.random() * corners.length)];
-        gx.value = randomCorner.x;
-        gy.value = randomCorner.y;
-
-        const initialAngle = Math.random() * Math.PI * 2;
-        const initialSpeed = 1.4;
-        gvx.value = Math.cos(initialAngle) * initialSpeed;
-        gvy.value = Math.sin(initialAngle) * initialSpeed;
-
-        bubbleText.value = '살려주세요 살려주세요 살려주세요어억!!!!';
-        showSpeechBubble.value = true;
-        if (bubbleTimer) clearTimeout(bubbleTimer);
-        bubbleTimer = setTimeout(() => {
-          showSpeechBubble.value = false;
-        }, 5000);
-      }
-
-      gRotation.value = (gRotation.value + gRotationSpeed.value) % 360;
-      gAnimationFrameId = requestAnimationFrame(animateGlobalDog);
-      return;
-    } else if (dist < 65) {
-      // 아주 근접할 시 흡수 프로세스 트리거
-      isSuckedIn.value = true;
-      showSpeechBubble.value = true;
-      if (bubbleTimer) clearTimeout(bubbleTimer);
-    } else {
-      // 성장기에 따라 견희의 최대 끌어당김 반경을 확장 (280px -> 최대 500px)
-      const range = 280 + (phase === 'grow' ? prog * 220 : 0);
-      
-      if (dist < range) {
-        const pullForce = (range - dist) / range;
-        const angle = Math.atan2(dy, dx);
-        const pullScale = 0.35 + (phase === 'grow' ? prog * 2.5 : 0);
-        
-        gvx.value += Math.cos(angle) * pullForce * pullScale;
-        gvy.value += Math.sin(angle) * pullForce * pullScale;
-
-        // 최대 속도 제어
-        const currentSpeed = Math.sqrt(gvx.value * gvx.value + gvy.value * gvy.value);
-        if (currentSpeed > 6.0) {
-          gvx.value = (gvx.value / currentSpeed) * 6.0;
-          gvy.value = (gvy.value / currentSpeed) * 6.0;
-        }
-
-        // 회전 속도 급증
-        gRotationSpeed.value = gRotationSpeed.value * 0.95 + Math.sign(gRotationSpeed.value) * pullForce * 1.8;
-
-        if (Math.random() < 0.02) {
-          bubbleText.value = Math.random() < 0.5 ? '어어.. 끌려들어간다!' : '끄어어어억! 살려줘!';
-          showSpeechBubble.value = true;
-          if (bubbleTimer) clearTimeout(bubbleTimer);
-          bubbleTimer = setTimeout(() => {
-            showSpeechBubble.value = false;
-          }, 1500);
-        }
-      }
-    }
-  }
-
-  if (gIsDragging.value) {
-    gRotation.value = (gRotation.value + gRotationSpeed.value) % 360;
-    gAnimationFrameId = requestAnimationFrame(animateGlobalDog);
-    return;
-  }
-
-  const viewWidth = window.innerWidth;
-  const viewHeight = window.innerHeight;
-
-  gx.value += gvx.value;
-  gy.value += gvy.value;
-  
-  gRotation.value = (gRotation.value + gRotationSpeed.value) % 360;
-  
-  let bounced = false;
-  
-  if (gx.value < 0) {
-    gx.value = 0;
-    gvx.value = Math.abs(gvx.value);
-    bounced = true;
-  } else if (gx.value + globalDogWidth.value > viewWidth) {
-    gx.value = viewWidth - globalDogWidth.value;
-    gvx.value = -Math.abs(gvx.value);
-    bounced = true;
-  }
-  
-  if (gy.value < 0) {
-    gy.value = 0;
-    gvy.value = Math.abs(gvy.value);
-    bounced = true;
-  } else if (gy.value + globalDogHeight.value > viewHeight) {
-    gy.value = viewHeight - globalDogHeight.value;
-    gvy.value = -Math.abs(gvy.value);
-    bounced = true;
-  }
-  
-  if (bounced) {
-    gRotationSpeed.value = -gRotationSpeed.value * 1.05;
-    if (Math.abs(gRotationSpeed.value) > 1.5) {
-      gRotationSpeed.value = Math.sign(gRotationSpeed.value) * 1.0;
-    }
-    
-    gBounceCount.value++;
-    if (gBounceCount.value >= 5) {
-      const currentSpeed = Math.sqrt(gvx.value * gvx.value + gvy.value * gvy.value);
-      if (currentSpeed > 0) {
-        const targetSpeed = 1.6;
-        const ratio = targetSpeed / currentSpeed;
-        gvx.value *= ratio;
-        gvy.value *= ratio;
-      }
-      gBounceCount.value = 0;
-    }
-  }
-  
-  gAnimationFrameId = requestAnimationFrame(animateGlobalDog);
-};
-
-const updateGlobalDogDimensions = () => {
-  if (!process.client) return;
-  const size = window.innerWidth > 768 ? 180 : 120;
-  globalDogWidth.value = size;
-  globalDogHeight.value = size;
-};
-
-const toggleGlobalDogAnimation = (isActive: boolean) => {
-  if (!process.client) return;
-  if (isActive) {
-    const viewWidth = window.innerWidth;
-    const viewHeight = window.innerHeight;
-    gx.value = Math.random() * (viewWidth - globalDogWidth.value);
-    gy.value = Math.random() * (viewHeight - globalDogHeight.value);
-
-    const initialAngle = Math.random() * Math.PI * 2;
-    const initialSpeed = 1.4;
-    gvx.value = Math.cos(initialAngle) * initialSpeed;
-    gvy.value = Math.sin(initialAngle) * initialSpeed;
-
-    updateGlobalDogDimensions();
-    window.addEventListener('resize', updateGlobalDogDimensions);
-    
-    cancelAnimationFrame(gAnimationFrameId);
-    gAnimationFrameId = requestAnimationFrame(animateGlobalDog);
-  } else {
-    window.removeEventListener('resize', updateGlobalDogDimensions);
-    cancelAnimationFrame(gAnimationFrameId);
-  }
-};
-
-watch(showGlobalDog, (newVal) => {
   if (process.client) {
-    toggleGlobalDogAnimation(newVal);
+    phaseAnimationFrameId = requestAnimationFrame(runPhaseLoop);
   }
-}, { immediate: true });
+});
 
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize);
-  window.removeEventListener('mousemove', handleGlobalMouseMove);
-  window.removeEventListener('mouseleave', handleGlobalMouseLeave);
-  cancelAnimationFrame(animationFrameId);
-
-  window.removeEventListener('resize', updateGlobalDogDimensions);
-  cancelAnimationFrame(gAnimationFrameId);
+  if (process.client) {
+    cancelAnimationFrame(phaseAnimationFrameId);
+  }
 });
 </script>
 
 <style scoped>
 @import url('@/assets/styles/mini-stats.css');
 
-.global-ripple-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  z-index: -1;
-}
-
-.global-dog-container {
-  position: fixed !important;
-  z-index: 0;
-  pointer-events: auto;
-  cursor: pointer;
-  transition: transform 0.1s ease;
-}
-
-.global-bouncing-dog {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-/* Speech bubble styling */
-.speech-bubble {
-  position: absolute;
-  bottom: 115%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.95);
-  border: 2px solid #34d399;
-  color: #0f172a;
-  padding: 8px 14px;
-  border-radius: 16px;
-  font-size: 0.9rem;
-  font-weight: 800;
-  white-space: nowrap;
-  box-shadow: 0 8px 20px rgba(52, 211, 153, 0.3), 0 4px 8px rgba(0, 0, 0, 0.15);
-  font-family: 'Outfit', 'Noto Sans KR', sans-serif;
-  pointer-events: none;
-  z-index: 100;
-  user-select: none;
-}
-
-[data-bs-theme="dark"] .speech-bubble {
-  background: rgba(15, 23, 42, 0.95);
-  border-color: #34d399;
-  color: #f8fafc;
-  box-shadow: 0 8px 25px rgba(52, 211, 153, 0.4), 0 4px 10px rgba(0, 0, 0, 0.4);
-}
-
-/* Speech bubble arrows */
-.speech-bubble::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 8px;
-  border-style: solid;
-  border-color: rgba(255, 255, 255, 0.95) transparent transparent transparent;
-}
-
-[data-bs-theme="dark"] .speech-bubble::after {
-  border-color: rgba(15, 23, 42, 0.95) transparent transparent transparent;
-}
-
-.speech-bubble::before {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 10px;
-  border-style: solid;
-  border-color: #34d399 transparent transparent transparent;
-}
-
-/* Cute bounce transitions for bubble */
-.fade-bubble-enter-active {
-  animation: bubble-bounce 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-.fade-bubble-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-.fade-bubble-leave-to {
-  opacity: 0;
-  transform: translate(-50%, -10px) scale(0.9);
-}
-
-@keyframes bubble-bounce {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, 15px) scale(0.6);
-  }
-  100% {
-    opacity: 1;
-    transform: translate(-50%, 0) scale(1);
-  }
-}
 
 .container {
   max-width: 1800px;
@@ -1713,11 +772,14 @@ onUnmounted(() => {
   z-index: 10;
   width: 240px;
   margin-top: 11rem;
+  min-height: 1050px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .nav-container {
-  position: absolute;
-  top: 0;
+  position: relative;
   width: 100%;
   box-sizing: border-box;
   background: var(--nav-bg);

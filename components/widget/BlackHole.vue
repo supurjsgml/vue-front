@@ -11,6 +11,7 @@ const canvasRef = ref<HTMLCanvasElement | null>(null);
 let animationId = 0;
 let img: HTMLImageElement | null = null;
 const isImageLoaded = ref(false);
+let isTabActive = true;
 
 interface Particle {
   angle: number;
@@ -33,12 +34,12 @@ const createParticle = (maxRadius: number, isInitial = false, isExplosion = fals
         : maxRadius - Math.random() * 10);
     
   const colors = [
-    'rgba(255, 255, 255, opacity)',      // white
-    'rgba(52, 211, 153, opacity)',      // emerald (그린)
-    'rgba(96, 165, 250, opacity)',      // blue (블루)
-    'rgba(251, 191, 36, opacity)',      // gold (골드)
-    'rgba(244, 63, 94, opacity)',       // rose (핑크)
-    'rgba(168, 85, 247, opacity)'       // purple (보라)
+    'rgb(255, 255, 255)',      // white
+    'rgb(52, 211, 153)',      // emerald (그린)
+    'rgb(96, 165, 250)',      // blue (블루)
+    'rgb(251, 191, 36)',      // gold (골드)
+    'rgb(244, 63, 94)',       // rose (핑크)
+    'rgb(168, 85, 247)'       // purple (보라)
   ];
   // 평소에는 흰색 위주, 폭발 시에는 다채로운 파편 컬러 사용
   let activeColors: string[] = [];
@@ -75,7 +76,7 @@ let lastIsDark = true;
 
 const animate = () => {
   const canvas = canvasRef.value;
-  if (!canvas) return;
+  if (!canvas || !isTabActive) return;
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
@@ -91,12 +92,12 @@ const animate = () => {
   // 실시간 테마 변경 시 모든 입자의 색상 즉시 업데이트
   if (isDark !== lastIsDark) {
     const colors = [
-      'rgba(255, 255, 255, opacity)',      // white
-      'rgba(52, 211, 153, opacity)',      // emerald
-      'rgba(96, 165, 250, opacity)',      // blue
-      'rgba(251, 191, 36, opacity)',      // gold
-      'rgba(244, 63, 94, opacity)',       // rose
-      'rgba(168, 85, 247, opacity)'       // purple
+      'rgb(255, 255, 255)',      // white
+      'rgb(52, 211, 153)',      // emerald
+      'rgb(96, 165, 250)',      // blue
+      'rgb(251, 191, 36)',      // gold
+      'rgb(244, 63, 94)',       // rose
+      'rgb(168, 85, 247)'       // purple
     ];
     const activeColors = isDark ? [colors[0], colors[3]] : [colors[1], colors[2], colors[3], colors[4], colors[5]];
     for (let i = 0; i < particles.length; i++) {
@@ -409,10 +410,13 @@ const animate = () => {
     alpha = Math.max(0, Math.min(1, alpha));
     
     if (alpha > 0) {
-      ctx.fillStyle = p.color.replace('opacity', alpha.toFixed(2));
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = p.color;
       ctx.beginPath();
       ctx.arc(x, y, p.size, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
     }
     
     // 범위 이탈 시 재스폰
@@ -437,6 +441,17 @@ const handleResize = () => {
   canvas.height = window.innerHeight;
 };
 
+const handleVisibilityChange = () => {
+  if (document.hidden) {
+    isTabActive = false;
+    cancelAnimationFrame(animationId);
+  } else {
+    isTabActive = true;
+    cancelAnimationFrame(animationId);
+    animationId = requestAnimationFrame(animate);
+  }
+};
+
 onMounted(() => {
   if (process.client) {
     img = new Image();
@@ -447,6 +462,7 @@ onMounted(() => {
     if (img.complete) {
       isImageLoaded.value = true;
     }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
   }
 
   const canvas = canvasRef.value;
@@ -467,6 +483,7 @@ onUnmounted(() => {
   cancelAnimationFrame(animationId);
   if (process.client) {
     window.removeEventListener('resize', handleResize);
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
   }
 });
 </script>

@@ -1,6 +1,5 @@
 .mini-stats-widget {
-  position: absolute;
-  top: 260px;
+  position: relative;
   width: 100%;
   box-sizing: border-box;
   background: var(--nav-bg);
