@@ -24,7 +24,7 @@ interface Particle {
 const particles: Particle[] = [];
 const numParticles = 250;
 
-const createParticle = (maxRadius: number, isInitial = false, isExplosion = false): Particle => {
+const createParticle = (maxRadius: number, isInitial = false, isExplosion = false, isDark = true): Particle => {
   // 빅뱅 폭발 시에는 중심부 근처에서 시작해 바깥으로 퍼져나감
   const radius = isExplosion
     ? Math.random() * 20 + 5
@@ -34,12 +34,23 @@ const createParticle = (maxRadius: number, isInitial = false, isExplosion = fals
     
   const colors = [
     'rgba(255, 255, 255, opacity)',      // white
-    'rgba(52, 211, 153, opacity)',      // emerald (빅뱅 파편용)
-    'rgba(96, 165, 250, opacity)',      // blue (빅뱅 파편용)
-    'rgba(251, 191, 36, opacity)'       // gold
+    'rgba(52, 211, 153, opacity)',      // emerald (그린)
+    'rgba(96, 165, 250, opacity)',      // blue (블루)
+    'rgba(251, 191, 36, opacity)',      // gold (골드)
+    'rgba(244, 63, 94, opacity)',       // rose (핑크)
+    'rgba(168, 85, 247, opacity)'       // purple (보라)
   ];
   // 평소에는 흰색 위주, 폭발 시에는 다채로운 파편 컬러 사용
-  const activeColors = isExplosion ? colors : [colors[0], colors[3]];
+  let activeColors: string[] = [];
+  if (isExplosion) {
+    activeColors = colors;
+  } else if (!isDark) {
+    // 화이트 모드일 때는 흰색을 제외한 다채로운 컬러 적용
+    activeColors = [colors[1], colors[2], colors[3], colors[4], colors[5]];
+  } else {
+    // 다크 모드 평상시에는 깔끔한 화이트/골드
+    activeColors = [colors[0], colors[3]];
+  }
   const colorBase = activeColors[Math.floor(Math.random() * activeColors.length)];
 
   return {
@@ -60,6 +71,7 @@ const createParticle = (maxRadius: number, isInitial = false, isExplosion = fals
 
 let time = 0;
 let explosionInitialized = false;
+let lastIsDark = true;
 
 const animate = () => {
   const canvas = canvasRef.value;
@@ -74,7 +86,25 @@ const animate = () => {
 
   ctx.clearRect(0, 0, w, h);
 
-  // 절대 시간 주기 해석 (60초 루프)
+  const isDark = typeof document !== 'undefined' ? document.documentElement.getAttribute('data-bs-theme') !== 'light' : true;
+  
+  // 실시간 테마 변경 시 모든 입자의 색상 즉시 업데이트
+  if (isDark !== lastIsDark) {
+    const colors = [
+      'rgba(255, 255, 255, opacity)',      // white
+      'rgba(52, 211, 153, opacity)',      // emerald
+      'rgba(96, 165, 250, opacity)',      // blue
+      'rgba(251, 191, 36, opacity)',      // gold
+      'rgba(244, 63, 94, opacity)',       // rose
+      'rgba(168, 85, 247, opacity)'       // purple
+    ];
+    const activeColors = isDark ? [colors[0], colors[3]] : [colors[1], colors[2], colors[3], colors[4], colors[5]];
+    for (let i = 0; i < particles.length; i++) {
+      particles[i].color = activeColors[Math.floor(Math.random() * activeColors.length)];
+    }
+    lastIsDark = isDark;
+  }
+
   const loopTime = 60000;
   const t = Date.now() % loopTime;
 
@@ -114,15 +144,12 @@ const animate = () => {
     rotationSpeed = 0.4 + progress * 1.5; // 속도 대폭 증가
     explosionInitialized = false;
   } else if (phase === 'collapse') {
-    // 블랙홀 크기를 대폭 키워서 컴포넌트들을 통째로 지워나가는 시각적 연출
-    const initialSwirl = 170;
-    const initialSingularity = 38;
+    // 블랙홀 이미지 크기는 팽창하지 않도록 고정 (화면을 덮는 효과 제거)
+    maxSwirlRadius = 170;
+    singularityRadius = 38;
     
-    maxSwirlRadius = initialSwirl + (maxDiagRadius - initialSwirl) * progress;
-    singularityRadius = initialSingularity + (maxDiagRadius * 0.85 - initialSingularity) * progress;
-    
-    rotationSpeed = 1.9 + progress * 4.0; // 소멸 직전 초고속 회전
-    scaleRatio = 1.0 + progress * 5.0; // 스케일도 함께 비대화
+    rotationSpeed = 1.9 + progress * 6.0; // 소멸 직전 초고속 회전만 가속화
+    scaleRatio = 1.0; // 스케일 비대화 제거
     explosionInitialized = false;
   } else if (phase === 'bigbang') {
     // 이미지 렌더링 안 함
@@ -148,6 +175,16 @@ const animate = () => {
   if (opacity > 0 && isImageLoaded.value && img) {
     ctx.save();
     ctx.globalAlpha = opacity;
+
+    // 붕괴 시 회전 가속화에 맞춰 사건의 지평선 바깥쪽 소용돌이 전체가 가로로 일그러지는 연출
+    if (phase === 'collapse') {
+      const distortX = 1.0 + progress * 0.45; // 가로로 최대 45% 팽창
+      const distortY = 1.0 - progress * 0.15; // 세로로 15% 수축
+      ctx.translate(cx, cy);
+      ctx.scale(distortX, distortY);
+      ctx.translate(-cx, -cy);
+    }
+
     const numRings = 40;
     const ringWidth = maxSwirlRadius / numRings;
 
@@ -201,9 +238,18 @@ const animate = () => {
     glow.addColorStop(0.5, 'rgba(96, 165, 250, 0.12)');
     glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = glow;
+    ctx.save();
+    if (phase === 'collapse') {
+      const distortX = 1.0 + progress * 0.45;
+      const distortY = 1.0 - progress * 0.15;
+      ctx.translate(cx, cy);
+      ctx.scale(distortX, distortY);
+      ctx.translate(-cx, -cy);
+    }
     ctx.beginPath();
     ctx.arc(cx, cy, auraRadius, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
   }
 
   // 5. 빅뱅 폭발 그래픽 효과 (Big Bang Phase)
@@ -213,35 +259,100 @@ const animate = () => {
     if (!explosionInitialized) {
       particles.length = 0;
       for (let i = 0; i < numParticles; i++) {
-        particles.push(createParticle(maxRadius, false, true));
+        particles.push(createParticle(maxRadius, false, true, isDark));
       }
       explosionInitialized = true;
     }
 
-    // A. 강렬한 팽창하는 백색/네온 네온 구형 에너지 파동
-    const flashRadius = progress * maxRadius;
-    const flashGlow = ctx.createRadialGradient(cx, cy, flashRadius * 0.1, cx, cy, Math.max(1, flashRadius));
-    flashGlow.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-    flashGlow.addColorStop(0.3, 'rgba(52, 211, 153, 0.8)');
-    flashGlow.addColorStop(0.7, 'rgba(96, 165, 250, 0.4)');
-    flashGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = flashGlow;
-    ctx.beginPath();
-    ctx.arc(cx, cy, flashRadius, 0, Math.PI * 2);
-    ctx.fill();
+    const invProg = 1.0 - progress;
 
-    // B. 다방면 번개 광선 레이저 라인 렌더링
-    const numRays = 16;
-    ctx.strokeStyle = `rgba(255, 255, 255, ${0.8 * (1.0 - progress)})`;
-    ctx.lineWidth = 2;
-    for (let i = 0; i < numRays; i++) {
-      const angle = (i / numRays) * Math.PI * 2 + progress * 2.0;
-      const rayLen = progress * maxRadius * (1.0 + Math.sin(time * 10 + i) * 0.2);
+    // A. 다중 레이어 회전 성운 가스 (Nebula Whorls) 연출
+    const baseRadius = progress * maxRadius * 1.1;
+    
+    // 레이어 1: 신비로운 우주 보라 성운 (Purple Nebula)
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(time * 0.5); // 가스 회전
+    const scaleX = 1.0 + Math.sin(time * 2) * 0.15;
+    const scaleY = 1.0 - Math.sin(time * 2) * 0.15;
+    ctx.scale(scaleX, scaleY);
+    
+    const nebulaGlow1 = ctx.createRadialGradient(0, 0, 0, 0, 0, Math.max(1, baseRadius));
+    nebulaGlow1.addColorStop(0, 'rgba(168, 85, 247, 0.7)'); // 보라색 중심
+    nebulaGlow1.addColorStop(0.4, 'rgba(139, 92, 246, 0.35)'); // 바이올렛 외곽
+    nebulaGlow1.addColorStop(0.8, 'rgba(96, 165, 250, 0.1)'); // 블루 경계
+    nebulaGlow1.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = nebulaGlow1;
+    ctx.beginPath();
+    ctx.arc(0, 0, baseRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 레이어 2: 강력한 폭발 에메랄드/화이트 코어 성운
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(-time * 0.8); // 반대 방향 가스 회전
+    const scaleX2 = 1.0 - Math.cos(time * 1.5) * 0.1;
+    const scaleY2 = 1.0 + Math.cos(time * 1.5) * 0.1;
+    ctx.scale(scaleX2, scaleY2);
+
+    const nebulaGlow2 = ctx.createRadialGradient(0, 0, 0, 0, 0, Math.max(1, baseRadius * 0.75));
+    nebulaGlow2.addColorStop(0, 'rgba(255, 255, 255, 0.95)'); // 눈부신 백색 중심
+    nebulaGlow2.addColorStop(0.2, 'rgba(52, 211, 153, 0.6)'); // 에메랄드
+    nebulaGlow2.addColorStop(0.6, 'rgba(251, 191, 36, 0.25)'); // 골드 외곽선
+    nebulaGlow2.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = nebulaGlow2;
+    ctx.beginPath();
+    ctx.arc(0, 0, baseRadius * 0.75, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // B. 초신성 우주 쇼크웨이브 고리 (Cosmic Shockwave Rings)
+    const ringRadius1 = progress * maxRadius * 0.95;
+    ctx.strokeStyle = `rgba(255, 255, 255, ${invProg * 0.95})`;
+    ctx.lineWidth = 6 * invProg;
+    ctx.beginPath();
+    ctx.arc(cx, cy, ringRadius1, 0, Math.PI * 2);
+    ctx.stroke();
+
+    const ringRadius2 = progress * maxRadius * 0.6;
+    ctx.strokeStyle = `rgba(168, 85, 247, ${invProg * 0.7})`;
+    ctx.lineWidth = 14 * invProg;
+    ctx.beginPath();
+    ctx.arc(cx, cy, ringRadius2, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // C. 렌즈 플레어 크로스 스파이크 (Lens Flare Star Spikes)
+    const spikeLength = progress * maxRadius * 1.3;
+    const numSpikes = 8;
+    
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(progress * 0.5); // 광선 회전
+    
+    for (let i = 0; i < numSpikes; i++) {
+      const angle = (i / numSpikes) * Math.PI * 2;
+      const isPrimary = i % 2 === 0;
+      const len = isPrimary ? spikeLength : spikeLength * 0.55;
+      const width = isPrimary ? 8 * invProg : 3 * invProg;
+
+      const endX = Math.cos(angle) * len;
+      const endY = Math.sin(angle) * len;
+      
+      const grad = ctx.createLinearGradient(0, 0, endX, endY);
+      grad.addColorStop(0, 'rgba(255, 255, 255, ' + invProg.toFixed(2) + ')');
+      grad.addColorStop(0.3, isPrimary ? 'rgba(52, 211, 153, ' + (invProg * 0.8).toFixed(2) + ')' : 'rgba(168, 85, 247, ' + (invProg * 0.8).toFixed(2) + ')');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      
       ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + Math.cos(angle) * rayLen, cy + Math.sin(angle) * rayLen);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = width;
+      ctx.lineCap = 'round';
+      ctx.moveTo(0, 0);
+      ctx.lineTo(endX, endY);
       ctx.stroke();
     }
+    ctx.restore();
   }
 
   // 6. 입자 시뮬레이션 및 렌더링
@@ -250,7 +361,7 @@ const animate = () => {
     // 빅뱅 이후 복구 단계 진입 시 폭발용 초고속 입자를 잔잔한 일반 입자로 점차 복원
     particles.length = 0;
     for (let i = 0; i < numParticles; i++) {
-      particles.push(createParticle(maxRadius, true, false));
+      particles.push(createParticle(maxRadius, true, false, isDark));
     }
   }
   
@@ -311,7 +422,7 @@ const animate = () => {
       }
     } else {
       if (p.radius < singularityRadius) {
-        particles[i] = createParticle(maxRadius, false, false);
+        particles[i] = createParticle(maxRadius, false, false, isDark);
       }
     }
   }
@@ -343,8 +454,10 @@ onMounted(() => {
     handleResize();
     window.addEventListener('resize', handleResize);
     const maxRadius = Math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height);
+    const isDark = typeof document !== 'undefined' ? document.documentElement.getAttribute('data-bs-theme') !== 'light' : true;
+    lastIsDark = isDark;
     for (let i = 0; i < numParticles; i++) {
-      particles.push(createParticle(maxRadius, true, false));
+      particles.push(createParticle(maxRadius, true, false, isDark));
     }
     animate();
   }
