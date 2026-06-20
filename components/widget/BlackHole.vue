@@ -22,7 +22,7 @@ interface Particle {
 }
 
 const particles: Particle[] = [];
-const numParticles = 120;
+const numParticles = 250;
 
 const createParticle = (maxRadius: number, isInitial = false, isExplosion = false): Particle => {
   // 빅뱅 폭발 시에는 중심부 근처에서 시작해 바깥으로 퍼져나감
@@ -69,33 +69,33 @@ const animate = () => {
 
   const w = canvas.width;
   const h = canvas.height;
-  const cx = w / 2;
-  const cy = h / 2;
+  const cx = 250;
+  const cy = h - 250;
 
   ctx.clearRect(0, 0, w, h);
 
-  // 절대 시간 주기 해석 (40초 루프)
-  const loopTime = 40000;
+  // 절대 시간 주기 해석 (60초 루프)
+  const loopTime = 60000;
   const t = Date.now() % loopTime;
 
   let phase = 'idle';
   let progress = 0;
 
-  if (t < 25000) {
+  if (t < 35000) {
     phase = 'grow';
-    progress = t / 25000; // 0 -> 1
-  } else if (t < 27500) {
+    progress = t / 35000; // 0 -> 1
+  } else if (t < 40000) {
     phase = 'collapse';
-    progress = (t - 25000) / 2500; // 0 -> 1
-  } else if (t < 29000) {
+    progress = (t - 35000) / 5000; // 0 -> 1
+  } else if (t < 42000) {
     phase = 'bigbang';
-    progress = (t - 27500) / 1500; // 0 -> 1
-  } else if (t < 34000) {
+    progress = (t - 40000) / 2000; // 0 -> 1
+  } else if (t < 50000) {
     phase = 'recover';
-    progress = (t - 29000) / 5000; // 0 -> 1
+    progress = (t - 42000) / 8000; // 0 -> 1
   } else {
     phase = 'idle';
-    progress = (t - 34000) / 6000; // 0 -> 1
+    progress = (t - 50000) / 10000; // 0 -> 1
   }
 
   // 1. 소용돌이 기하 왜곡 매개변수 계산
@@ -105,6 +105,8 @@ const animate = () => {
   let opacity = 1.0;
   let scaleRatio = 1.0;
 
+  const maxDiagRadius = Math.sqrt(w * w + h * h) + 200;
+
   if (phase === 'grow') {
     // 70px -> 170px 로 점진적 비대화
     maxSwirlRadius = 70 + progress * 100;
@@ -112,11 +114,15 @@ const animate = () => {
     rotationSpeed = 0.4 + progress * 1.5; // 속도 대폭 증가
     explosionInitialized = false;
   } else if (phase === 'collapse') {
-    // 특이점 급격히 팽창 후 소멸 (싱글래러티 삼킴 극대화)
-    maxSwirlRadius = 170 * (1.0 - progress * 0.95);
-    singularityRadius = (38 + progress * 30) * (1.0 - progress);
+    // 블랙홀 크기를 대폭 키워서 컴포넌트들을 통째로 지워나가는 시각적 연출
+    const initialSwirl = 170;
+    const initialSingularity = 38;
+    
+    maxSwirlRadius = initialSwirl + (maxDiagRadius - initialSwirl) * progress;
+    singularityRadius = initialSingularity + (maxDiagRadius * 0.85 - initialSingularity) * progress;
+    
     rotationSpeed = 1.9 + progress * 4.0; // 소멸 직전 초고속 회전
-    scaleRatio = Math.max(0.01, 1.0 - progress);
+    scaleRatio = 1.0 + progress * 5.0; // 스케일도 함께 비대화
     explosionInitialized = false;
   } else if (phase === 'bigbang') {
     // 이미지 렌더링 안 함
@@ -140,6 +146,7 @@ const animate = () => {
 
   // 2. 동심원 분할 마스킹 및 이미지 소용돌이 드로잉 (Grow / Collapse / Recover / Idle 상태)
   if (opacity > 0 && isImageLoaded.value && img) {
+    ctx.save();
     ctx.globalAlpha = opacity;
     const numRings = 40;
     const ringWidth = maxSwirlRadius / numRings;
@@ -174,7 +181,7 @@ const animate = () => {
 
       ctx.restore();
     }
-    ctx.globalAlpha = 1.0;
+    ctx.restore();
   }
 
   // 3. 사건의 지평선 (검은색 중앙 싱귤래러티) - 폭발 시에는 그리지 않음
@@ -201,17 +208,18 @@ const animate = () => {
 
   // 5. 빅뱅 폭발 그래픽 효과 (Big Bang Phase)
   if (phase === 'bigbang') {
+    const maxRadius = Math.sqrt(w * w + h * h);
     // 폭발 진입 순간에 입자들을 폭발용으로 리셋
     if (!explosionInitialized) {
       particles.length = 0;
       for (let i = 0; i < numParticles; i++) {
-        particles.push(createParticle(w / 2, false, true));
+        particles.push(createParticle(maxRadius, false, true));
       }
       explosionInitialized = true;
     }
 
     // A. 강렬한 팽창하는 백색/네온 네온 구형 에너지 파동
-    const flashRadius = progress * (w / 2);
+    const flashRadius = progress * maxRadius;
     const flashGlow = ctx.createRadialGradient(cx, cy, flashRadius * 0.1, cx, cy, Math.max(1, flashRadius));
     flashGlow.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
     flashGlow.addColorStop(0.3, 'rgba(52, 211, 153, 0.8)');
@@ -228,7 +236,7 @@ const animate = () => {
     ctx.lineWidth = 2;
     for (let i = 0; i < numRays; i++) {
       const angle = (i / numRays) * Math.PI * 2 + progress * 2.0;
-      const rayLen = progress * (w / 2) * (1.0 + Math.sin(time * 10 + i) * 0.2);
+      const rayLen = progress * maxRadius * (1.0 + Math.sin(time * 10 + i) * 0.2);
       ctx.beginPath();
       ctx.moveTo(cx, cy);
       ctx.lineTo(cx + Math.cos(angle) * rayLen, cy + Math.sin(angle) * rayLen);
@@ -237,24 +245,23 @@ const animate = () => {
   }
 
   // 6. 입자 시뮬레이션 및 렌더링
+  const maxRadius = Math.sqrt(w * w + h * h);
   if (phase !== 'bigbang' && particles.length > 0 && particles[0].speed > 2.0) {
     // 빅뱅 이후 복구 단계 진입 시 폭발용 초고속 입자를 잔잔한 일반 입자로 점차 복원
     particles.length = 0;
     for (let i = 0; i < numParticles; i++) {
-      particles.push(createParticle(w / 2, true, false));
+      particles.push(createParticle(maxRadius, true, false));
     }
   }
-
-  const maxRadius = w / 2;
   
-  // 시간에 따른 입자 흡입 속도 가속화 계산 (지수 함수를 사용하여 시간이 지날수록 더 급격히 가속화)
+  // 시간에 따른 입자 흡입 속도 가속화 계산
   let speedMult = 1.0;
   if (phase === 'grow') {
-    speedMult = 1.0 + Math.pow(progress, 2) * 4.0; // 성장할수록 속도 최대 5.0배 가속 (지수 상승)
+    speedMult = 1.0 + Math.pow(progress, 2) * 4.0; 
   } else if (phase === 'collapse') {
-    speedMult = 5.0 + Math.pow(progress, 2) * 15.0; // 붕괴 시 완전 극적인 수축 가속 (최대 20.0배)
+    speedMult = 5.0 + Math.pow(progress, 2) * 15.0; 
   } else if (phase === 'recover') {
-    speedMult = 0.7; // 복구 단계에서는 부드럽고 차분하게
+    speedMult = 0.7; 
   } else {
     speedMult = 1.0;
   }
@@ -268,7 +275,6 @@ const animate = () => {
       p.angle += p.angularSpeed;
     } else {
       // 평소에는 안으로 나선 흡입
-      // 중심(특이점)에 가까워질수록 중력이 급격히 강해져 빨려 들어가는 속도와 회전 속도가 가속화됨
       const gravityPull = Math.min(8.0, 100 / Math.max(p.radius, 12));
       
       p.radius -= p.speed * speedMult * gravityPull;
@@ -313,6 +319,13 @@ const animate = () => {
   animationId = requestAnimationFrame(animate);
 };
 
+const handleResize = () => {
+  const canvas = canvasRef.value;
+  if (!canvas) return;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+};
+
 onMounted(() => {
   if (process.client) {
     img = new Image();
@@ -327,9 +340,9 @@ onMounted(() => {
 
   const canvas = canvasRef.value;
   if (canvas) {
-    canvas.width = 400;
-    canvas.height = 400;
-    const maxRadius = canvas.width / 2;
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    const maxRadius = Math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height);
     for (let i = 0; i < numParticles; i++) {
       particles.push(createParticle(maxRadius, true, false));
     }
@@ -339,26 +352,26 @@ onMounted(() => {
 
 onUnmounted(() => {
   cancelAnimationFrame(animationId);
+  if (process.client) {
+    window.removeEventListener('resize', handleResize);
+  }
 });
 </script>
 
 <style scoped>
 .black-hole-bg-container {
-  position: relative;
-  width: 200px;
-  height: 200px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   pointer-events: none;
+  z-index: 0;
 }
 
 .black-hole-canvas {
-  position: absolute;
-  top: -100px;
-  left: -100px;
-  width: 400px;
-  height: 400px;
+  width: 100%;
+  height: 100%;
   display: block;
 }
 </style>

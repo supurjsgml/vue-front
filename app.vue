@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="container" :style="containerStyle">
     <canvas ref="rippleCanvas" class="global-ripple-canvas"></canvas>
     
     <!-- 배경 고정 블랙홀 위젯 -->
@@ -31,7 +31,7 @@
 
     <div class="main-ui-wrapper" :style="containerWarpStyle">
       <!-- 왼쪽 패널 그룹 -->
-      <div class="left-panel-wrapper">
+      <div class="left-panel-wrapper" :class="{ 'is-collapsing': bhPhase === 'collapse' }" :style="leftPanelWarpStyle">
       <!-- 메인 네비게이션 영역 (개별 드래그) -->
       <div 
         tabindex="0"
@@ -130,14 +130,14 @@
     </div> <!-- End of left-panel-wrapper -->
 
     <!-- 콘텐츠 영역 -->
-    <div class="content">
+    <div class="content" :class="{ 'is-collapsing': bhPhase === 'collapse' }" :style="contentWarpStyle">
       <NuxtLayout>
         <NuxtPage />
       </NuxtLayout>
     </div>
 
     <!-- 오른쪽 홍보 링크 영역 -->
-    <aside class="sidebar">
+    <aside class="sidebar" :class="{ 'is-collapsing': bhPhase === 'collapse' }" :style="sidebarWarpStyle">
       <ul>
         <li>
           <a :href="useRuntimeConfig().public.restApi" target="_blank">
@@ -159,7 +159,7 @@
     </div>
 
     <!-- 테마 토글 버튼 -->
-    <button class="theme-toggle-btn" @click="toggleTheme" title="테마 변경">
+    <button class="theme-toggle-btn" :class="{ 'is-collapsing': bhPhase === 'collapse' }" :style="themeWarpStyle" @click="toggleTheme" title="테마 변경">
       <SunIcon v-if="isDarkMode" class="theme-icon" />
       <MoonIcon v-else class="theme-icon" />
     </button>
@@ -191,91 +191,233 @@ useHead({
 })
 
 // 블랙홀 종말 및 빅뱅 상태 동기화 관리
+const isMounted = ref(false);
 const animationTick = ref(0);
 const bhPhase = ref('idle');
 const bhProgress = ref(0);
 const windowHeight = ref(1000);
+const windowWidth = ref(1200);
 
 if (process.client) {
   windowHeight.value = window.innerHeight;
+  windowWidth.value = window.innerWidth;
   window.addEventListener('resize', () => {
     windowHeight.value = window.innerHeight;
+    windowWidth.value = window.innerWidth;
   });
 }
 
 // 실시간 동기화 위상 연산
 const updateBlackHolePhase = () => {
-  const loopTime = 40000;
+  const loopTime = 60000;
   const t = Date.now() % loopTime;
 
-  if (t < 25000) {
+  if (t < 35000) {
     bhPhase.value = 'grow';
-    bhProgress.value = t / 25000;
-  } else if (t < 27500) {
+    bhProgress.value = t / 35000;
+  } else if (t < 40000) {
     bhPhase.value = 'collapse';
-    bhProgress.value = (t - 25000) / 2500;
-  } else if (t < 29000) {
+    bhProgress.value = (t - 35000) / 5000;
+  } else if (t < 42000) {
     bhPhase.value = 'bigbang';
-    bhProgress.value = (t - 27500) / 1500;
-  } else if (t < 34000) {
+    bhProgress.value = (t - 40000) / 2000;
+  } else if (t < 50000) {
     bhPhase.value = 'recover';
-    bhProgress.value = (t - 29000) / 5000;
+    bhProgress.value = (t - 42000) / 8000;
   } else {
     bhPhase.value = 'idle';
-    bhProgress.value = (t - 34000) / 6000;
+    bhProgress.value = (t - 50000) / 10000;
   }
 };
 
+const containerStyle = computed(() => {
+  if (!isMounted.value) return {};
+  const phase = bhPhase.value;
+  const prog = bhProgress.value;
+  const h = windowHeight.value;
+  const w = windowWidth.value;
+
+  const bhCenterY = h - 250;
+
+  if (phase === 'collapse') {
+    const initialRadius = 170;
+    const targetRadius = Math.sqrt(w * w + h * h) + 200;
+    const currentRadius = initialRadius + (targetRadius - initialRadius) * prog;
+    const innerRadius = Math.max(0, currentRadius - 70);
+    const outerRadius = currentRadius + 70;
+
+    return {
+      '--bh-y': `${bhCenterY}px`,
+      '--bh-mask-radius-inner': `${innerRadius}px`,
+      '--bh-mask-radius-outer': `${outerRadius}px`,
+    };
+  }
+  return {
+    '--bh-y': `${h - 250}px`,
+    '--bh-mask-radius-inner': `0px`,
+    '--bh-mask-radius-outer': `0px`,
+  };
+});
+
 const containerWarpStyle = computed(() => {
-  // Vue 리액티비티 의존성 등록
-  const tick = animationTick.value;
-  
-  updateBlackHolePhase();
+  return {};
+});
+
+// 1단계: 왼쪽 패널 스타일 (가장 먼저 소멸/복구)
+const leftPanelWarpStyle = computed(() => {
+  if (!isMounted.value) return {};
   const phase = bhPhase.value;
   const prog = bhProgress.value;
   const h = windowHeight.value;
 
-  // 블랙홀의 중심 (X = 250, Y = h - 250)
-  const originX = 250;
-  const originY = h - 250;
+  const dx = 250 - 170;
+  const dy = (h - 250) - 450;
 
-  if (phase === 'grow') {
-    // 성장기: 미세한 요동
-    const shake = Math.sin(Date.now() * 0.04) * (prog * 1.5);
+  if (phase === 'collapse') {
+    const localBhX = 250 - leftRect.value.left;
+    const localBhY = (h - 250) - leftRect.value.top;
     return {
-      transformOrigin: `${originX}px ${originY}px`,
-      transform: `translate(${shake}px, ${shake}px)`,
-    };
-  } else if (phase === 'collapse') {
-    // 붕괴기: 블랙홀로 순식간에 회전하며 스케일 0으로 수축
-    const scale = Math.max(0, 1.0 - prog);
-    const rotate = -prog * 360;
-    return {
-      transformOrigin: `${originX}px ${originY}px`,
-      transform: `scale(${scale}) rotate(${rotate}deg)`,
-      filter: `blur(${prog * 15}px) contrast(${1.0 + prog * 3.0})`,
+      pointerEvents: 'none' as const,
       transition: 'none',
+      '--local-bh-x': `${localBhX}px`,
+      '--local-bh-y': `${localBhY}px`,
     };
   } else if (phase === 'bigbang') {
-    // 빅뱅: 격렬한 쉐이크 바운스백
-    const scale = prog * 1.15;
-    const shake = (Math.random() - 0.5) * 40 * (1.0 - prog);
-    return {
-      transformOrigin: `${originX}px ${originY}px`,
-      transform: `scale(${Math.min(1.0, scale)}) translate(${shake}px, ${shake}px)`,
-      filter: 'none',
-      transition: 'transform 0.08s ease-out',
-    };
+    return { opacity: 0, filter: 'blur(12px)', pointerEvents: 'none' as const };
   } else if (phase === 'recover') {
-    // 복구기: 부드럽게 고정
+    const localProg = Math.min(1.0, Math.max(0, (prog - 0.4) / 0.6));
+    const invProg = 1.0 - localProg;
+    const tx = dx * invProg;
+    const ty = dy * invProg;
+    const scale = localProg;
+    const rotate = -invProg * 360;
+
     return {
-      transformOrigin: `${originX}px ${originY}px`,
-      transform: 'scale(1.0)',
-      filter: 'none',
-      transition: 'transform 0.5s ease-out',
+      transform: `translate(${tx}px, ${ty}px) scale(${scale}) rotate(${rotate}deg)`,
+      opacity: localProg,
+      filter: `blur(${invProg * 8}px)`,
+      transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease-out'
     };
   }
-  
+  return {};
+});
+
+// 2단계: 중앙 콘텐츠 스타일 (중간 영역 소멸/복구)
+const contentWarpStyle = computed(() => {
+  if (!isMounted.value) return {};
+  const phase = bhPhase.value;
+  const prog = bhProgress.value;
+  const h = windowHeight.value;
+  const w = windowWidth.value;
+
+  const dx = 250 - (w / 2);
+  const dy = (h - 250) - (h / 2);
+
+  if (phase === 'collapse') {
+    const localBhX = 250 - contentRect.value.left;
+    const localBhY = (h - 250) - contentRect.value.top;
+    return {
+      pointerEvents: 'none' as const,
+      transition: 'none',
+      '--local-bh-x': `${localBhX}px`,
+      '--local-bh-y': `${localBhY}px`,
+    };
+  } else if (phase === 'bigbang') {
+    return { opacity: 0, filter: 'blur(12px)', pointerEvents: 'none' as const };
+  } else if (phase === 'recover') {
+    const localProg = Math.min(1.0, Math.max(0, (prog - 0.2) / 0.6));
+    const invProg = 1.0 - localProg;
+    const tx = dx * invProg;
+    const ty = dy * invProg;
+    const scale = localProg;
+    const rotate = -invProg * 270;
+
+    return {
+      transform: `translate(${tx}px, ${ty}px) scale(${scale}) rotate(${rotate}deg)`,
+      opacity: localProg,
+      filter: `blur(${invProg * 8}px)`,
+      transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease-out'
+    };
+  }
+  return {};
+});
+
+// 3단계: 우측 사이드바 및 테마 버튼 스타일 (오른쪽 위 끝자락 가장 늦게 소멸/가장 먼저 복구)
+const sidebarWarpStyle = computed(() => {
+  if (!isMounted.value) return {};
+  const phase = bhPhase.value;
+  const prog = bhProgress.value;
+  const h = windowHeight.value;
+  const w = windowWidth.value;
+
+  const dx = 250 - (w - 140);
+  const dy = (h - 250) - 250;
+
+  if (phase === 'collapse') {
+    const localBhX = 250 - sidebarRect.value.left;
+    const localBhY = (h - 250) - sidebarRect.value.top;
+    return {
+      pointerEvents: 'none' as const,
+      transition: 'none',
+      '--local-bh-x': `${localBhX}px`,
+      '--local-bh-y': `${localBhY}px`,
+    };
+  } else if (phase === 'bigbang') {
+    return { opacity: 0, filter: 'blur(12px)', pointerEvents: 'none' as const };
+  } else if (phase === 'recover') {
+    const localProg = Math.min(1.0, Math.max(0, prog / 0.5));
+    const invProg = 1.0 - localProg;
+    const tx = dx * invProg;
+    const ty = dy * invProg;
+    const scale = localProg;
+    const rotate = -invProg * 180;
+
+    return {
+      transform: `translate(${tx}px, ${ty}px) scale(${scale}) rotate(${rotate}deg)`,
+      opacity: localProg,
+      filter: `blur(${invProg * 8}px)`,
+      transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease-out'
+    };
+  }
+  return {};
+});
+
+// 테마 버튼 전용 소멸/복구 스타일
+const themeWarpStyle = computed(() => {
+  if (!isMounted.value) return {};
+  const phase = bhPhase.value;
+  const prog = bhProgress.value;
+  const h = windowHeight.value;
+
+  const dx = 250 - themeRect.value.left;
+  const dy = (h - 250) - themeRect.value.top;
+
+  if (phase === 'collapse') {
+    const localBhX = 250 - themeRect.value.left;
+    const localBhY = (h - 250) - themeRect.value.top;
+    return {
+      pointerEvents: 'none' as const,
+      transition: 'none',
+      '--local-bh-x': `${localBhX}px`,
+      '--local-bh-y': `${localBhY}px`,
+    };
+  } else if (phase === 'bigbang') {
+    return { opacity: 0, filter: 'blur(12px)', pointerEvents: 'none' as const };
+  } else if (phase === 'recover') {
+    const localProg = Math.min(1.0, Math.max(0, prog / 0.5));
+    const invProg = 1.0 - localProg;
+    const tx = dx * invProg;
+    const ty = dy * invProg;
+    const scale = localProg;
+    const rotate = -invProg * 180;
+
+    return {
+      transform: `translate(${tx}px, ${ty}px) scale(${scale}) rotate(${rotate}deg)`,
+      opacity: localProg,
+      filter: `blur(${invProg * 8}px)`,
+      transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease-out'
+    };
+  }
   return {};
 });
 
@@ -550,6 +692,110 @@ const initGrid = (width: number, height: number) => {
   }
 };
 
+interface FragmentParticle {
+  x: number;
+  y: number;
+  startX: number;
+  startY: number;
+  color: string;
+  size: number;
+  angle: number;
+  radius: number;
+  angularSpeed: number;
+  speed: number;
+  opacity: number;
+  active: boolean;
+  threshold: number;
+  activated: boolean;
+  group: 'left' | 'content' | 'sidebar' | 'theme';
+}
+
+const uiFragments: FragmentParticle[] = [];
+let collapseTriggered = false;
+
+const leftRect = ref({ left: 0, top: 0, width: 0, height: 0 });
+const contentRect = ref({ left: 0, top: 0, width: 0, height: 0 });
+const sidebarRect = ref({ left: 0, top: 0, width: 0, height: 0 });
+const themeRect = ref({ left: 0, top: 0, width: 0, height: 0 });
+
+const spawnDustParticles = (group: 'left' | 'content' | 'sidebar' | 'theme', rect: { left: number, top: number, width: number, height: number }) => {
+  if (rect.width <= 0 || rect.height <= 0) return;
+  
+  let count = 250;
+  let baseColors: string[] = [];
+  
+  if (group === 'left') {
+    count = 800;
+    baseColors = [
+      'rgba(52, 211, 153, opacity)',  // emerald
+      'rgba(255, 255, 255, opacity)', // white dust
+      'rgba(30, 41, 59, opacity)'     // slate
+    ];
+  } else if (group === 'content') {
+    count = 1600;
+    baseColors = [
+      'rgba(96, 165, 250, opacity)',  // blue
+      'rgba(248, 250, 252, opacity)', // white text
+      'rgba(15, 23, 42, opacity)'     // slate-900
+    ];
+  } else if (group === 'sidebar') {
+    count = 600;
+    baseColors = [
+      'rgba(251, 191, 36, opacity)',  // gold
+      'rgba(255, 255, 255, opacity)', // white
+      'rgba(30, 41, 59, opacity)'     // slate
+    ];
+  } else if (group === 'theme') {
+    count = 150;
+    baseColors = [
+      'rgba(251, 191, 36, opacity)',  // amber
+      'rgba(253, 224, 71, opacity)',  // yellow
+      'rgba(255, 255, 255, opacity)'
+    ];
+  }
+  
+  for (let i = 0; i < count; i++) {
+    const rx = rect.left + Math.random() * rect.width;
+    const ry = rect.top + Math.random() * rect.height;
+    
+    // threshold from top-right to bottom-left:
+    const threshold = ((rect.left + rect.width - rx) / rect.width + (ry - rect.top) / rect.height) / 2;
+    const color = baseColors[Math.floor(Math.random() * baseColors.length)];
+    
+    // Volumetric size distribution:
+    // 60% small dust (0.6 - 1.8px)
+    // 30% medium chunks (1.8 - 3.5px)
+    // 10% large/thick debris (3.5 - 7.5px)
+    const rand = Math.random();
+    let size = 1.0;
+    if (rand < 0.60) {
+      size = Math.random() * 1.2 + 0.6;
+    } else if (rand < 0.90) {
+      size = Math.random() * 1.7 + 1.8;
+    } else {
+      size = Math.random() * 4.0 + 3.5;
+    }
+    
+    uiFragments.push({
+      x: rx,
+      y: ry,
+      startX: rx,
+      startY: ry,
+      color: color,
+      size: size,
+      angle: 0,
+      radius: 0,
+      angularSpeed: (Math.random() * 0.022 + 0.012) * (Math.random() < 0.5 ? 1 : -1),
+      speed: Math.random() * 2.0 + 0.8,
+      opacity: 1.0,
+      active: true,
+      threshold: threshold,
+      activated: false,
+      group: group
+    });
+  }
+};
+
 const handleGlobalMouseMove = (e: MouseEvent) => {
   if (!rippleCanvas.value) return;
   const rect = rippleCanvas.value.getBoundingClientRect();
@@ -573,7 +819,8 @@ const animateBackground = (time: number) => {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  // 리액티비티 갱신 트리거
+  // 리액티비티 및 페이즈 갱신 트리거
+  updateBlackHolePhase();
   animationTick.value++;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -698,6 +945,109 @@ const animateBackground = (time: number) => {
     }
   }
 
+  // --- 컴포넌트 점진적 분쇄용 파편(Fragment Particles) 연출 시뮬레이션 ---
+  const phase = bhPhase.value;
+  const prog = bhProgress.value;
+
+  if (phase === 'collapse') {
+    if (!collapseTriggered) {
+      const leftEl = document.querySelector('.left-panel-wrapper');
+      const contentEl = document.querySelector('.content');
+      const sidebarEl = document.querySelector('.sidebar');
+      const themeEl = document.querySelector('.theme-toggle-btn');
+
+      leftRect.value = leftEl ? leftEl.getBoundingClientRect() : { left: 50, top: 150, width: 240, height: 600 };
+      contentRect.value = contentEl ? contentEl.getBoundingClientRect() : { left: 320, top: 100, width: canvas.width - 640, height: canvas.height - 200 };
+      sidebarRect.value = sidebarEl ? sidebarEl.getBoundingClientRect() : { left: canvas.width - 300, top: 80, width: 250, height: 500 };
+      themeRect.value = themeEl ? themeEl.getBoundingClientRect() : { left: canvas.width - 65, top: 20, width: 45, height: 45 };
+
+      uiFragments.length = 0;
+      spawnDustParticles('left', leftRect.value);
+      spawnDustParticles('content', contentRect.value);
+      spawnDustParticles('sidebar', sidebarRect.value);
+      spawnDustParticles('theme', themeRect.value);
+
+      collapseTriggered = true;
+    }
+  } else {
+    collapseTriggered = false;
+    if (phase !== 'bigbang') {
+      uiFragments.length = 0;
+    }
+  }
+
+  if (uiFragments.length > 0) {
+    for (let i = 0; i < uiFragments.length; i++) {
+      const p = uiFragments[i];
+      if (!p.active) continue;
+
+      if (phase === 'collapse') {
+        if (!p.activated) {
+          const dx = p.startX - bhCenterX;
+          const dy = p.startY - bhCenterY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          
+          const targetRadius = Math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height) + 200;
+          const currentRadius = 170 + (targetRadius - 170) * prog;
+
+          if (currentRadius + 70 >= dist) {
+            p.activated = true;
+            p.radius = dist;
+            p.angle = Math.atan2(dy, dx);
+          }
+        }
+
+        if (p.activated) {
+          const speedMult = 1.5 + prog * 6.0;
+          const gravityPull = Math.min(8.0, 200 / Math.max(p.radius, 12));
+          
+          p.radius -= p.speed * speedMult * gravityPull * 1.2;
+          p.angle += p.angularSpeed * speedMult * gravityPull * 2.5;
+
+          p.x = bhCenterX + Math.cos(p.angle) * p.radius;
+          p.y = bhCenterY + Math.sin(p.angle) * p.radius;
+
+          // Smoothly fade out near the event horizon (under 60px radius)
+          if (p.radius < 60) {
+            p.opacity = Math.max(0, p.radius / 60);
+          }
+
+          if (p.radius < 12 || p.opacity <= 0) {
+            p.active = false;
+          }
+        }
+      } else if (phase === 'bigbang') {
+        if (p.activated) {
+          const speedMult = 8.0 * (1.0 - prog);
+          p.radius += p.speed * speedMult;
+          p.angle += p.angularSpeed * 0.5;
+
+          p.x = bhCenterX + Math.cos(p.angle) * p.radius;
+          p.y = bhCenterY + Math.sin(p.angle) * p.radius;
+          p.opacity = Math.max(0, 1.0 - prog);
+
+          if (p.opacity <= 0) {
+            p.active = false;
+          }
+        }
+      }
+
+      if (p.activated && p.active && p.opacity > 0) {
+        if (p.size > 3.5) {
+          // Draw a soft outer glow for large chunks
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * 1.8, 0, Math.PI * 2);
+          ctx.fillStyle = p.color.replace('opacity', (p.opacity * 0.15).toFixed(2));
+          ctx.fill();
+        }
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = p.color.replace('opacity', p.opacity.toFixed(2));
+        ctx.fill();
+      }
+    }
+  }
+
   animationFrameId = requestAnimationFrame(animateBackground);
 };
 
@@ -720,6 +1070,7 @@ const toggleTheme = () => {
 }
 
 onMounted(async () => {
+  isMounted.value = true;
   await recordHit();
   fetchStats();
   // 테마 초기 설정
@@ -1136,6 +1487,11 @@ onUnmounted(() => {
 <style scoped>
 @import url('@/assets/styles/mini-stats.css');
 
+.is-collapsing {
+  mask-image: radial-gradient(circle at 250px var(--bh-y), transparent var(--bh-mask-radius-inner, 0px), black var(--bh-mask-radius-outer, 0px));
+  -webkit-mask-image: radial-gradient(circle at 250px var(--bh-y), transparent var(--bh-mask-radius-inner, 0px), black var(--bh-mask-radius-outer, 0px));
+}
+
 .global-ripple-canvas {
   position: fixed;
   top: 0;
@@ -1543,10 +1899,10 @@ onUnmounted(() => {
 
 .black-hole-bg-widget {
   position: fixed !important;
-  bottom: 150px;
-  left: 150px;
-  width: 200px;
-  height: 200px;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   z-index: 0;
   pointer-events: none;
 }
