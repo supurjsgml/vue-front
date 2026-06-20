@@ -5,8 +5,7 @@
     <!-- 배경 고정 블랙홀 위젯 -->
     <WidgetBlackHole class="black-hole-bg-widget" />
     
-    <div class="main-ui-wrapper" :style="containerWarpStyle">
-      <ClientOnly>
+    <ClientOnly>
       <div
         v-if="showGlobalDog"
         class="global-dog-container"
@@ -29,8 +28,10 @@
         </Transition>
       </div>
     </ClientOnly>
-    <!-- 왼쪽 패널 그룹 -->
-    <div class="left-panel-wrapper">
+
+    <div class="main-ui-wrapper" :style="containerWarpStyle">
+      <!-- 왼쪽 패널 그룹 -->
+      <div class="left-panel-wrapper">
       <!-- 메인 네비게이션 영역 (개별 드래그) -->
       <div 
         tabindex="0"
