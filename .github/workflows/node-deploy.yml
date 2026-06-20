@@ -72,6 +72,9 @@ jobs:
         needs: [check, build]
         if: needs.check.outputs.changed == 'true'
         runs-on: ubuntu-latest
+
+        environment: vue-front
+
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
