@@ -34,6 +34,7 @@ export default defineEventHandler(async (event) => {
     'x-frame-options', 'content-security-policy',
     'content-security-policy-report-only',
     'transfer-encoding', 'connection', 'content-encoding',
+    'content-length',
   ])
   res.headers.forEach((val, key) => {
     if (key.toLowerCase() === 'set-cookie') {
