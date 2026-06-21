@@ -54,17 +54,16 @@ jobs:
             - name: Build Nuxt project
               run: yarn build
             
+            # 배포 파일 압축 (SCP 전송 효율 향상 및 파일 누락 방지)
+            - name: Compress build files
+              run: tar -czf release.tar.gz .output package.json yarn.lock .env.prod
+            
             # 넉3 업로드
             - name: Upload Build Artifact
               uses: actions/upload-artifact@v4
               with:
                 name: node-app-build
-                path: |
-                      .output
-                      package.json
-                      Procfile
-                      yarn.lock
-                      .env.prod
+                path: release.tar.gz
                 retention-days: 7 # 아티팩트 깃헙에 7일 동안 보관
     
     # 배포
@@ -100,17 +99,17 @@ jobs:
             #     usedocker: false
             #     rollbackonhealthcheckfailed: false
 
-            # Lightsail로 빌드 파일 전송 (SCP)
-            - name: Copy build files to Lightsail
+            # Lightsail로 압축된 빌드 파일 전송 (SCP)
+            - name: Copy release tar to Lightsail
               uses: appleboy/scp-action@v0.1.7
               with:
                 host: ${{ secrets.LIGHTSAIL_HOST }}
                 username: ${{ secrets.LIGHTSAIL_USERNAME }}
                 key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
-                source: ".output,package.json,yarn.lock,.env.prod"
+                source: "release.tar.gz"
                 target: "/home/ubuntu/vue-front"
 
-            # Lightsail 서버에서 PM2 실행 및 구동
+            # Lightsail 서버에서 압축 해제 및 PM2 실행 및 구동
             - name: SSH to Lightsail and deploy
               uses: appleboy/ssh-action@v1.0.3
               with:
@@ -118,10 +117,14 @@ jobs:
                 username: ${{ secrets.LIGHTSAIL_USERNAME }}
                 key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
                 script: |
+                  mkdir -p /home/ubuntu/vue-front
                   cd /home/ubuntu/vue-front
+                  # 기존 release.tar.gz 파일 압축 해제 및 삭제
+                  tar -xzf release.tar.gz
+                  rm release.tar.gz
+                  
                   # PM2를 이용하여 포트 9000번으로 Nuxt 실행 및 무중단 재시작
-                  PORT=9000 pm2 start .output/server/index.mjs --name "vue-front" || PORT=9000 pm2 reload "vue-front" --update-env
-                  pm2 save
+                  (PORT=9000 pm2 reload "vue-front" --update-env || PORT=9000 pm2 start .output/server/index.mjs --name "vue-front") && pm2 save
             
     # 변경사항 없으면 서버만 재시작    
     restart:

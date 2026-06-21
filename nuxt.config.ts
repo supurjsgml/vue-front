@@ -43,8 +43,8 @@ export default defineNuxtConfig({
 
   modules: ["@pinia/nuxt", "@nuxt/image"],
   runtimeConfig: {
-    redisRestUrl: process.env.REDIS_HOST,
-    redisRestToken: process.env.REDIS_TOKEN,
+    redisRestUrl: process.env.REDIS_HOST || "https://definite-bug-116442.upstash.io",
+    redisRestToken: process.env.REDIS_TOKEN || "gQAAAAAAAcbaAAIgcDFlZDFmMmY0OTcwNjQ0MDFmOTg1NTU1ODY4Njk1YzNkNw",
     redisTtl: process.env.REDIS_TTL,
     public: {
       restApi: process.env.REDOC_API_URL,
