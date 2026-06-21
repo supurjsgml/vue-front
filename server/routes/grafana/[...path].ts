@@ -6,6 +6,10 @@ export default defineEventHandler(async (event) => {
 
   const reqHeaders = { ...getRequestHeaders(event) }
   delete reqHeaders['host']
+  delete reqHeaders['connection']
+  delete reqHeaders['keep-alive']
+  delete reqHeaders['transfer-encoding']
+  delete reqHeaders['upgrade']
 
   const res = await fetch(targetUrl, {
     method: event.method,
