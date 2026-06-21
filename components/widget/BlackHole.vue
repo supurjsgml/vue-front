@@ -323,37 +323,7 @@ const animate = () => {
     ctx.arc(cx, cy, ringRadius2, 0, Math.PI * 2);
     ctx.stroke();
 
-    // C. 렌즈 플레어 크로스 스파이크 (Lens Flare Star Spikes)
-    const spikeLength = progress * maxRadius * 1.3;
-    const numSpikes = 8;
-    
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(progress * 0.5); // 광선 회전
-    
-    for (let i = 0; i < numSpikes; i++) {
-      const angle = (i / numSpikes) * Math.PI * 2;
-      const isPrimary = i % 2 === 0;
-      const len = isPrimary ? spikeLength : spikeLength * 0.55;
-      const width = isPrimary ? 8 * invProg : 3 * invProg;
 
-      const endX = Math.cos(angle) * len;
-      const endY = Math.sin(angle) * len;
-      
-      const grad = ctx.createLinearGradient(0, 0, endX, endY);
-      grad.addColorStop(0, 'rgba(255, 255, 255, ' + invProg.toFixed(2) + ')');
-      grad.addColorStop(0.3, isPrimary ? 'rgba(52, 211, 153, ' + (invProg * 0.8).toFixed(2) + ')' : 'rgba(168, 85, 247, ' + (invProg * 0.8).toFixed(2) + ')');
-      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      
-      ctx.beginPath();
-      ctx.strokeStyle = grad;
-      ctx.lineWidth = width;
-      ctx.lineCap = 'round';
-      ctx.moveTo(0, 0);
-      ctx.lineTo(endX, endY);
-      ctx.stroke();
-    }
-    ctx.restore();
   }
 
   // 6. 입자 시뮬레이션 및 렌더링

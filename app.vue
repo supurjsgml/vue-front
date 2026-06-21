@@ -2,6 +2,7 @@
   <div class="container" :style="containerStyle">
     <!-- 배경 그리드 및 파편 시뮬레이션 컴포넌트 -->
     <WidgetBackgroundGrid 
+      v-if="isBlackHoleEnabled"
       :bhPhase="bhPhase" 
       :bhProgress="bhProgress" 
       :animationTick="animationTick" 
@@ -13,7 +14,7 @@
     />
     
     <!-- 배경 고정 블랙홀 위젯 -->
-    <WidgetBlackHole class="black-hole-bg-widget" />
+    <WidgetBlackHole v-if="isBlackHoleEnabled" class="black-hole-bg-widget" />
     
     <!-- 견희 캐릭터 위젯 -->
     <WidgetGlobalDog 
@@ -170,6 +171,9 @@ import { useHead, useRoute } from '#imports'
 import { ChevronRightIcon, SunIcon, MoonIcon } from '@heroicons/vue/24/solid'
 import { getAPI } from '~/api/get'
 
+const { isBlackHoleEnabled, bigBangTriggerTime, initBlackHoleSetting } = useBlackHole()
+const timeOffset = ref(0)
+
 useHead({
   title: '카멜따리 ~',
   link: [
@@ -205,7 +209,7 @@ if (process.client) {
 // 실시간 동기화 위상 연산
 const updateBlackHolePhase = () => {
   const loopTime = 60000;
-  const t = Date.now() % loopTime;
+  const t = (Date.now() + timeOffset.value) % loopTime;
 
   if (t < 35000) {
     bhPhase.value = 'grow';
@@ -728,6 +732,7 @@ onMounted(async () => {
   isMounted.value = true;
   await recordHit();
   fetchStats();
+  initBlackHoleSetting();
   
   const savedTheme = localStorage.getItem('theme')
   if (savedTheme) {
@@ -737,8 +742,33 @@ onMounted(async () => {
   }
   document.documentElement.setAttribute('data-bs-theme', isDarkMode.value ? 'dark' : 'light')
 
-  if (process.client) {
+  if (process.client && isBlackHoleEnabled.value) {
     phaseAnimationFrameId = requestAnimationFrame(runPhaseLoop);
+  }
+});
+
+watch(isBlackHoleEnabled, (newVal) => {
+  if (process.client) {
+    if (newVal) {
+      cancelAnimationFrame(phaseAnimationFrameId);
+      phaseAnimationFrameId = requestAnimationFrame(runPhaseLoop);
+    } else {
+      cancelAnimationFrame(phaseAnimationFrameId);
+      bhPhase.value = 'idle';
+      bhProgress.value = 0;
+    }
+  }
+});
+
+watch(bigBangTriggerTime, (newVal) => {
+  if (newVal > 0 && process.client) {
+    const loopTime = 60000;
+    const currentModulo = Date.now() % loopTime;
+    let offset = 40000 - currentModulo;
+    if (offset < 0) {
+      offset += loopTime;
+    }
+    timeOffset.value += offset;
   }
 });
 
