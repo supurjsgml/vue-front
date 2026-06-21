@@ -49,18 +49,25 @@ export default defineEventHandler(async (event) => {
       var B='/grafana';  
       var _f=window.fetch;  
       window.fetch=function(u,o){  
-        if(typeof u==='string'&&u.startsWith('/')&&!u.startsWith(B))u=B+u;  
+        if(typeof u==='string'){  
+          if(u.startsWith('/')&&!u.startsWith(B)) u=B+u;  
+          else if(!u.includes('://')&&!u.startsWith('data:')&&!u.startsWith(B)) u=B+'/'+u;  
+        }  
         return _f.call(this,u,o);  
       };  
       var _x=XMLHttpRequest.prototype.open;  
       XMLHttpRequest.prototype.open=function(){  
         var a=[].slice.call(arguments);  
-        if(typeof a[1]==='string'&&a[1].startsWith('/')&&!a[1].startsWith(B))a[1]=B+a[1];  
+        if(typeof a[1]==='string'){  
+          if(a[1].startsWith('/')&&!a[1].startsWith(B)) a[1]=B+a[1];  
+          else if(!a[1].includes('://')&&!a[1].startsWith('data:')&&!a[1].startsWith(B)) a[1]=B+'/'+a[1];  
+        }  
         return _x.apply(this,a);  
       };  
     })();  
     </script>`
 
+    html = html.replace(/<base href="\/"\s*\/?>/i, '<base href="/grafana/" />')
     html = html.replace(/<head>/i, '<head>' + interceptor)
     setHeader(event, 'content-type', 'text/html; charset=utf-8')
     return html
