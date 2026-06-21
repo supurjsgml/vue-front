@@ -86,19 +86,42 @@ jobs:
                 name: node-app-build
                 path: .
 
-            # 헤로쿠 CLI 설치
-            - name: Install Heroku CLI
-              run: curl https://cli-assets.heroku.com/install.sh | sh
+            # 헤로쿠 CLI 설치 (기존 스크립트 백업용 주석 처리)
+            # - name: Install Heroku CLI
+            #   run: curl https://cli-assets.heroku.com/install.sh | sh
 
-            # Heroku 배포
-            - name: Deploy to Heroku
-              uses: akhileshns/heroku-deploy@v3.13.15
+            # Heroku 배포 (기존 스크립트 백업용 주석 처리)
+            # - name: Deploy to Heroku
+            #   uses: akhileshns/heroku-deploy@v3.13.15
+            #   with:
+            #     heroku_api_key: ${{ secrets.HEROKU_API_KEY_NODE }}
+            #     heroku_app_name: ${{ secrets.HEROKU_APP_NAME_NODE }}
+            #     heroku_email: ${{ secrets.HEROKU_EMAIL }}
+            #     usedocker: false
+            #     rollbackonhealthcheckfailed: false
+
+            # Lightsail로 빌드 파일 전송 (SCP)
+            - name: Copy build files to Lightsail
+              uses: appleboy/scp-action@v0.1.7
               with:
-                heroku_api_key: ${{ secrets.HEROKU_API_KEY_NODE }}
-                heroku_app_name: ${{ secrets.HEROKU_APP_NAME_NODE }}
-                heroku_email: ${{ secrets.HEROKU_EMAIL }}
-                usedocker: false
-                rollbackonhealthcheckfailed: false
+                host: ${{ secrets.LIGHTSAIL_HOST }}
+                username: ${{ secrets.LIGHTSAIL_USERNAME }}
+                key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+                source: ".output,package.json,yarn.lock,.env.prod"
+                target: "/home/ubuntu/vue-front"
+
+            # Lightsail 서버에서 PM2 실행 및 구동
+            - name: SSH to Lightsail and deploy
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                host: ${{ secrets.LIGHTSAIL_HOST }}
+                username: ${{ secrets.LIGHTSAIL_USERNAME }}
+                key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+                script: |
+                  cd /home/ubuntu/vue-front
+                  # PM2를 이용하여 포트 9000번으로 Nuxt 실행 및 무중단 재시작
+                  PORT=9000 pm2 start .output/server/index.mjs --name "vue-front" || PORT=9000 pm2 reload "vue-front" --update-env
+                  pm2 save
             
     # 변경사항 없으면 서버만 재시작    
     restart:
@@ -106,9 +129,19 @@ jobs:
         if: needs.check.outputs.changed == 'false'
         runs-on: ubuntu-latest
         steps:
-            - name: Install Heroku CLI
-              run: curl https://cli-assets.heroku.com/install.sh | sh
-            - name: Restart Heroku Dynos
-              run: heroku ps:restart -a ${{ secrets.HEROKU_APP_NAME_NODE }}
-              env:
-                  HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY_NODE }}
+            # 헤로쿠 재시작 (기존 스크립트 백업용 주석 처리)
+            # - name: Install Heroku CLI
+            #   run: curl https://cli-assets.heroku.com/install.sh | sh
+            # - name: Restart Heroku Dynos
+            #   run: heroku ps:restart -a ${{ secrets.HEROKU_APP_NAME_NODE }}
+            #   env:
+            #       HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY_NODE }}
+
+            - name: SSH to Lightsail and restart PM2
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                host: ${{ secrets.LIGHTSAIL_HOST }}
+                username: ${{ secrets.LIGHTSAIL_USERNAME }}
+                key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+                script: |
+                  pm2 restart "vue-front"
