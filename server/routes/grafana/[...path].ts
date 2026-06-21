@@ -1,4 +1,4 @@
-import { defineEventHandler, setHeader, setResponseStatus, getRequestHeaders } from 'h3'
+import { defineEventHandler, setHeader, setResponseStatus, getRequestHeaders, readRawBody } from 'h3'
 
 export default defineEventHandler(async (event) => {
   const path = event.path.replace(/^\/grafana/, '') || '/'
@@ -11,9 +11,14 @@ export default defineEventHandler(async (event) => {
   delete reqHeaders['transfer-encoding']
   delete reqHeaders['upgrade']
 
+  const body = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(event.method)
+    ? await readRawBody(event)
+    : undefined
+
   const res = await fetch(targetUrl, {
     method: event.method,
     headers: reqHeaders as HeadersInit,
+    body: body as any,
   })
 
   // plugin settings 401 → 빈 200으로 대체 (SPA 초기화 실패 방지)  
