@@ -34,6 +34,7 @@ const props = defineProps<{
 }>();
 
 const route = useRoute();
+const { isBlackHoleEnabled } = useBlackHole();
 
 const showGlobalDog = computed(() => {
   return route.path !== '/';
@@ -205,7 +206,7 @@ const animateGlobalDog = () => {
   const bhCenterX = 250;
   const bhCenterY = window.innerHeight - 250;
 
-  if (!gIsDragging.value) {
+  if (!gIsDragging.value && isBlackHoleEnabled.value) {
     const dx = bhCenterX - dogCenterX;
     const dy = bhCenterY - dogCenterY;
     const dist = Math.sqrt(dx * dx + dy * dy);
@@ -416,6 +417,14 @@ watch(showGlobalDog, (newVal) => {
     toggleGlobalDogAnimation(newVal);
   }
 }, { immediate: true });
+
+watch(isBlackHoleEnabled, (newVal) => {
+  if (!newVal) {
+    isSuckedIn.value = false;
+    globalDogScale.value = 1.0;
+    gRotationSpeed.value = 0.4;
+  }
+});
 
 onMounted(() => {
   if (process.client) {
