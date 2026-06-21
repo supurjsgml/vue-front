@@ -421,7 +421,7 @@ const sidebarWarpStyle = computed(() => {
 });
 
 // 테마 버튼 전용 소멸/복구 스타일
-const themeWarpStyle = computed(() => {
+const themeWarpStyle = computed(() => { 
   if (!isMounted.value) return {};
   const phase = bhPhase.value;
   const prog = bhProgress.value;
