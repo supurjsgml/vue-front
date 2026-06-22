@@ -58,7 +58,7 @@
         :class="{ dragging: statsIsDragging }"
         @click="openStatsModalIfNoDrag" 
         @mousedown.stop="startStatsDrag"
-        :style="{ transform: `translate(${statsPosition.x}px, ${statsPosition.y}px)` }"
+        :style="{ transform: `translate(${statsPosition.x}px, ${statsPosition.y}px)`, top: statsTop }"
       >
         <div class="mini-stats-header">
           <div class="mini-stats-info">
@@ -507,6 +507,15 @@ const bigBangOverlayStyle = computed(() => {
 });
 
 const isMainOpen = ref(true)
+const statsTop = computed(() => {
+  if (!isMainOpen.value) {
+    return '110px';
+  }
+  const base = 80;
+  const itemHeight = 48;
+  const gap = 30;
+  return `${base + (4 * itemHeight) + gap}px`;
+})
 const showStatsModal = ref(false)
 
 const statsData = ref({
@@ -784,6 +793,7 @@ onUnmounted(() => {
 
 
 .container {
+  width: 100%;
   max-width: 1800px;
   margin: 0 auto;
   padding: 30px;
@@ -801,7 +811,7 @@ onUnmounted(() => {
   position: relative;
   z-index: 10;
   width: 240px;
-  margin-top: 11rem;
+  margin-top: 34px;
   min-height: 1050px;
   display: flex;
   flex-direction: column;
@@ -809,7 +819,9 @@ onUnmounted(() => {
 }
 
 .nav-container {
-  position: relative;
+  position: absolute !important;
+  top: 0;
+  left: 0;
   width: 100%;
   box-sizing: border-box;
   background: var(--nav-bg);
@@ -936,6 +948,11 @@ onUnmounted(() => {
     padding: 15px;
   }
 
+  .theme-toggle-btn {
+    right: 15px !important;
+    top: 15px !important;
+  }
+
   .main-ui-wrapper {
     flex-direction: column;
     align-items: stretch;
@@ -945,6 +962,7 @@ onUnmounted(() => {
   .left-panel-wrapper {
     width: 100%;
     margin-top: 0;
+    min-height: auto;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -959,6 +977,7 @@ onUnmounted(() => {
     transform: none !important;
     width: 100% !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+    transition: none !important;
   }
 
   .nav-item {
@@ -1005,6 +1024,7 @@ onUnmounted(() => {
   border-radius: 16px;
   position: sticky;
   top: 20px;
+  margin-top: 34px;
   align-self: flex-start;
   user-select: none;
   -webkit-user-select: none;
@@ -1107,5 +1127,12 @@ onUnmounted(() => {
   height: 100vh;
   pointer-events: none;
   mix-blend-mode: screen;
+}
+
+.mini-stats-widget {
+  position: absolute !important;
+  left: 0;
+  width: 100%;
+  transition: top 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 </style>

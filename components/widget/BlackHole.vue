@@ -380,13 +380,11 @@ const animate = () => {
     alpha = Math.max(0, Math.min(1, alpha));
     
     if (alpha > 0) {
-      ctx.save();
       ctx.globalAlpha = alpha;
       ctx.fillStyle = p.color;
       ctx.beginPath();
       ctx.arc(x, y, p.size, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
     }
     
     // 범위 이탈 시 재스폰
@@ -401,6 +399,7 @@ const animate = () => {
     }
   }
 
+  ctx.globalAlpha = 1.0;
   animationId = requestAnimationFrame(animate);
 };
 
