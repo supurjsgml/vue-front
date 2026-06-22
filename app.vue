@@ -31,7 +31,7 @@
         class="nav-container draggable-panel"
         :class="{ dragging: navIsDragging }"
         @mousedown.stop="startNavDrag"
-        :style="{ transform: `translate(${navPosition.x}px, ${navPosition.y}px)` }"
+        :style="navWarpStyle"
       >
         <div class="nav-item" @click="toggleMain">
         <NuxtLink class="custom-link" to="/" @click="() => isMainOpen = false" @mousedown.stop>main</NuxtLink>
@@ -58,7 +58,7 @@
         :class="{ dragging: statsIsDragging }"
         @click="openStatsModalIfNoDrag" 
         @mousedown.stop="startStatsDrag"
-        :style="{ transform: `translate(${statsPosition.x}px, ${statsPosition.y}px)`, top: statsTop }"
+        :style="statsWarpStyle"
       >
         <div class="mini-stats-header">
           <div class="mini-stats-info">
@@ -511,11 +511,35 @@ const statsTop = computed(() => {
   if (!isMainOpen.value) {
     return '110px';
   }
-  const base = 80;
-  const itemHeight = 48;
+  const base = 85;
+  const itemHeight = 54;
   const gap = 30;
   return `${base + (4 * itemHeight) + gap}px`;
 })
+
+const isMobile = computed(() => {
+  return windowWidth.value <= 1024;
+})
+
+const navWarpStyle = computed(() => {
+  if (isMobile.value) {
+    return {};
+  }
+  return {
+    transform: `translate(${navPosition.value.x}px, ${navPosition.value.y}px)`
+  };
+})
+
+const statsWarpStyle = computed(() => {
+  if (isMobile.value) {
+    return {};
+  }
+  return {
+    transform: `translate(${statsPosition.value.x}px, ${statsPosition.value.y}px)`,
+    top: statsTop.value
+  };
+})
+
 const showStatsModal = ref(false)
 
 const statsData = ref({
@@ -942,80 +966,7 @@ onUnmounted(() => {
   pointer-events: auto;
 }
 
-/* 반응형 스타일 */
-@media (max-width: 768px) {
-  .container {
-    padding: 15px;
-  }
 
-  .theme-toggle-btn {
-    right: 15px !important;
-    top: 15px !important;
-  }
-
-  .main-ui-wrapper {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 15px;
-  }
-
-  .left-panel-wrapper {
-    width: 100%;
-    margin-top: 0;
-    min-height: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-bottom: 20px;
-  }
-
-  .nav-container,
-  .mini-stats-widget {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    transform: none !important;
-    width: 100% !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
-    transition: none !important;
-  }
-
-  .nav-item {
-    justify-content: space-between;
-    padding: 14px;
-  }
-
-  .sub-menu {
-    padding-left: 0;
-    margin-top: 8px;
-  }
-
-  .content {
-    margin-left: 0;
-    margin-right: 0;
-    max-width: 100%;
-    width: 100%;
-  }
-
-  .sidebar {
-    width: 100%;
-    position: static;
-    padding: 15px 0;
-    margin-top: 30px;
-    border-top: 1px solid var(--nav-border);
-  }
-
-  .sidebar ul {
-    display: flex;
-    justify-content: center;
-    gap: 25px;
-    margin: 0;
-  }
-
-  .sidebar li {
-    margin-bottom: 0;
-  }
-}
 
 .sidebar {
   width: 280px;
@@ -1134,5 +1085,80 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   transition: top 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 반응형 스타일 (CSS 오버라이드를 위해 최하단 배치) */
+@media (max-width: 1024px) {
+  .container {
+    padding: 15px;
+  }
+
+  .theme-toggle-btn {
+    right: 15px !important;
+    top: 15px !important;
+  }
+
+  .main-ui-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+
+  .left-panel-wrapper {
+    width: 100%;
+    margin-top: 0;
+    min-height: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
+  .nav-container,
+  .mini-stats-widget {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    transform: none !important;
+    width: 100% !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+    transition: none !important;
+  }
+
+  .nav-item {
+    justify-content: space-between;
+    padding: 14px;
+  }
+
+  .sub-menu {
+    padding-left: 0;
+    margin-top: 8px;
+  }
+
+  .content {
+    margin-left: 0;
+    margin-right: 0;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .sidebar {
+    width: 100%;
+    position: static;
+    padding: 15px 0;
+    margin-top: 30px;
+    border-top: 1px solid var(--nav-border);
+  }
+
+  .sidebar ul {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    margin: 0;
+  }
+
+  .sidebar li {
+    margin-bottom: 0;
+  }
 }
 </style>
