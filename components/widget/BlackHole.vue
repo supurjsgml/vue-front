@@ -5,9 +5,51 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { useBlackHole } from '~/composables/commonUtils';
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
+const { isActionEnabled, bigBangClickTime, timeOffset } = useBlackHole();
+
+interface Ripple {
+  x: number;
+  y: number;
+  radius: number;
+  maxRadius: number;
+  color: string;
+  opacity: number;
+  speed: number;
+}
+const ripples = ref<Ripple[]>([]);
+
+watch(bigBangClickTime, (newVal) => {
+  if (newVal > 0 && process.client) {
+    const canvas = canvasRef.value;
+    if (!canvas) return;
+    
+    const cx = 250;
+    const cy = canvas.height - 250;
+    
+    // 온/오프 상태에 따른 색상 정의 (ON: 파랑, OFF: 빨강)
+    const isNowEnabled = isActionEnabled.value;
+    const color = isNowEnabled 
+      ? 'rgba(0, 230, 255, '
+      : 'rgba(255, 60, 60, ';
+      
+    ripples.value = []; // 기존 충격파 초기화
+    for (let i = 0; i < 3; i++) {
+      ripples.value.push({
+        x: cx,
+        y: cy,
+        radius: 10 + i * 15,
+        maxRadius: 180 + i * 40,
+        color: color,
+        opacity: 0.8 - i * 0.15,
+        speed: 3.5 - i * 0.5
+      });
+    }
+  }
+});
 let animationId = 0;
 let img: HTMLImageElement | null = null;
 const isImageLoaded = ref(false);
@@ -106,32 +148,42 @@ const animate = () => {
     lastIsDark = isDark;
   }
 
-  const loopTime = 60000;
-  const t = Date.now() % loopTime;
-
   let phase = 'idle';
   let progress = 0;
 
-  if (t < 35000) {
-    phase = 'grow';
-    progress = t / 35000; // 0 -> 1
-  } else if (t < 40000) {
-    phase = 'collapse';
-    progress = (t - 35000) / 5000; // 0 -> 1
-  } else if (t < 42000) {
-    phase = 'bigbang';
-    progress = (t - 40000) / 2000; // 0 -> 1
-  } else if (t < 50000) {
-    phase = 'recover';
-    progress = (t - 42000) / 8000; // 0 -> 1
+  if (!isActionEnabled.value) {
+    // OFF 상태일 때는 고요하고 은은한 은하수 모드로 상시 고정
+    phase = 'serene';
+    progress = 0.5;
   } else {
-    phase = 'idle';
-    progress = (t - 50000) / 10000; // 0 -> 1
+    const loopTime = 60000;
+    const t = (Date.now() + timeOffset.value) % loopTime;
+
+    if (t < 35000) {
+      phase = 'grow';
+      progress = t / 35000; // 0 -> 1
+    } else if (t < 40000) {
+      phase = 'collapse';
+      progress = (t - 35000) / 5000; // 0 -> 1
+    } else if (t < 42000) {
+      phase = 'bigbang';
+      progress = (t - 40000) / 2000; // 0 -> 1
+    } else if (t < 50000) {
+      phase = 'recover';
+      progress = (t - 42000) / 8000; // 0 -> 1
+    } else {
+      phase = 'idle';
+      progress = (t - 50000) / 10000; // 0 -> 1
+    }
   }
 
   // 1. 소용돌이 기하 왜곡 매개변수 계산
   let maxSwirlRadius = 70;
   let singularityRadius = 18;
+  if (isActionEnabled.value) {
+    // 액션이 활성화된 상태일 때는 에너지가 끓어오르는 은은한 맥박 효과(15px ~ 21px)를 줍니다.
+    singularityRadius += Math.sin(Date.now() / 250) * 3;
+  }
   let rotationSpeed = 0.4;
   let opacity = 1.0;
   let scaleRatio = 1.0;
@@ -143,6 +195,12 @@ const animate = () => {
     maxSwirlRadius = 70 + progress * 100;
     singularityRadius = 18 + progress * 20;
     rotationSpeed = 0.4 + progress * 1.5; // 속도 대폭 증가
+    explosionInitialized = false;
+  } else if (phase === 'serene') {
+    // 평온한 은하 모드 파라미터 (천천히 아름답게 회전)
+    maxSwirlRadius = 85;
+    singularityRadius = 14;
+    rotationSpeed = 0.12; // 0.4 대비 훨씬 느린 은은한 속도
     explosionInitialized = false;
   } else if (phase === 'collapse') {
     // 블랙홀 이미지 크기는 팽창하지 않도록 고정 (화면을 덮는 효과 제거)
@@ -340,6 +398,8 @@ const animate = () => {
   let speedMult = 1.0;
   if (phase === 'grow') {
     speedMult = 1.0 + Math.pow(progress, 2) * 4.0; 
+  } else if (phase === 'serene') {
+    speedMult = 0.22; // 아주 느리고 차분하게 흐르는 은하수 효과
   } else if (phase === 'collapse') {
     speedMult = 5.0 + Math.pow(progress, 2) * 15.0; 
   } else if (phase === 'recover') {
@@ -398,6 +458,30 @@ const animate = () => {
       }
     }
   }
+
+  // 3. 충격파 링 (Shockwave Ripples) 그리기
+  ctx.globalAlpha = 1.0;
+  ripples.value = ripples.value.filter(ripple => {
+    ripple.radius += ripple.speed;
+    ripple.opacity -= 0.015;
+    
+    if (ripple.opacity <= 0 || ripple.radius >= ripple.maxRadius) {
+      return false;
+    }
+    
+    ctx.beginPath();
+    ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
+    ctx.strokeStyle = `${ripple.color}${ripple.opacity})`;
+    ctx.lineWidth = 3 * (1 - (ripple.radius / ripple.maxRadius)) + 0.5;
+    ctx.stroke();
+    
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = ripple.color.includes('255, 60') ? 'rgba(255, 60, 60, 0.8)' : 'rgba(0, 230, 255, 0.8)';
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    
+    return true;
+  });
 
   ctx.globalAlpha = 1.0;
   animationId = requestAnimationFrame(animate);

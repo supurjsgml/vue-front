@@ -171,8 +171,7 @@ import { useHead, useRoute } from '#imports'
 import { ChevronRightIcon, SunIcon, MoonIcon } from '@heroicons/vue/24/solid'
 import { getAPI } from '~/api/get'
 
-const { isBlackHoleEnabled, bigBangTriggerTime, initBlackHoleSetting } = useBlackHole()
-const timeOffset = ref(0)
+const { isBlackHoleEnabled, isActionEnabled, bigBangTriggerTime, timeOffset, initBlackHoleSetting } = useBlackHole()
 
 useHead({
   title: '카멜따리 ~',
@@ -208,6 +207,11 @@ if (process.client) {
 
 // 실시간 동기화 위상 연산
 const updateBlackHolePhase = () => {
+  if (!isActionEnabled.value) {
+    bhPhase.value = 'grow';
+    bhProgress.value = 0.5;
+    return;
+  }
   const loopTime = 60000;
   const t = (Date.now() + timeOffset.value) % loopTime;
 
@@ -793,6 +797,23 @@ watch(isBlackHoleEnabled, (newVal) => {
   }
 });
 
+watch(isActionEnabled, (newVal) => {
+  if (process.client) {
+    if (!newVal) {
+      bhPhase.value = 'grow';
+      bhProgress.value = 0.5;
+    } else {
+      const loopTime = 60000;
+      const currentModulo = Date.now() % loopTime;
+      let offset = 0 - currentModulo;
+      if (offset < 0) {
+        offset += loopTime;
+      }
+      timeOffset.value = offset;
+    }
+  }
+});
+
 watch(bigBangTriggerTime, (newVal) => {
   if (newVal > 0 && process.client) {
     const loopTime = 60000;
@@ -801,7 +822,7 @@ watch(bigBangTriggerTime, (newVal) => {
     if (offset < 0) {
       offset += loopTime;
     }
-    timeOffset.value += offset;
+    timeOffset.value = offset;
   }
 });
 

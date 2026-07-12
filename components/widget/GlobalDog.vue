@@ -34,7 +34,7 @@ const props = defineProps<{
 }>();
 
 const route = useRoute();
-const { isBlackHoleEnabled } = useBlackHole();
+const { isBlackHoleEnabled, isActionEnabled } = useBlackHole();
 
 const showGlobalDog = computed(() => {
   return route.path !== '/';
@@ -206,7 +206,7 @@ const animateGlobalDog = () => {
   const bhCenterX = 250;
   const bhCenterY = window.innerHeight - 250;
 
-  if (!gIsDragging.value && isBlackHoleEnabled.value) {
+  if (!gIsDragging.value && isBlackHoleEnabled.value && isActionEnabled.value) {
     const dx = bhCenterX - dogCenterX;
     const dy = bhCenterY - dogCenterY;
     const dist = Math.sqrt(dx * dx + dy * dy);
