@@ -32,6 +32,7 @@ export default defineEventHandler(async (event): Promise<any> => {
     const pageVisits = {
       Main: 0,
       Camel: 0,
+      Translate: 0,
       Grafana: 0,
       Google: 0
     }
@@ -59,6 +60,7 @@ export default defineEventHandler(async (event): Promise<any> => {
       data: {
         Main: 0,
         Camel: 0,
+        Translate: 0,
         Grafana: 0,
         Google: 0,
         Stats: 0

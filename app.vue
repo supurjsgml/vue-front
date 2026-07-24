@@ -141,14 +141,40 @@
           </a>
         </li>
         <li>
-          <a href="https://chromewebstore.google.com/detail/%EC%9E%A1%EC%BD%94%EB%A6%AC%EC%95%84-%EC%9D%B4%EB%A0%A5%EC%84%9C-%EA%B0%B1%EC%8B%A0/chjbcemdkiommdpeklplkbfpemefejcp" target="_blank">
-            <img src="@/assets/styles/img/logo/chromeWebStoreLogo.png" alt="chromeWebStoreLogo" class="sidebar-logo" />
-          </a>
-        </li>
-        <li>
           <a :href="useRuntimeConfig().public.grafanaUrl.concat('/public-dashboards/6db3adcb8b00421589797ad121289dd1')" target="_blank">
             <img src="@/assets/styles/img/logo/grafanaLogo.png" alt="grafanaLogo" class="sidebar-logo" />
           </a>
+        </li>
+        <!-- 크롬 확장프로그램 세션 (이쁘게 구분된 2개 링크) -->
+        <li class="extension-section">
+          <div class="extension-section-header">
+            <img src="@/assets/styles/img/logo/chromeWebStoreLogo.png" alt="Chrome Web Store" class="extension-header-logo" />
+            <span class="extension-header-title">Chrome Extensions</span>
+          </div>
+          <div class="extension-links">
+            <a 
+              href="https://chromewebstore.google.com/detail/%EC%9E%A1%EC%BD%94%EB%A6%AC%EC%95%84-%EC%9D%B4%EB%A0%A5%EC%84%9C-%EA%B0%B1%EC%8B%A0/chjbcemdkiommdpeklplkbfpemefejcp" 
+              target="_blank" 
+              class="extension-card"
+            >
+              <div class="extension-info">
+                <span class="extension-name">잡코리아 이력서 갱신</span>
+                <span class="extension-desc">이력서 자동 갱신 툴</span>
+              </div>
+              <span class="extension-tag">확장앱</span>
+            </a>
+            <a 
+              href="https://chromewebstore.google.com/detail/gemini-ai-web-agent/cigmfccgmaeohgblgnpfcheefkpockeo?authuser=0&hl=ko" 
+              target="_blank" 
+              class="extension-card extension-card-new"
+            >
+              <div class="extension-info">
+                <span class="extension-name">Gemini AI Web Agent</span>
+                <span class="extension-desc">AI 웹 자동화 에이전트</span>
+              </div>
+              <span class="extension-tag tag-new">NEW</span>
+            </a>
+          </div>
         </li>
       </ul>
     </aside>
@@ -1042,6 +1068,124 @@ onUnmounted(() => {
   text-decoration: underline;
 }
 
+/* 크롬 확장프로그램 섹션 스타일 */
+.extension-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--nav-border);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.3s ease;
+}
+
+.extension-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.extension-header-logo {
+  height: 18px;
+  width: auto;
+  object-fit: contain;
+}
+
+.extension-header-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--nav-text);
+  opacity: 0.85;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.extension-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.extension-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--nav-border);
+  border-radius: 8px;
+  text-decoration: none !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.extension-card:hover {
+  background: rgba(52, 211, 153, 0.08);
+  border-color: rgba(52, 211, 153, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 211, 153, 0.15);
+}
+
+.extension-card-new:hover {
+  background: rgba(168, 85, 247, 0.1);
+  border-color: rgba(168, 85, 247, 0.4);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);
+}
+
+.extension-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.extension-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--nav-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s ease;
+}
+
+.extension-card:hover .extension-name {
+  color: #34d399;
+}
+
+.extension-card-new:hover .extension-name {
+  color: #c084fc;
+}
+
+.extension-desc {
+  font-size: 0.7rem;
+  color: var(--nav-text);
+  opacity: 0.6;
+}
+
+.extension-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--nav-text);
+  opacity: 0.8;
+  flex-shrink: 0;
+  border: 1px solid var(--nav-border);
+}
+
+.tag-new {
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+  color: #ffffff;
+  opacity: 1;
+  border: none;
+  box-shadow: 0 2px 6px rgba(168, 85, 247, 0.4);
+}
+
 /* 테마 토글 버튼 스타일 */
 .theme-toggle-btn {
   position: fixed;
@@ -1173,13 +1317,20 @@ onUnmounted(() => {
 
   .sidebar ul {
     display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     justify-content: center;
-    gap: 25px;
+    gap: 20px;
     margin: 0;
   }
 
   .sidebar li {
     margin-bottom: 0;
+  }
+
+  .extension-section {
+    width: 100%;
+    max-width: 320px;
   }
 }
 </style>
