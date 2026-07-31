@@ -39,6 +39,7 @@ export default defineNuxtConfig({
   css: [
     "@/assets/styles/ui.css",
     "@/assets/styles/docs.css",
+    "@/assets/styles/diff.css",
   ],
 
   modules: ["@pinia/nuxt", "@nuxt/image"],

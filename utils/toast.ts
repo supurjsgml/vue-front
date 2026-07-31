@@ -1,48 +1,102 @@
-export function showCopyToast(event: MouseEvent | HTMLElement, message: string, duration = 2000) {
-    const target = event instanceof HTMLElement ? event : (event.currentTarget as HTMLElement || event.target as HTMLElement);
-    if (!target) return;
+export function showCopyToast(event?: MouseEvent | HTMLElement | null, message = '클립보드에 복사 되었습니다.', duration = 2200) {
+    if (typeof document === 'undefined') return;
 
-    // 기존 띄워진 동일한 위치의 툴팁이 있다면 제거 (중복 방지)
-    const existingTooltips = document.querySelectorAll('.copy-tooltip-floating');
-    existingTooltips.forEach(el => el.remove());
+    // 1. 기존 버튼 근처 플로팅 툴팁 처리 (event가 전달되었을 경우)
+    if (event) {
+        const target = event instanceof HTMLElement ? event : (event.currentTarget as HTMLElement || event.target as HTMLElement);
+        if (target) {
+            const existingTooltips = document.querySelectorAll('.copy-tooltip-floating');
+            existingTooltips.forEach(el => el.remove());
 
-    // 툴팁 엘리먼트 생성
-    const tooltip = document.createElement('div');
-    tooltip.className = 'copy-tooltip-floating';
-    tooltip.innerText = message;
+            const tooltip = document.createElement('div');
+            tooltip.className = 'copy-tooltip-floating';
+            tooltip.innerText = message;
 
-    document.body.appendChild(tooltip);
+            document.body.appendChild(tooltip);
 
-    // 좌표 계산
-    const rect = target.getBoundingClientRect();
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+            const rect = target.getBoundingClientRect();
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
-    // 버튼 상단 중앙에 배치
-    const tooltipHeight = 32; // 대략적인 높이
-    const top = rect.top + scrollTop - tooltipHeight - 8; // 8px 간격
-    const left = rect.left + scrollLeft + (rect.width / 2);
+            const tooltipHeight = 32;
+            const top = rect.top + scrollTop - tooltipHeight - 8;
+            const left = rect.left + scrollLeft + (rect.width / 2);
 
-    tooltip.style.position = 'absolute';
-    tooltip.style.top = `${top}px`;
-    tooltip.style.left = `${left}px`;
-    tooltip.style.transform = 'translateX(-50%)';
-    tooltip.style.zIndex = '99999';
+            tooltip.style.position = 'absolute';
+            tooltip.style.top = `${top}px`;
+            tooltip.style.left = `${left}px`;
+            tooltip.style.transform = 'translateX(-50%)';
+            tooltip.style.zIndex = '99999';
 
-    // 브라우저 렌더링 동기화 후 활성화 클래스 추가
+            requestAnimationFrame(() => {
+                tooltip.classList.add('visible');
+            });
+
+            setTimeout(() => {
+                tooltip.classList.remove('visible');
+                const onTransitionEnd = () => {
+                    tooltip.removeEventListener('transitionend', onTransitionEnd);
+                    tooltip.remove();
+                };
+                tooltip.addEventListener('transitionend', onTransitionEnd);
+                setTimeout(() => tooltip.remove(), 300);
+            }, duration);
+        }
+    }
+
+    // 2. 엘든링 스타일 중앙 배너 연출 함수 호출
+    showEldenRingBanner(message, duration);
+}
+
+export function showEldenRingBanner(message = '클립보드에 복사 되었습니다.', duration = 2200) {
+    if (typeof document === 'undefined') return;
+
+    // 기존 활성화된 배너가 있다면 제거
+    const existingBanners = document.querySelectorAll('.elden-ring-banner-overlay');
+    existingBanners.forEach(el => el.remove());
+
+    const overlay = document.createElement('div');
+    overlay.className = 'elden-ring-banner-overlay';
+
+    const content = document.createElement('div');
+    content.className = 'elden-banner-content';
+
+    const textWrapper = document.createElement('div');
+    textWrapper.className = 'elden-text-wrapper';
+
+    const titleText = 'COPIED TO CLIPBOARD';
+
+    const ghostEl = document.createElement('div');
+    ghostEl.className = 'elden-banner-title ghost-layer';
+    ghostEl.innerText = titleText;
+
+    const mainEl = document.createElement('div');
+    mainEl.className = 'elden-banner-title main-layer';
+    mainEl.innerText = titleText;
+
+    textWrapper.appendChild(ghostEl);
+    textWrapper.appendChild(mainEl);
+
+    const subTitleEl = document.createElement('div');
+    subTitleEl.className = 'elden-banner-subtitle';
+    subTitleEl.innerText = message;
+
+    content.appendChild(textWrapper);
+    content.appendChild(subTitleEl);
+
+    overlay.appendChild(content);
+
+    document.body.appendChild(overlay);
+
     requestAnimationFrame(() => {
-        tooltip.classList.add('visible');
+        overlay.classList.add('active');
     });
 
-    // 5초(duration) 후 제거
     setTimeout(() => {
-        tooltip.classList.remove('visible');
-        const onTransitionEnd = () => {
-            tooltip.removeEventListener('transitionend', onTransitionEnd);
-            tooltip.remove();
-        };
-        tooltip.addEventListener('transitionend', onTransitionEnd);
-        // 트랜지션 미작동 대비 안전 제거 장치
-        setTimeout(() => tooltip.remove(), 300);
+        overlay.classList.remove('active');
+        overlay.classList.add('fade-out');
+        setTimeout(() => {
+            overlay.remove();
+        }, 500);
     }, duration);
 }

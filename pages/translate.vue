@@ -29,13 +29,13 @@
             v-model="inputText"
             @input="handleInput"
             placeholder="번역할 텍스트를 입력하세요."
-            maxlength="1000"
+            maxlength="5000"
             class="translate-textarea"
           ></textarea>
         </div>
 
         <div class="panel-footer">
-          <span class="char-counter">{{ inputText.length }} / 1000자</span>
+          <span class="char-counter">{{ inputText.length }} / 5000자</span>
         </div>
       </div>
 
@@ -144,12 +144,12 @@ const triggerTranslate = async () => {
   isLoading.value = true;
   try {
     const q = encodeURIComponent(inputText.value.trim());
-    const langpair = `${sourceLang.value}|${targetLang.value}`;
-    const response = await fetch(`https://api.mymemory.translated.net/get?q=${q}&langpair=${langpair}`);
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang.value}&tl=${targetLang.value}&dt=t&q=${q}`;
+    const response = await fetch(url);
     const data = await response.json();
 
-    if (data && data.responseData && data.responseData.translatedText) {
-      translatedText.value = data.responseData.translatedText;
+    if (data && data[0] && Array.isArray(data[0])) {
+      translatedText.value = data[0].map((item: any) => item[0]).filter(Boolean).join('');
     } else {
       translatedText.value = '번역을 완료하지 못했습니다. 다시 시도해 주세요.';
     }
@@ -182,16 +182,12 @@ watch([sourceLang, targetLang], () => {
   }
 });
 
-// 복사 토스트 메시지 기능
-const copyToClipboard = () => {
+// 복사 토스트 및 엘든링 배너 연출 실행
+const copyToClipboard = (event?: MouseEvent) => {
   if (!translatedText.value) return;
 
   navigator.clipboard.writeText(translatedText.value).then(() => {
-    toastMessage.value = '클립보드에 번역 결과가 복사되었습니다!';
-    showToast.value = true;
-    setTimeout(() => {
-      showToast.value = false;
-    }, 2500);
+    showCopyToast(event || null, '클립보드에 번역 결과가 복사되었습니다!');
   }).catch(err => {
     console.error('Copy failed:', err);
   });

@@ -15,11 +15,26 @@ export default defineEventHandler(async (event) => {
     ? await readRawBody(event)
     : undefined
 
-  const res = await fetch(targetUrl, {
-    method: event.method,
-    headers: reqHeaders as HeadersInit,
-    body: body as any,
-  })
+  let res: Response
+  try {
+    res = await fetch(targetUrl, {
+      method: event.method,
+      headers: reqHeaders as HeadersInit,
+      body: body as any,
+      signal: AbortSignal.timeout(60000),
+    })
+  } catch (firstErr) {
+    try {
+      res = await fetch(targetUrl, {
+        method: event.method,
+        headers: reqHeaders as HeadersInit,
+        body: body as any,
+        signal: AbortSignal.timeout(60000),
+      })
+    } catch (secondErr) {
+      throw secondErr
+    }
+  }
 
   // plugin settings 401 → 빈 200으로 대체 (SPA 초기화 실패 방지)  
   if (path.match(/\/api\/plugins\/.+\/settings/) && res.status === 401) {
@@ -51,7 +66,7 @@ export default defineEventHandler(async (event) => {
     const interceptor = `<script>  
     (function(){  
       var p = window.location.pathname;  
-      if(p.indexOf('/grafana') === 0) history.replaceState({}, '', p.slice(8) || '/');  
+      if(p.indexOf('/grafana') === 0) history.replaceState({}, '', (p.slice(8) || '/') + window.location.search);  
       var B='/grafana';  
       var _f=window.fetch;  
       window.fetch=function(u,o){  

@@ -36,9 +36,18 @@ const props = defineProps<{
 const route = useRoute();
 const { isBlackHoleEnabled, isActionEnabled } = useBlackHole();
 
+const isToggleVisible = ref(true);
+
 const showGlobalDog = computed(() => {
-  return route.path !== '/';
+  return route.path !== '/' && isToggleVisible.value;
 });
+
+const handleKeydown = (event: KeyboardEvent) => {
+  if (event.ctrlKey && event.altKey && (event.key === 'g' || event.key === 'G' || event.code === 'KeyG')) {
+    event.preventDefault();
+    isToggleVisible.value = !isToggleVisible.value;
+  }
+};
 
 const globalDogWidth = ref(180);
 const globalDogHeight = ref(180);
@@ -428,6 +437,7 @@ watch(isBlackHoleEnabled, (newVal) => {
 
 onMounted(() => {
   if (process.client) {
+    window.addEventListener('keydown', handleKeydown);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     if (showGlobalDog.value) {
       toggleGlobalDogAnimation(true);
@@ -437,6 +447,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (process.client) {
+    window.removeEventListener('keydown', handleKeydown);
     document.removeEventListener('visibilitychange', handleVisibilityChange);
     window.removeEventListener('resize', updateGlobalDogDimensions);
     cancelAnimationFrame(gAnimationFrameId);

@@ -33,15 +33,18 @@
         @mousedown.stop="startNavDrag"
         :style="navWarpStyle"
       >
-        <div class="nav-item" @click="toggleMain">
-        <NuxtLink class="custom-link" to="/" @click="() => isMainOpen = false" @mousedown.stop>main</NuxtLink>
-        <ChevronRightIcon @click="toggleMain" :class="{ rotated: isMainOpen }" class="icon" />
-      </div>
+        <div class="nav-item">
+          <NuxtLink class="custom-link" to="/" @mousedown.stop>main</NuxtLink>
+          <ChevronRightIcon @click.stop="toggleMain" :class="{ rotated: isMainOpen }" class="icon" />
+        </div>
       <div class="sub-menu" v-if="isMainOpen">
         <NuxtLink class="custom-link" to="/camel" @mousedown.stop>camel</NuxtLink>
       </div>
       <div class="sub-menu" v-if="isMainOpen">
         <NuxtLink class="custom-link" to="/translate" @mousedown.stop>번역쓰</NuxtLink>
+      </div>
+      <div class="sub-menu" v-if="isMainOpen">
+        <NuxtLink class="custom-link" to="/diff" @mousedown.stop>Diff 비교</NuxtLink>
       </div>
       <div class="sub-menu" v-if="isMainOpen">
         <NuxtLink class="custom-link" to="/grafana" @mousedown.stop>구라파나</NuxtLink>
@@ -51,7 +54,62 @@
         </div>
       </div> <!-- End of nav-container -->
 
-      <!-- Mini Stats Widget (개별 드래그) -->
+      </div> <!-- End of left-panel-wrapper -->
+
+    <!-- 콘텐츠 영역 -->
+    <div class="content" :style="contentWarpStyle">
+      <NuxtLayout>
+        <NuxtPage />
+      </NuxtLayout>
+    </div>
+
+    <!-- 오른쪽 홍보 링크 영역 -->
+    <aside class="sidebar" :style="sidebarWarpStyle">
+      <ul>
+        <li>
+          <a :href="useRuntimeConfig().public.restApi" target="_blank">
+            <img src="@/assets/styles/img/logo/swaggerLogo.png" alt="SwaggerLogo" class="sidebar-logo" />
+          </a>
+        </li>
+        <li>
+          <a :href="useRuntimeConfig().public.grafanaUrl.concat('/public-dashboards/6db3adcb8b00421589797ad121289dd1?from=now-24h&to=now&timezone=browser&refresh=10s')" target="_blank">
+            <img src="@/assets/styles/img/logo/grafanaLogo.png" alt="grafanaLogo" class="sidebar-logo" />
+          </a>
+        </li>
+        <!-- 크롬 확장프로그램 세션 -->
+        <li class="extension-section">
+          <div class="extension-section-header">
+            <img src="@/assets/styles/img/logo/chromeWebStoreLogo.png" alt="Chrome Web Store" class="extension-header-logo" />
+            <span class="extension-header-title">Chrome Extensions</span>
+          </div>
+          <div class="extension-links">
+            <a 
+              href="https://chromewebstore.google.com/detail/%EC%9E%A1%EC%BD%94%EB%A6%AC%EC%95%84-%EC%9D%B4%EB%A0%A5%EC%84%9C-%EA%B0%B1%EC%8B%A0/chjbcemdkiommdpeklplkbfpemefejcp" 
+              target="_blank" 
+              class="extension-card"
+            >
+              <div class="extension-info">
+                <span class="extension-name">잡코리아 이력서 갱신</span>
+                <span class="extension-desc">이력서 자동 갱신 툴</span>
+              </div>
+              <span class="extension-tag">확장앱</span>
+            </a>
+            <a 
+              href="https://chromewebstore.google.com/detail/gemini-ai-web-agent/cigmfccgmaeohgblgnpfcheefkpockeo?authuser=0&hl=ko" 
+              target="_blank" 
+              class="extension-card extension-card-new"
+            >
+              <div class="extension-info">
+                <span class="extension-name">Gemini AI Web Agent</span>
+                <span class="extension-desc">AI 웹 자동화 에이전트</span>
+              </div>
+              <span class="extension-tag tag-new">NEW</span>
+            </a>
+          </div>
+        </li>
+      </ul>
+
+      <!-- Mini Stats Widget (사이드바 우측에 위치 배치) -->
       <div 
         tabindex="0"
         class="mini-stats-widget draggable-panel" 
@@ -123,60 +181,6 @@
           </span>
         </div>
       </div>
-    </div> <!-- End of left-panel-wrapper -->
-
-    <!-- 콘텐츠 영역 -->
-    <div class="content" :style="contentWarpStyle">
-      <NuxtLayout>
-        <NuxtPage />
-      </NuxtLayout>
-    </div>
-
-    <!-- 오른쪽 홍보 링크 영역 -->
-    <aside class="sidebar" :style="sidebarWarpStyle">
-      <ul>
-        <li>
-          <a :href="useRuntimeConfig().public.restApi" target="_blank">
-            <img src="@/assets/styles/img/logo/swaggerLogo.png" alt="SwaggerLogo" class="sidebar-logo" />
-          </a>
-        </li>
-        <li>
-          <a :href="useRuntimeConfig().public.grafanaUrl.concat('/public-dashboards/6db3adcb8b00421589797ad121289dd1')" target="_blank">
-            <img src="@/assets/styles/img/logo/grafanaLogo.png" alt="grafanaLogo" class="sidebar-logo" />
-          </a>
-        </li>
-        <!-- 크롬 확장프로그램 세션 (이쁘게 구분된 2개 링크) -->
-        <li class="extension-section">
-          <div class="extension-section-header">
-            <img src="@/assets/styles/img/logo/chromeWebStoreLogo.png" alt="Chrome Web Store" class="extension-header-logo" />
-            <span class="extension-header-title">Chrome Extensions</span>
-          </div>
-          <div class="extension-links">
-            <a 
-              href="https://chromewebstore.google.com/detail/%EC%9E%A1%EC%BD%94%EB%A6%AC%EC%95%84-%EC%9D%B4%EB%A0%A5%EC%84%9C-%EA%B0%B1%EC%8B%A0/chjbcemdkiommdpeklplkbfpemefejcp" 
-              target="_blank" 
-              class="extension-card"
-            >
-              <div class="extension-info">
-                <span class="extension-name">잡코리아 이력서 갱신</span>
-                <span class="extension-desc">이력서 자동 갱신 툴</span>
-              </div>
-              <span class="extension-tag">확장앱</span>
-            </a>
-            <a 
-              href="https://chromewebstore.google.com/detail/gemini-ai-web-agent/cigmfccgmaeohgblgnpfcheefkpockeo?authuser=0&hl=ko" 
-              target="_blank" 
-              class="extension-card extension-card-new"
-            >
-              <div class="extension-info">
-                <span class="extension-name">Gemini AI Web Agent</span>
-                <span class="extension-desc">AI 웹 자동화 에이전트</span>
-              </div>
-              <span class="extension-tag tag-new">NEW</span>
-            </a>
-          </div>
-        </li>
-      </ul>
     </aside>
     </div>
 
@@ -537,15 +541,6 @@ const bigBangOverlayStyle = computed(() => {
 });
 
 const isMainOpen = ref(true)
-const statsTop = computed(() => {
-  if (!isMainOpen.value) {
-    return '110px';
-  }
-  const base = 85;
-  const itemHeight = 54;
-  const gap = 30;
-  return `${base + (4 * itemHeight) + gap}px`;
-})
 
 const isMobile = computed(() => {
   return windowWidth.value <= 1024;
@@ -565,8 +560,7 @@ const statsWarpStyle = computed(() => {
     return {};
   }
   return {
-    transform: `translate(${statsPosition.value.x}px, ${statsPosition.value.y}px)`,
-    top: statsTop.value
+    transform: `translate(${statsPosition.value.x}px, ${statsPosition.value.y}px)`
   };
 })
 
@@ -1008,7 +1002,9 @@ onUnmounted(() => {
 .content :deep(.glass-card),
 .content :deep(.editor-card),
 .content :deep(.download-bar),
+.content :deep(.grafana-container),
 .content :deep(iframe),
+.content :deep(button),
 .content :deep(.draggable) {
   pointer-events: auto;
 }
@@ -1247,9 +1243,9 @@ onUnmounted(() => {
 
 .mini-stats-widget {
   position: absolute !important;
-  left: 0;
-  width: 100%;
-  transition: top 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  left: calc(100% + 20px);
+  top: 0;
+  width: 240px;
 }
 
 /* 반응형 스타일 (CSS 오버라이드를 위해 최하단 배치) */

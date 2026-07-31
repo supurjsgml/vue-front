@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&display=swap');
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -312,6 +314,260 @@ code,
 .output-area-large * {
   user-select: text !important;
   -webkit-user-select: text !important;
+}
+
+/* 공통 헤더, 카드 및 버튼 스타일 */
+.gradient-title {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.4rem;
+}
+
+.description-text {
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+[data-bs-theme="light"] .description-text {
+  color: #475569;
+}
+
+.glass-card {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+}
+
+[data-bs-theme="light"] .glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.secondary-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+[data-bs-theme="light"] .secondary-btn {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1e293b;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+[data-bs-theme="light"] .secondary-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #0f172a;
+}
+
+.primary-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+}
+
+.primary-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+}
+
+.primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.elden-ring-banner-overlay {
+  position: fixed;
+  top: 50%;
+  left: 0;
+  width: 100vw;
+  transform: translateY(-50%);
+  z-index: 9999999;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(90deg, 
+    rgba(0, 0, 0, 0) 0%, 
+    rgba(8, 6, 2, 0.82) 15%, 
+    rgba(14, 11, 4, 0.95) 50%, 
+    rgba(8, 6, 2, 0.82) 85%, 
+    rgba(0, 0, 0, 0) 100%
+  );
+  padding: 22px 0;
+  box-sizing: border-box;
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.elden-ring-banner-overlay.active {
+  opacity: 1;
+}
+
+.elden-ring-banner-overlay.fade-out {
+  opacity: 0;
+  transform: translateY(-50%) scale(1.03);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.elden-banner-content {
+  padding: 12px 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.elden-text-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.elden-banner-title {
+  font-family: 'Cinzel', 'Trajan Pro', 'Georgia', serif;
+  font-size: 2.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.elden-banner-title.main-layer {
+  position: relative;
+  z-index: 2;
+  letter-spacing: 0.32em;
+  background: linear-gradient(180deg, #fffbeb 0%, #ffd700 35%, #d4af37 70%, #8c6515 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 18px rgba(255, 215, 0, 0.65)) drop-shadow(0 2px 5px rgba(0, 0, 0, 0.95));
+  animation: eldenMainTextFade 2.2s cubic-bezier(0.1, 0.95, 0.2, 1) forwards;
+}
+
+.elden-banner-title.ghost-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  color: rgba(255, 223, 110, 0.65);
+  text-shadow: 0 0 16px rgba(255, 215, 0, 0.75);
+  pointer-events: none;
+  animation: eldenGhostExpand 2.2s cubic-bezier(0.1, 0.85, 0.2, 1) forwards;
+}
+
+.elden-banner-subtitle {
+  font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+  color: rgba(255, 230, 130, 0.9);
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.6), 0 1px 4px rgba(0, 0, 0, 0.9);
+  animation: eldenSubFade 2.2s ease forwards;
+}
+
+@keyframes eldenMainTextFade {
+  0% {
+    letter-spacing: 0.1em;
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  25% {
+    letter-spacing: 0.32em;
+    opacity: 1;
+    transform: scale(1);
+  }
+  80% {
+    letter-spacing: 0.32em;
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    letter-spacing: 0.32em;
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes eldenGhostExpand {
+  0% {
+    letter-spacing: 0.1em;
+    opacity: 0;
+    transform: scale(0.95);
+    filter: blur(0px);
+  }
+  25% {
+    letter-spacing: 0.32em;
+    opacity: 0.5;
+    transform: scale(1.04);
+    filter: blur(2px);
+  }
+  75% {
+    letter-spacing: 0.32em;
+    opacity: 0.25;
+    transform: scale(1.08);
+    filter: blur(5px);
+  }
+  100% {
+    letter-spacing: 0.32em;
+    opacity: 0;
+    transform: scale(1.12);
+    filter: blur(8px);
+  }
+}
+
+@keyframes eldenSubFade {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+
+@media (max-width: 768px) {
+  .elden-banner-title {
+    font-size: 1.75rem;
+  }
 }
 
 
