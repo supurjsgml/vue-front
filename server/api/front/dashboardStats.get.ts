@@ -19,7 +19,7 @@ export default defineEventHandler(async (event): Promise<any> => {
     const keys: string[] = []
     const displayDays: string[] = []
 
-    for (let i = 6; i >= 0; i--) {
+    for (let i = 13; i >= 0; i--) {
       const d = new Date(dateInSeoul)
       d.setDate(dateInSeoul.getDate() - i)
       const yyyy = d.getFullYear()
@@ -28,10 +28,12 @@ export default defineEventHandler(async (event): Promise<any> => {
 
       keys.push(`visitor_count:${yyyy}-${mm}-${dd}`)
 
-      if (i === 0) {
-        displayDays.push("오늘")
-      } else {
-        displayDays.push(dd)
+      if (i < 7) {
+        if (i === 0) {
+          displayDays.push("오늘")
+        } else {
+          displayDays.push(dd)
+        }
       }
     }
 
@@ -49,20 +51,23 @@ export default defineEventHandler(async (event): Promise<any> => {
     }
 
     const rawValues = response?.result || []
-    const sparklineValues = rawValues.map((val: any) => val !== null && val !== undefined ? parseInt(val, 10) : 0)
-    const total = sparklineValues.reduce((acc: number, val: number) => acc + val, 0)
+    const allValues = rawValues.map((val: any) => val !== null && val !== undefined ? parseInt(val, 10) : 0)
 
-    // Calculate trend: comparison between today (index 6) and yesterday (index 5)
-    const todayCount = sparklineValues[6] || 0
-    const yesterdayCount = sparklineValues[5] || 0
+    const prevWeekValues = allValues.slice(0, 7)
+    const thisWeekValues = allValues.slice(7, 14)
+
+    const prevWeekTotal = prevWeekValues.reduce((acc: number, val: number) => acc + val, 0)
+    const thisWeekTotal = thisWeekValues.reduce((acc: number, val: number) => acc + val, 0)
+
     let trend = "0%"
     let trendDirection = "up"
 
-    if (yesterdayCount > 0) {
-      const percent = ((todayCount - yesterdayCount) / yesterdayCount) * 100
-      trend = `${Math.abs(percent).toFixed(1)}%`
+    if (prevWeekTotal > 0) {
+      const percent = ((thisWeekTotal - prevWeekTotal) / prevWeekTotal) * 100
+      const rounded = Math.round(percent)
+      trend = `${rounded >= 0 ? '+' : ''}${rounded}%`
       trendDirection = percent >= 0 ? "up" : "down"
-    } else if (todayCount > 0) {
+    } else if (thisWeekTotal > 0) {
       trend = "100%"
       trendDirection = "up"
     }
@@ -72,11 +77,11 @@ export default defineEventHandler(async (event): Promise<any> => {
       message: "성공",
       data: {
         label: "주간 방문자 (1주)",
-        value: total.toLocaleString('en-US'),
+        value: thisWeekTotal.toLocaleString('en-US'),
         description: "껄껄",
         trend: trend,
         trendDirection: trendDirection,
-        sparklineValues: sparklineValues,
+        sparklineValues: thisWeekValues,
         days: displayDays
       }
     }

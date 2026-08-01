@@ -63,53 +63,55 @@
       </NuxtLayout>
     </div>
 
-    <!-- 오른쪽 홍보 링크 영역 -->
-    <aside class="sidebar" :style="sidebarWarpStyle">
-      <ul>
-        <li>
-          <a :href="useRuntimeConfig().public.restApi" target="_blank">
-            <img src="@/assets/styles/img/logo/swaggerLogo.png" alt="SwaggerLogo" class="sidebar-logo" />
-          </a>
-        </li>
-        <li>
-          <a :href="useRuntimeConfig().public.grafanaUrl.concat('/public-dashboards/6db3adcb8b00421589797ad121289dd1?from=now-24h&to=now&timezone=browser&refresh=10s')" target="_blank">
-            <img src="@/assets/styles/img/logo/grafanaLogo.png" alt="grafanaLogo" class="sidebar-logo" />
-          </a>
-        </li>
-        <!-- 크롬 확장프로그램 세션 -->
-        <li class="extension-section">
-          <div class="extension-section-header">
-            <img src="@/assets/styles/img/logo/chromeWebStoreLogo.png" alt="Chrome Web Store" class="extension-header-logo" />
-            <span class="extension-header-title">Chrome Extensions</span>
-          </div>
-          <div class="extension-links">
-            <a 
-              href="https://chromewebstore.google.com/detail/%EC%9E%A1%EC%BD%94%EB%A6%AC%EC%95%84-%EC%9D%B4%EB%A0%A5%EC%84%9C-%EA%B0%B1%EC%8B%A0/chjbcemdkiommdpeklplkbfpemefejcp" 
-              target="_blank" 
-              class="extension-card"
-            >
-              <div class="extension-info">
-                <span class="extension-name">잡코리아 이력서 갱신</span>
-                <span class="extension-desc">이력서 자동 갱신 툴</span>
-              </div>
-              <span class="extension-tag">확장앱</span>
+    <!-- 오른쪽 홍보 링크 및 주간 방문자 패널 그룹 -->
+    <div class="right-panel-wrapper" :style="sidebarWarpStyle">
+      <aside class="sidebar">
+        <ul>
+          <li>
+            <a :href="useRuntimeConfig().public.restApi" target="_blank">
+              <img src="@/assets/styles/img/logo/swaggerLogo.png" alt="SwaggerLogo" class="sidebar-logo" />
             </a>
-            <a 
-              href="https://chromewebstore.google.com/detail/gemini-ai-web-agent/cigmfccgmaeohgblgnpfcheefkpockeo?authuser=0&hl=ko" 
-              target="_blank" 
-              class="extension-card extension-card-new"
-            >
-              <div class="extension-info">
-                <span class="extension-name">Gemini AI Web Agent</span>
-                <span class="extension-desc">AI 웹 자동화 에이전트</span>
-              </div>
-              <span class="extension-tag tag-new">NEW</span>
+          </li>
+          <li>
+            <a :href="useRuntimeConfig().public.grafanaUrl.concat('/public-dashboards/6db3adcb8b00421589797ad121289dd1?from=now-24h&to=now&timezone=browser&refresh=10s')" target="_blank">
+              <img src="@/assets/styles/img/logo/grafanaLogo.png" alt="grafanaLogo" class="sidebar-logo" />
             </a>
-          </div>
-        </li>
-      </ul>
+          </li>
+          <!-- 크롬 확장프로그램 세션 -->
+          <li class="extension-section">
+            <div class="extension-section-header">
+              <img src="@/assets/styles/img/logo/chromeWebStoreLogo.png" alt="Chrome Web Store" class="extension-header-logo" />
+              <span class="extension-header-title">Chrome Extensions</span>
+            </div>
+            <div class="extension-links">
+              <a 
+                href="https://chromewebstore.google.com/detail/%EC%9E%A1%EC%BD%94%EB%A6%AC%EC%95%84-%EC%9D%B4%EB%A0%A5%EC%84%9C-%EA%B0%B1%EC%8B%A0/chjbcemdkiommdpeklplkbfpemefejcp" 
+                target="_blank" 
+                class="extension-card"
+              >
+                <div class="extension-info">
+                  <span class="extension-name">잡코리아 이력서 갱신</span>
+                  <span class="extension-desc">이력서 자동 갱신 툴</span>
+                </div>
+                <span class="extension-tag">확장앱</span>
+              </a>
+              <a 
+                href="https://chromewebstore.google.com/detail/gemini-ai-web-agent/cigmfccgmaeohgblgnpfcheefkpockeo?authuser=0&hl=ko" 
+                target="_blank" 
+                class="extension-card extension-card-new"
+              >
+                <div class="extension-info">
+                  <span class="extension-name">Gemini AI Web Agent</span>
+                  <span class="extension-desc">AI 웹 자동화 에이전트</span>
+                </div>
+                <span class="extension-tag tag-new">NEW</span>
+              </a>
+            </div>
+          </li>
+        </ul>
+      </aside>
 
-      <!-- Mini Stats Widget (사이드바 우측에 위치 배치) -->
+      <!-- Mini Stats Widget (분리된 독립 컴포넌트) -->
       <div 
         tabindex="0"
         class="mini-stats-widget draggable-panel" 
@@ -127,7 +129,7 @@
           <div class="trend-badge">
             <svg v-if="statsData.trendDirection === 'up'" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
             <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
-            {{ statsData.trend }}
+            {{ formatTrend(statsData.trend) }}
           </div>
         </div>
         <div class="sparkline-container">
@@ -181,7 +183,7 @@
           </span>
         </div>
       </div>
-    </aside>
+    </div>
     </div>
 
     <!-- 테마 토글 버튼 -->
@@ -576,6 +578,11 @@ const statsData = ref({
   days: ['05', '06', '07', '08', '09', '10', '오늘']
 })
 
+const formatTrend = (trendStr: string): string => {
+  if (!trendStr) return '0%';
+  return trendStr.replace(/\.\d+/, '');
+}
+
 const sparklinePaths = computed(() => {
   const values = statsData.value.sparklineValues || [];
   if (values.length === 0) return { line: '', fill: '' };
@@ -756,7 +763,7 @@ const updateRects = () => {
   if (!process.client) return
   leftRect.value = getActualRect('.left-panel-wrapper', { left: 50, top: 150, width: 240, height: 600 })
   contentRect.value = getActualRect('.content', { left: 320, top: 100, width: windowWidth.value - 640, height: windowHeight.value - 200 })
-  sidebarRect.value = getActualRect('.sidebar', { left: windowWidth.value - 300, top: 80, width: 250, height: 500 })
+  sidebarRect.value = getActualRect('.right-panel-wrapper', { left: windowWidth.value - 300, top: 80, width: 280, height: 600 })
   
   const themeEl = document.querySelector('.theme-toggle-btn')
   themeRect.value = themeEl ? themeEl.getBoundingClientRect() : { left: windowWidth.value - 65, top: 20, width: 45, height: 45 }
@@ -1011,15 +1018,21 @@ onUnmounted(() => {
 
 
 
-.sidebar {
+.right-panel-wrapper {
+  position: relative;
+  z-index: 10;
   width: 280px;
+  margin-top: 34px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.sidebar {
+  width: 100%;
   padding: 20px;
   box-sizing: border-box; /* Ensures padding does not increase the sidebar's width */
   border-radius: 16px;
-  position: sticky;
-  top: 20px;
-  margin-top: 34px;
-  align-self: flex-start;
   user-select: none;
   -webkit-user-select: none;
   background: var(--nav-bg);
@@ -1242,10 +1255,10 @@ onUnmounted(() => {
 }
 
 .mini-stats-widget {
-  position: absolute !important;
-  left: calc(100% + 20px);
-  top: 0;
-  width: 240px;
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  width: 100% !important;
 }
 
 /* 반응형 스타일 (CSS 오버라이드를 위해 최하단 배치) */
