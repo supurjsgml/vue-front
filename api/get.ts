@@ -15,8 +15,11 @@ export const getAPI = () => {
     /**
      * 그라파나 대시보드 iframe src 가져오기
      */
-    async getGrafanaIframeSrc() {
-      return await $fetch("/api/grafana/iframe-src", { method: "GET" });
+    async getGrafanaIframeSrc(type?: string) {
+      return await $fetch("/api/grafana/iframe-src", { 
+        method: "GET",
+        query: { type: type || 'batch' }
+      });
     },
 
     /**

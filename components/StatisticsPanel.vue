@@ -185,6 +185,7 @@ const pageColors: Record<string, string> = {
   Main: '#00f2fe',
   Camel: '#4facfe',
   Translate: '#38ef7d',
+  Diff: '#a855f7',
   Grafana: '#f093fb',
   Google: '#f5576c'
 };
@@ -193,6 +194,7 @@ const pageStats = ref([
   { name: 'Main', visits: 0, color: '#00f2fe' },
   { name: 'Camel', visits: 0, color: '#4facfe' },
   { name: 'Translate', visits: 0, color: '#38ef7d' },
+  { name: 'Diff', visits: 0, color: '#a855f7' },
   { name: 'Grafana', visits: 0, color: '#f093fb' },
   { name: 'Google', visits: 0, color: '#f5576c' }
 ]);

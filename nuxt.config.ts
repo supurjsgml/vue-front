@@ -44,12 +44,11 @@ export default defineNuxtConfig({
 
   modules: ["@pinia/nuxt", "@nuxt/image"],
   runtimeConfig: {
-    redisRestUrl: process.env.REDIS_HOST || "https://definite-bug-116442.upstash.io",
-    redisRestToken: process.env.REDIS_TOKEN || "gQAAAAAAAcbaAAIgcDFlZDFmMmY0OTcwNjQ0MDFmOTg1NTU1ODY4Njk1YzNkNw",
-    redisTtl: process.env.REDIS_TTL,
     public: {
       restApi: process.env.REDOC_API_URL,
       grafanaUrl: process.env.GRAFANA_URL,
+      grafanaBatchUrl: process.env.GRAFANA_BATCH_URL,
+      grafanaApiUrl: process.env.GRAFANA_API_URL,
     },
   },
 

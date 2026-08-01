@@ -46,9 +46,7 @@
       <div class="sub-menu" v-if="isMainOpen">
         <NuxtLink class="custom-link" to="/diff" @mousedown.stop>Diff 비교</NuxtLink>
       </div>
-      <div class="sub-menu" v-if="isMainOpen">
-        <NuxtLink class="custom-link" to="/grafana" @mousedown.stop>구라파나</NuxtLink>
-      </div>
+
         <div class="sub-menu" v-if="isMainOpen">
           <NuxtLink class="custom-link" to="/google" @mousedown.stop>googleDownLink</NuxtLink>
         </div>
@@ -72,18 +70,72 @@
               <img src="@/assets/styles/img/logo/swaggerLogo.png" alt="SwaggerLogo" class="sidebar-logo" />
             </a>
           </li>
-          <li>
-            <a :href="useRuntimeConfig().public.grafanaUrl.concat('/public-dashboards/6db3adcb8b00421589797ad121289dd1?from=now-24h&to=now&timezone=browser&refresh=10s')" target="_blank">
-              <img src="@/assets/styles/img/logo/grafanaLogo.png" alt="grafanaLogo" class="sidebar-logo" />
-            </a>
+          <!-- 그라파나 대시보드 세션 -->
+          <li class="extension-section grafana-section">
+            <div class="extension-section-header clickable-header" @click="toggleGrafanaSection" @mousedown.stop>
+              <div class="extension-header-left">
+                <img src="@/assets/styles/img/logo/grafanaLogo.png" alt="Grafana" class="extension-header-logo" />
+                <span class="extension-header-title">구라파나 Dashboards</span>
+              </div>
+              <ChevronRightIcon :class="{ rotated: isGrafanaSectionOpen }" class="icon section-toggle-icon" />
+            </div>
+            <div class="extension-links" v-if="isGrafanaSectionOpen">
+              <NuxtLink 
+                to="/grafana?type=batch" 
+                class="extension-card extension-card-batch"
+                @mousedown.stop
+              >
+                <div class="extension-info">
+                  <span class="extension-name">Batch</span>
+                </div>
+                <button 
+                  type="button"
+                  class="external-tab-btn"
+                  title="새 창으로 열기"
+                  @click.stop.prevent="openExternalGrafana('batch')"
+                  @mousedown.stop
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                  </svg>
+                </button>
+              </NuxtLink>
+              <NuxtLink 
+                to="/grafana?type=api" 
+                class="extension-card extension-card-api"
+                @mousedown.stop
+              >
+                <div class="extension-info">
+                  <span class="extension-name">API</span>
+                </div>
+                <button 
+                  type="button"
+                  class="external-tab-btn"
+                  title="새 창으로 열기"
+                  @click.stop.prevent="openExternalGrafana('api')"
+                  @mousedown.stop
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                  </svg>
+                </button>
+              </NuxtLink>
+            </div>
           </li>
           <!-- 크롬 확장프로그램 세션 -->
           <li class="extension-section">
-            <div class="extension-section-header">
-              <img src="@/assets/styles/img/logo/chromeWebStoreLogo.png" alt="Chrome Web Store" class="extension-header-logo" />
-              <span class="extension-header-title">Chrome Extensions</span>
+            <div class="extension-section-header clickable-header" @click="toggleChromeExtensionsSection" @mousedown.stop>
+              <div class="extension-header-left">
+                <img src="@/assets/styles/img/logo/chromeWebStoreLogo.png" alt="Chrome Web Store" class="extension-header-logo" />
+                <span class="extension-header-title">Chrome Extensions</span>
+              </div>
+              <ChevronRightIcon :class="{ rotated: isChromeExtensionsSectionOpen }" class="icon section-toggle-icon" />
             </div>
-            <div class="extension-links">
+            <div class="extension-links" v-if="isChromeExtensionsSectionOpen">
               <a 
                 href="https://chromewebstore.google.com/detail/%EC%9E%A1%EC%BD%94%EB%A6%AC%EC%95%84-%EC%9D%B4%EB%A0%A5%EC%84%9C-%EA%B0%B1%EC%8B%A0/chjbcemdkiommdpeklplkbfpemefejcp" 
                 target="_blank" 
@@ -543,6 +595,24 @@ const bigBangOverlayStyle = computed(() => {
 });
 
 const isMainOpen = ref(true)
+const isGrafanaSectionOpen = ref(true)
+const isChromeExtensionsSectionOpen = ref(true)
+
+const toggleGrafanaSection = () => {
+  isGrafanaSectionOpen.value = !isGrafanaSectionOpen.value
+}
+
+const toggleChromeExtensionsSection = () => {
+  isChromeExtensionsSectionOpen.value = !isChromeExtensionsSectionOpen.value
+}
+
+const openExternalGrafana = (type: string) => {
+  const config = useRuntimeConfig()
+  const url = type === 'api' ? config.public.grafanaApiUrl : config.public.grafanaBatchUrl
+  if (url && process.client) {
+    window.open(url, '_blank')
+  }
+}
 
 const isMobile = computed(() => {
   return windowWidth.value <= 1024;
@@ -655,6 +725,7 @@ const getPageNameByPath = (path: string): string => {
   if (path === '/') return 'Main';
   if (path.startsWith('/camel')) return 'Camel';
   if (path.startsWith('/translate')) return 'Translate';
+  if (path.startsWith('/diff')) return 'Diff';
   if (path.startsWith('/grafana')) return 'Grafana';
   if (path.startsWith('/google')) return 'Google';
   return 'Main';
@@ -1092,9 +1163,43 @@ onUnmounted(() => {
 .extension-section-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
   padding-bottom: 6px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.clickable-header {
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.2s ease;
+}
+
+.clickable-header:hover {
+  opacity: 0.85;
+}
+
+.extension-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-toggle-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--nav-text);
+  opacity: 0.6;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+  margin-left: auto;
+}
+
+.section-toggle-icon.rotated {
+  transform: rotate(90deg);
+}
+
+.clickable-header:hover .section-toggle-icon {
+  opacity: 1;
+  color: #34d399;
 }
 
 .extension-header-logo {
@@ -1169,6 +1274,39 @@ onUnmounted(() => {
   color: #c084fc;
 }
 
+.extension-card-batch:hover .extension-name {
+  color: #f97316;
+}
+
+.extension-card-api:hover .extension-name {
+  color: #38bdf8;
+}
+
+.external-tab-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
+  border-radius: 6px;
+  color: var(--nav-text);
+  opacity: 0.5;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--nav-border);
+  transition: all 0.2s ease;
+  margin-left: auto;
+  flex-shrink: 0;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.external-tab-btn:hover {
+  opacity: 1;
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.15);
+  border-color: #34d399;
+  transform: scale(1.1);
+}
+
 .extension-desc {
   font-size: 0.7rem;
   color: var(--nav-text);
@@ -1193,6 +1331,22 @@ onUnmounted(() => {
   opacity: 1;
   border: none;
   box-shadow: 0 2px 6px rgba(168, 85, 247, 0.4);
+}
+
+.tag-batch {
+  background: linear-gradient(135deg, #f97316 0%, #d97706 100%);
+  color: #ffffff;
+  opacity: 1;
+  border: none;
+  box-shadow: 0 2px 6px rgba(249, 115, 22, 0.4);
+}
+
+.tag-api {
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+  color: #ffffff;
+  opacity: 1;
+  border: none;
+  box-shadow: 0 2px 6px rgba(6, 182, 212, 0.4);
 }
 
 /* 테마 토글 버튼 스타일 */
