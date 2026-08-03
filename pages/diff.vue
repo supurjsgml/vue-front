@@ -33,7 +33,7 @@
         <!-- Original Text Panel -->
         <div class="input-panel">
           <div class="input-panel-header">
-            <span class="panel-title">Original Text (원본 텍스트)</span>
+            <span class="panel-title">Original Text</span>
             <span class="char-count">{{ originalText.length.toLocaleString() }}자</span>
           </div>
           <textarea
@@ -46,7 +46,7 @@
         <!-- Changed Text Panel -->
         <div class="input-panel">
           <div class="input-panel-header">
-            <span class="panel-title">Changed Text (수정된 텍스트)</span>
+            <span class="panel-title">Changed Text</span>
             <span class="char-count">{{ changedText.length.toLocaleString() }}자</span>
           </div>
           <textarea
@@ -112,52 +112,50 @@
             <!-- 모달 바디 (Diff 뷰어) -->
             <div class="modal-body">
               
-              <!-- Split View (Side by Side) -->
+              <!-- Split View (Side by Side - 단일 통합 테이블 및 스크롤) -->
               <div v-if="viewMode === 'split'" class="diff-split-view">
-                <div class="split-column left-column">
-                  <div class="column-header">Original Text (원본)</div>
-                  <div class="code-viewport">
-                    <table class="diff-table">
-                      <tbody>
-                        <tr 
-                          v-for="(row, idx) in sideBySideRows" 
-                          :key="'left-' + idx"
-                          :class="['diff-row', row.left.type]"
-                        >
-                          <td class="line-num">{{ row.left.lineNum || '' }}</td>
-                          <td class="line-marker">
-                            <span v-if="row.left.type === 'removed'">-</span>
-                          </td>
-                          <td class="line-content">
-                            <pre>{{ row.left.val }}</pre>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                <div class="code-viewport">
+                  <table class="diff-table diff-split-table">
+                    <colgroup>
+                      <col style="width: 45px;" />
+                      <col style="width: 24px;" />
+                      <col style="width: calc(50% - 69px);" />
+                      <col style="width: 45px;" />
+                      <col style="width: 24px;" />
+                      <col style="width: calc(50% - 69px);" />
+                    </colgroup>
+                    <thead>
+                      <tr>
+                        <th colspan="3" class="column-header left-header">Original Text</th>
+                        <th colspan="3" class="column-header right-header">Changed Text</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr 
+                        v-for="(row, idx) in sideBySideRows" 
+                        :key="'split-' + idx"
+                        class="diff-row"
+                      >
+                        <!-- 원본 (Original) -->
+                        <td class="line-num" :class="row.left.type">{{ row.left.lineNum || '' }}</td>
+                        <td class="line-marker" :class="row.left.type">
+                          <span v-if="row.left.type === 'removed'">-</span>
+                        </td>
+                        <td class="line-content left-content" :class="row.left.type">
+                          <pre>{{ row.left.val }}</pre>
+                        </td>
 
-                <div class="split-column right-column">
-                  <div class="column-header">Changed Text (수정본)</div>
-                  <div class="code-viewport">
-                    <table class="diff-table">
-                      <tbody>
-                        <tr 
-                          v-for="(row, idx) in sideBySideRows" 
-                          :key="'right-' + idx"
-                          :class="['diff-row', row.right.type]"
-                        >
-                          <td class="line-num">{{ row.right.lineNum || '' }}</td>
-                          <td class="line-marker">
-                            <span v-if="row.right.type === 'added'">+</span>
-                          </td>
-                          <td class="line-content">
-                            <pre>{{ row.right.val }}</pre>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+                        <!-- 수정본 (Changed) -->
+                        <td class="line-num" :class="row.right.type">{{ row.right.lineNum || '' }}</td>
+                        <td class="line-marker" :class="row.right.type">
+                          <span v-if="row.right.type === 'added'">+</span>
+                        </td>
+                        <td class="line-content right-content" :class="row.right.type">
+                          <pre>{{ row.right.val }}</pre>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
