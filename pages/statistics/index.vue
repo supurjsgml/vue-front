@@ -48,7 +48,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { getAPI } from '~/api';
+import { getAPI } from '~/api/get';
 
 const pageColors: Record<string, string> = {
   Main: '#00f2fe',
