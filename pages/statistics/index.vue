@@ -47,23 +47,55 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { getAPI } from '~/api';
 
-// Dummy data for visualization
+const pageColors: Record<string, string> = {
+  Main: '#00f2fe',
+  Camel: '#4facfe',
+  Translate: '#38ef7d',
+  Diff: '#a855f7',
+  Google: '#f5576c'
+};
+
 const pageStats = ref([
-  { name: 'Main', visits: 12450, color: '#00f2fe' },
-  { name: 'Camel', visits: 8230, color: '#4facfe' },
-  { name: 'Grafana', visits: 15300, color: '#f093fb' },
-  { name: 'Google', visits: 6420, color: '#f5576c' },
-  { name: 'Stats', visits: 3100, color: '#5ee7df' }
+  { name: 'Main', visits: 0, color: '#00f2fe' },
+  { name: 'Camel', visits: 0, color: '#4facfe' },
+  { name: 'Translate', visits: 0, color: '#38ef7d' },
+  { name: 'Diff', visits: 0, color: '#a855f7' },
+  { name: 'Google', visits: 0, color: '#f5576c' }
 ]);
+
+const fetchPageStats = async () => {
+  try {
+    const api = getAPI();
+    const res = await api.getPageStats();
+    if (res && res.success && res.data) {
+      const data = res.data;
+      pageStats.value = Object.keys(data).map(key => {
+        return {
+          name: key,
+          visits: data[key] || 0,
+          color: pageColors[key] || '#ffffff'
+        };
+      });
+    }
+  } catch (error) {
+    console.error('Failed to fetch page statistics:', error);
+  }
+};
+
+onMounted(() => {
+  fetchPageStats();
+});
 
 const totalVisits = computed(() => {
   return pageStats.value.reduce((acc, curr) => acc + curr.visits, 0);
 });
 
 const maxVisits = computed(() => {
-  return Math.max(...pageStats.value.map(s => s.visits)) * 1.15; // Add 15% padding at top
+  const max = Math.max(...pageStats.value.map(s => s.visits));
+  return max > 0 ? max * 1.15 : 10;
 });
 
 const yAxisTicks = computed(() => {
