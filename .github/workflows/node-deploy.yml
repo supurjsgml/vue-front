@@ -1,150 +1,156 @@
-name: master
+﻿name: master
 
 on:
-    workflow_dispatch:
-#    push:
-#      branches:
-#        - master
+  workflow_dispatch:
 
 jobs:
-    # 소스 변동 사항 체크
-    check:
-        runs-on: ubuntu-latest
-        outputs:
-            changed: ${{ steps.changed-files.outputs.changed }}
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-              with:
-                fetch-depth: 2
-            - name: Check for changes
-              id: changed-files
-              run: |
-                # node 프로젝트에 맞춰 감시할 경로 파일 조져
-                if git diff --quiet HEAD^ HEAD -- \
-                  api/ assets/ components/ config/ pages/ public/ server/ stores/ \
-                  app.vue nuxt.config.ts package.json tsconfig.json; then
-                  echo "changed=false" >> $GITHUB_OUTPUT
-                else
-                  echo "changed=true" >> $GITHUB_OUTPUT
-                fi
-              
-    # 빌드
-    build:
-        needs: check
-        if: needs.check.outputs.changed == 'true'
-        runs-on: ubuntu-latest
-        
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-        
-            # Node.js 설정
-            - name: Set up Node.js 22
-              uses: actions/setup-node@v4
-              with:
-                node-version: '22'
-                cache: 'yarn' # yarn 캐시 설정
-        
-            # 패키지 설치
-            - name: Install dependencies
-              run: yarn install --frozen-lockfile
-        
-            # Nuxt 빌드
-            - name: Build Nuxt project
-              run: yarn build
-            
-            # 배포 파일 압축 (SCP 전송 효율 향상 및 파일 누락 방지)
-            - name: Compress build files
-              run: tar -czf release.tar.gz .output package.json yarn.lock .env.prod
-            
-            # 넉3 업로드
-            - name: Upload Build Artifact
-              uses: actions/upload-artifact@v4
-              with:
-                name: node-app-build
-                path: release.tar.gz
-                retention-days: 7 # 아티팩트 깃헙에 7일 동안 보관
-    
-    # 배포
-    deploy:
-        needs: [check, build]
-        if: needs.check.outputs.changed == 'true'
-        runs-on: ubuntu-latest
+  # 소스 변동 사항 확인
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.changed-files.outputs.changed }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-        environment: vue-front
+      - name: Check for changes
+        id: changed-files
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PREV_SHA=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs?status=completed&conclusion=success&per_page=1" \
+            | jq -r '.workflow_runs[0].head_sha')
+          
+          if [ -z "$PREV_SHA" ] || [ "$PREV_SHA" = "null" ]; then
+            echo ">> 이전 성공 빌드 이력이 없어 직전 커밋(HEAD^)과 비교합니다."
+            PREV_SHA="HEAD^"
+          else
+            echo ">> 이전 성공 배포 커밋: $PREV_SHA"
+          fi
+          
+          if git diff --quiet $PREV_SHA HEAD -- \
+            api/ assets/ components/ config/ pages/ public/ server/ stores/ \
+            app.vue nuxt.config.ts package.json tsconfig.json Dockerfile manifests/app.yml .github/workflows/node-deploy.yml; then
+            echo ">> 소스 코드 변동 없음 -> 단순 재시작"
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo ">> 소스 코드 변동 감지 -> 신규 빌드 및 배포 진행"
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-              
-            # 빌드한 파일 다운로드
-            - name: Download Build Artifact
-              uses: actions/download-artifact@v4
-              with:
-                name: node-app-build
-                path: .
+  # 소스 코드 변경이 있을 때: 1단계 - Nuxt 빌드 및 Docker 이미지 푸시
+  build:
+    needs: check
+    if: needs.check.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
-            # 헤로쿠 CLI 설치 (기존 스크립트 백업용 주석 처리)
-            # - name: Install Heroku CLI
-            #   run: curl https://cli-assets.heroku.com/install.sh | sh
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            # Heroku 배포 (기존 스크립트 백업용 주석 처리)
-            # - name: Deploy to Heroku
-            #   uses: akhileshns/heroku-deploy@v3.13.15
-            #   with:
-            #     heroku_api_key: ${{ secrets.HEROKU_API_KEY_NODE }}
-            #     heroku_app_name: ${{ secrets.HEROKU_APP_NAME_NODE }}
-            #     heroku_email: ${{ secrets.HEROKU_EMAIL }}
-            #     usedocker: false
-            #     rollbackonhealthcheckfailed: false
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
 
-            # Lightsail로 압축된 빌드 파일 전송 (SCP)
-            - name: Copy release tar to Lightsail
-              uses: appleboy/scp-action@v0.1.7
-              with:
-                host: ${{ secrets.LIGHTSAIL_HOST }}
-                username: ${{ secrets.LIGHTSAIL_USERNAME }}
-                key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
-                source: "release.tar.gz"
-                target: "/home/ubuntu/vue-front"
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
 
-            # Lightsail 서버에서 압축 해제 및 PM2 실행 및 구동
-            - name: SSH to Lightsail and deploy
-              uses: appleboy/ssh-action@v1.0.3
-              with:
-                host: ${{ secrets.LIGHTSAIL_HOST }}
-                username: ${{ secrets.LIGHTSAIL_USERNAME }}
-                key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
-                script: |
-                  mkdir -p /home/ubuntu/vue-front
-                  cd /home/ubuntu/vue-front
-                  # 기존 release.tar.gz 파일 압축 해제 및 삭제
-                  tar -xzf release.tar.gz
-                  rm release.tar.gz
-                  
-                  # PM2를 이용하여 포트 9000번으로 Nuxt 실행 및 무중단 재시작
-                  (PORT=9000 pm2 reload "vue-front" --update-env || PORT=9000 pm2 start .output/server/index.mjs --name "vue-front") && pm2 save
-            
-    # 변경사항 없으면 서버만 재시작    
-    restart:
-        needs: check
-        if: needs.check.outputs.changed == 'false'
-        runs-on: ubuntu-latest
-        steps:
-            # 헤로쿠 재시작 (기존 스크립트 백업용 주석 처리)
-            # - name: Install Heroku CLI
-            #   run: curl https://cli-assets.heroku.com/install.sh | sh
-            # - name: Restart Heroku Dynos
-            #   run: heroku ps:restart -a ${{ secrets.HEROKU_APP_NAME_NODE }}
-            #   env:
-            #       HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY_NODE }}
+      - name: Build Nuxt project
+        run: yarn build
 
-            - name: SSH to Lightsail and restart PM2
-              uses: appleboy/ssh-action@v1.0.3
-              with:
-                host: ${{ secrets.LIGHTSAIL_HOST }}
-                username: ${{ secrets.LIGHTSAIL_USERNAME }}
-                key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
-                script: |
-                  pm2 restart "vue-front"
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_TAG="ghcr.io/${REPO_LOWER}:latest"
+          
+          docker build -t "$IMAGE_TAG" .
+          docker push "$IMAGE_TAG"
+
+  # 소스 코드 변경이 있을 때: 2단계 - 관리자 승인 후 Azure 배포
+  deploy:
+    needs: [check, build]
+    if: needs.check.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    environment: vue-front
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure Container Apps
+        env:
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          export IMAGE_TAG="ghcr.io/${REPO_LOWER}:latest"
+          export MANAGED_ENV_ID=$(az containerapp env show --name cluster-rest-api --resource-group guney-aks --query id -o tsv)
+
+          envsubst < manifests/app.yml > manifests/app.rendered.yml
+
+          if ! az containerapp show --name vue-front --resource-group guney-aks &>/dev/null; then
+            echo ">> 신규 Azure Container App 생성: vue-front"
+            az containerapp create \
+              --name vue-front \
+              --resource-group guney-aks \
+              --yaml manifests/app.rendered.yml
+          else
+            echo ">> 기존 Azure Container App 업데이트 배포: vue-front"
+            az containerapp update \
+              --name vue-front \
+              --resource-group guney-aks \
+              --yaml manifests/app.rendered.yml
+          fi
+
+  # 소스 코드 변경이 없을 때: 빌드 건너뛰고 즉시 재시작
+  restart:
+    needs: check
+    if: needs.check.outputs.changed == 'false'
+    runs-on: ubuntu-latest
+    environment: vue-front
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Restart Azure Container App
+        env:
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          export IMAGE_TAG="ghcr.io/${REPO_LOWER}:latest"
+          export MANAGED_ENV_ID=$(az containerapp env show --name cluster-rest-api --resource-group guney-aks --query id -o tsv)
+
+          envsubst < manifests/app.yml > manifests/app.rendered.yml
+
+          echo ">> 소스 코드 변경 없음: YAML 설정 반영 및 컨테이너 무중단 재시작"
+          az containerapp update \
+            --name vue-front \
+            --resource-group guney-aks \
+            --yaml manifests/app.rendered.yml
+

@@ -1,0 +1,55 @@
+﻿kind: containerapp
+location: koreasouth
+name: vue-front
+resourceGroup: guney-aks
+type: Microsoft.App/containerApps
+properties:
+  managedEnvironmentId: ${MANAGED_ENV_ID}
+  configuration:
+    activeRevisionsMode: Single
+    ingress:
+      external: true
+      targetPort: 3000
+      transport: auto
+      allowInsecure: false
+    registries:
+      - server: ghcr.io
+        username: ${GH_ACTOR}
+        passwordSecretRef: ghcr-password
+    secrets:
+      - name: ghcr-password
+        value: ${GH_TOKEN}
+  template:
+    containers:
+      - name: vue-front
+        image: ${IMAGE_TAG}
+        resources:
+          cpu: 0.25
+          memory: 0.5Gi
+        probes:
+          - type: Liveness
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          - type: Readiness
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+        env:
+          - name: NODE_ENV
+            value: "production"
+          - name: PORT
+            value: "3000"
+    scale:
+      minReplicas: 1
+      maxReplicas: 3
+      rules:
+        - name: http-scaling-rule
+          http:
+            metadata:
+              concurrentRequests: "100"
+
