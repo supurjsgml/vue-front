@@ -272,6 +272,7 @@ useHead({
   ],
 })
 
+
 // 블랙홀 종말 및 빅뱅 상태 동기화 관리
 const isMounted = ref(false);
 const animationTick = ref(0);
