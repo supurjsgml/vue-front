@@ -61,7 +61,7 @@ jobs:
           cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install
 
       - name: Build Nuxt project
         run: yarn build
@@ -153,4 +153,5 @@ jobs:
             --name vue-front \
             --resource-group guney-aks \
             --yaml manifests/app.rendered.yml
+
 
