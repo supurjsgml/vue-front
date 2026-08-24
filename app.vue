@@ -70,6 +70,7 @@
               <img src="@/assets/styles/img/logo/swaggerLogo.png" alt="SwaggerLogo" class="sidebar-logo" />
             </a>
           </li>
+          
           <!-- 그라파나 대시보드 세션 -->
           <li class="extension-section grafana-section">
             <div class="extension-section-header clickable-header" @click="toggleGrafanaSection" @mousedown.stop>
