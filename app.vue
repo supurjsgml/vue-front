@@ -553,6 +553,7 @@ const themeWarpStyle = computed(() => {
       opacity: 1.0 - suckProg,
       willChange: 'transform, opacity',
     };
+    
   } else if (phase === 'bigbang') {
     return { opacity: 0, filter: 'blur(12px)', pointerEvents: 'none' as const };
   } else if (phase === 'recover') {
