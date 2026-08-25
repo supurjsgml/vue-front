@@ -45,8 +45,8 @@ properties:
           - name: PORT
             value: "3000"
     scale:
-      minReplicas: 1
-      maxReplicas: 3
+      minReplicas: 2
+      maxReplicas: 5
       rules:
         - name: http-scaling-rule
           http:
