@@ -66,7 +66,7 @@
       <aside class="sidebar">
         <ul>
           <li>
-            <a :href="useRuntimeConfig().public.restApi" target="_blank">
+            <a :href="useRuntimeConfig().public.restApi" target="_blank" @click="openSwagger" @mousedown.stop>
               <img src="@/assets/styles/img/logo/swaggerLogo.png" alt="SwaggerLogo" class="sidebar-logo" />
             </a>
           </li>
@@ -614,6 +614,45 @@ const openExternalGrafana = (type: string) => {
   const url = type === 'api' ? config.public.grafanaApiUrl : config.public.grafanaBatchUrl
   if (url && process.client) {
     window.open(url, '_blank')
+  }
+}
+
+const openSwagger = async (event: MouseEvent) => {
+  event.preventDefault()
+  if (!process.client) return
+
+  const config = useRuntimeConfig()
+  const primaryUrl = config.public.restApi
+  const fallbackUrl = config.public.fallbackRestApi
+
+  if (!primaryUrl) {
+    if (fallbackUrl) window.open(fallbackUrl, '_blank')
+    return
+  }
+
+  const newTab = window.open('about:blank', '_blank')
+
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 2000)
+
+    const response = await fetch(primaryUrl, {
+      method: 'GET',
+      signal: controller.signal
+    })
+    clearTimeout(timeoutId)
+
+    if (response && response.status === 500) {
+      if (newTab) newTab.location.href = primaryUrl
+    } else if (response && response.status >= 400 && response.status !== 500) {
+      if (newTab) newTab.location.href = fallbackUrl || primaryUrl
+    } else {
+      if (newTab) newTab.location.href = primaryUrl
+    }
+  } catch {
+    if (newTab) {
+      newTab.location.href = fallbackUrl || primaryUrl
+    }
   }
 }
 

@@ -46,6 +46,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       restApi: process.env.REDOC_API_URL,
+      fallbackRestApi: process.env.REDOC_FALLBACK_API_URL,
       grafanaUrl: process.env.GRAFANA_URL,
       grafanaBatchUrl: process.env.GRAFANA_BATCH_URL,
       grafanaApiUrl: process.env.GRAFANA_API_URL,
