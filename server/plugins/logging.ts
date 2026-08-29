@@ -14,6 +14,15 @@ export default defineNitroPlugin((nitroApp) => {
       return;
     }
 
+    const userAgent = (getRequestHeader(event, 'user-agent') || '').toLowerCase();
+    if (
+      userAgent.includes('kube-probe') ||
+      userAgent.includes('go-http-client') ||
+      userAgent.includes('healthcheck')
+    ) {
+      return;
+    }
+
     const duration = Date.now() - (event.context._startTime || Date.now());
     const method = event.method || 'GET';
     const status = getResponseStatus(event);
