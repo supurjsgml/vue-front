@@ -53,8 +53,6 @@ export default defineNuxtConfig({
     },
   },
 
-  serverMiddleware: ['~/server/middleware/redirect'],
-
   nitro: {
     routeRules: {
       ...grafanaProxyRoutes,

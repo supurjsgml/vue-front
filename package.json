@@ -9,7 +9,6 @@
     "build": "nuxt build --dotenv .env.prod",
     "start": "nuxt start --dotenv .env.prod",
     "generate": "nuxt generate",
-    "heroku-postbuild": "npm run build",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
   },

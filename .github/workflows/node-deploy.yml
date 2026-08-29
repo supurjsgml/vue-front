@@ -1,4 +1,4 @@
-﻿name: master
+name: master
 
 on:
   workflow_dispatch:
@@ -32,7 +32,7 @@ jobs:
           fi
           
           if git diff --quiet $PREV_SHA HEAD -- \
-            api/ assets/ components/ config/ pages/ public/ server/ stores/ \
+            api/ assets/ components/ pages/ public/ server/ stores/ \
             app.vue nuxt.config.ts package.json tsconfig.json Dockerfile manifests/app.yml .github/workflows/node-deploy.yml; then
             echo ">> 소스 코드 변동 없음 -> 단순 재시작"
             echo "changed=false" >> $GITHUB_OUTPUT
