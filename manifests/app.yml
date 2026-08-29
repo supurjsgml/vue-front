@@ -1,4 +1,4 @@
-﻿kind: containerapp
+kind: containerapp
 location: koreasouth
 name: vue-front
 resourceGroup: guney-aks
@@ -44,6 +44,18 @@ properties:
             value: "production"
           - name: PORT
             value: "3000"
+          - name: LOKI_URL
+            value: "https://logs-prod-030.grafana.net/loki/api/v1/push"
+          - name: LOKI_USER
+            value: "${LOKI_USER}"
+          - name: LOKI_TOKEN
+            value: "${LOKI_TOKEN}"
+          - name: AXIOM_API_URL
+            value: "https://api.axiom.co/v1/datasets/"
+          - name: AXIOM_DATASET
+            value: "vue-front"
+          - name: AXIOM_TOKEN
+            value: "${AXIOM_TOKEN}"
     scale:
       minReplicas: 1
       maxReplicas: 2

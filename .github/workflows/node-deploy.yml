@@ -32,7 +32,7 @@ jobs:
           fi
           
           if git diff --quiet $PREV_SHA HEAD -- \
-            api/ assets/ components/ pages/ public/ server/ stores/ \
+            api/ assets/ components/ pages/ plugins/ public/ server/ stores/ \
             app.vue nuxt.config.ts package.json tsconfig.json Dockerfile manifests/app.yml .github/workflows/node-deploy.yml; then
             echo ">> 소스 코드 변동 없음 -> 단순 재시작"
             echo "changed=false" >> $GITHUB_OUTPUT
@@ -103,6 +103,9 @@ jobs:
         env:
           GH_ACTOR: ${{ github.actor }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LOKI_USER: ${{ secrets.LOKI_USER }}
+          LOKI_TOKEN: ${{ secrets.LOKI_TOKEN }}
+          AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
         run: |
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           export IMAGE_TAG="ghcr.io/${REPO_LOWER}:${{ github.sha }}"
@@ -143,6 +146,9 @@ jobs:
         env:
           GH_ACTOR: ${{ github.actor }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LOKI_USER: ${{ secrets.LOKI_USER }}
+          LOKI_TOKEN: ${{ secrets.LOKI_TOKEN }}
+          AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
         run: |
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           export IMAGE_TAG="ghcr.io/${REPO_LOWER}:${{ github.sha }}"

@@ -44,6 +44,12 @@ export default defineNuxtConfig({
 
   modules: ["@pinia/nuxt", "@nuxt/image"],
   runtimeConfig: {
+    lokiUrl: process.env.LOKI_URL,
+    lokiUser: process.env.LOKI_USER,
+    lokiToken: process.env.LOKI_TOKEN,
+    axiomApiUrl: process.env.AXIOM_API_URL,
+    axiomDataset: process.env.AXIOM_DATASET,
+    axiomToken: process.env.AXIOM_TOKEN,
     public: {
       restApi: process.env.REDOC_API_URL,
       fallbackRestApi: process.env.REDOC_FALLBACK_API_URL,
