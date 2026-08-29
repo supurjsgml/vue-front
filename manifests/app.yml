@@ -29,13 +29,13 @@ properties:
         probes:
           - type: Liveness
             httpGet:
-              path: /
+              path: /healthz
               port: 3000
             initialDelaySeconds: 20
             periodSeconds: 10
           - type: Readiness
             httpGet:
-              path: /
+              path: /healthz
               port: 3000
             initialDelaySeconds: 10
             periodSeconds: 5

@@ -6,6 +6,7 @@ export default defineNitroPlugin((nitroApp) => {
   nitroApp.hooks.hook('afterResponse', (event) => {
     const path = event.path || '';
     if (
+      path === '/healthz' ||
       path.startsWith('/_nuxt') ||
       path.startsWith('/public') ||
       path.startsWith('/api/front/log') ||
@@ -31,7 +32,8 @@ export default defineNitroPlugin((nitroApp) => {
       method,
       path,
       status,
-      durationMs: duration
+      durationMs: duration,
+      userAgent: getRequestHeader(event, 'user-agent') || 'none'
     });
   });
 
