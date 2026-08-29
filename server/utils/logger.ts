@@ -23,6 +23,9 @@ class CentralLogger {
     if (this.timer && typeof this.timer.unref === 'function') {
       this.timer.unref();
     }
+
+    const conf = this.getConfig();
+    console.log(`[Logger] CentralLogger 가동 완료 (Loki: ${Boolean(conf.lokiToken)}, Axiom: ${Boolean(conf.axiomToken)})`);
   }
 
   private getReplica(): string {
@@ -52,6 +55,24 @@ class CentralLogger {
     }
   }
 
+  private getConfig() {
+    let runtimeConf: any = {};
+    try {
+      runtimeConf = useRuntimeConfig();
+    } catch {
+      // ignore
+    }
+
+    return {
+      lokiUrl: process.env.LOKI_URL || runtimeConf?.lokiUrl,
+      lokiUser: process.env.LOKI_USER || runtimeConf?.lokiUser,
+      lokiToken: process.env.LOKI_TOKEN || runtimeConf?.lokiToken,
+      axiomApiUrl: process.env.AXIOM_API_URL || runtimeConf?.axiomApiUrl,
+      axiomDataset: process.env.AXIOM_DATASET || runtimeConf?.axiomDataset,
+      axiomToken: process.env.AXIOM_TOKEN || runtimeConf?.axiomToken,
+    };
+  }
+
   private async flush() {
     if (this.isFlushing || this.queue.length === 0) {
       return;
@@ -61,7 +82,7 @@ class CentralLogger {
     const batch = this.queue.splice(0, this.batchSize);
 
     try {
-      const config = useRuntimeConfig();
+      const config = this.getConfig();
       await Promise.allSettled([
         this.sendToLoki(batch, config),
         this.sendToAxiom(batch, config)
@@ -73,9 +94,10 @@ class CentralLogger {
     }
   }
 
-  private async sendToLoki(batch: LogItem[], config: any) {
+  private async sendToLoki(batch: LogItem[], config: ReturnType<typeof this.getConfig>) {
     const { lokiUrl, lokiUser, lokiToken } = config;
     if (!lokiUrl || !lokiUser || !lokiToken) {
+      console.warn('[Logger] Loki 인증 정보 누락 (lokiUrl, lokiUser, lokiToken 확인 필요)');
       return;
     }
 
@@ -121,9 +143,10 @@ class CentralLogger {
     }
   }
 
-  private async sendToAxiom(batch: LogItem[], config: any) {
+  private async sendToAxiom(batch: LogItem[], config: ReturnType<typeof this.getConfig>) {
     const { axiomApiUrl, axiomDataset, axiomToken } = config;
     if (!axiomApiUrl || !axiomDataset || !axiomToken) {
+      console.warn('[Logger] Axiom 인증 정보 누락 (axiomApiUrl, axiomDataset, axiomToken 확인 필요)');
       return;
     }
 
