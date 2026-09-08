@@ -2,9 +2,18 @@ import { useState } from '#imports'
 
 export const useBlackHole = () => {
   const isBlackHoleEnabled = useState<boolean>('bh_enabled', () => true)
-  const isActionEnabled = useState<boolean>('bh_action_enabled', () => true)
+  const isActionEnabled = useState<boolean>('bh_action_enabled', () => false)
   const bigBangClickTime = useState<number>('bh_click_time', () => 0)
   const timeOffset = useState<number>('bh_time_offset', () => 0)
+
+  const bhVersion = useState<'b1' | 'b2'>('bh_version', () => 'b2')
+
+  const toggleBlackHoleVersion = () => {
+    bhVersion.value = bhVersion.value === 'b1' ? 'b2' : 'b1'
+    if (process.client) {
+      localStorage.setItem('bh_version', bhVersion.value)
+    }
+  }
 
   const toggleBlackHole = () => {
     isBlackHoleEnabled.value = !isBlackHoleEnabled.value
@@ -30,6 +39,15 @@ export const useBlackHole = () => {
       const savedAction = localStorage.getItem('bh_action_enabled')
       if (savedAction !== null) {
         isActionEnabled.value = savedAction === 'true'
+      } else {
+        isActionEnabled.value = false
+      }
+
+      const savedVersion = localStorage.getItem('bh_version')
+      if (savedVersion === 'b1' || savedVersion === 'v1') {
+        bhVersion.value = 'b1'
+      } else if (savedVersion === 'b2' || savedVersion === 'v2') {
+        bhVersion.value = 'b2'
       }
 
       // 비밀 단축키 Ctrl + Alt + B 감지 이벤트 리스너 등록 (얼럿창 제외)
@@ -42,7 +60,7 @@ export const useBlackHole = () => {
 
       // 사건의 지평선(블랙홀 중심부) 마우스 클릭 감지 리스너 등록
       window.addEventListener('click', (e) => {
-        if (!isBlackHoleEnabled.value) return
+        if (!isBlackHoleEnabled.value || bhVersion.value !== 'b1') return
         const cx = 250
         const cy = window.innerHeight - 250
         const dx = e.clientX - cx
@@ -62,8 +80,10 @@ export const useBlackHole = () => {
     isActionEnabled,
     bigBangClickTime,
     timeOffset,
+    bhVersion,
     toggleBlackHole,
     toggleAction,
+    toggleBlackHoleVersion,
     initBlackHoleSetting
   }
 }

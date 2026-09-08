@@ -32,6 +32,14 @@ export default defineNuxtConfig({
     enabled: true,
   },
 
+  app: {
+    head: {
+      htmlAttrs: {
+        'data-bs-theme': 'dark'
+      }
+    }
+  },
+
   experimental: {
     appManifest: false,
   },
