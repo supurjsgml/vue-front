@@ -26,16 +26,18 @@
 
         <div class="textarea-wrapper">
           <textarea
-            v-model="inputText"
-            @input="handleInput"
-            placeholder="번역할 텍스트를 입력하세요."
-            maxlength="5000"
+            :value="inputText"
+            @input="handleInput($event)"
+            @compositionend="handleInput($event)"
+            @keydown.ctrl.enter.prevent="triggerTranslate"
+            @keydown.meta.enter.prevent="triggerTranslate"
+            placeholder="번역할 텍스트를 입력하세요. (Ctrl+Enter 즉시 번역)"
             class="translate-textarea"
           ></textarea>
         </div>
 
         <div class="panel-footer">
-          <span class="char-counter">{{ inputText.length }} / 5000자</span>
+          <span class="char-counter">{{ inputText.length.toLocaleString() }}자</span>
         </div>
       </div>
 
@@ -112,11 +114,17 @@ const isLoading = ref(false);
 const showToast = ref(false);
 const toastMessage = ref('');
 
-let debounceTimer: any = null;
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+let abortController: AbortController | null = null;
+const translationCache = new Map<string, string>();
 
 const clearInput = () => {
   inputText.value = '';
   translatedText.value = '';
+  if (abortController) {
+    abortController.abort();
+    abortController = null;
+  }
 };
 
 const swapLanguages = () => {
@@ -129,31 +137,115 @@ const swapLanguages = () => {
   translatedText.value = tempText;
 };
 
-// API 번역 요청 실행
+// API 번역 요청 실행 (다중 폴백 및 캐싱 적용)
 const triggerTranslate = async () => {
-  if (!inputText.value.trim()) {
+  const text = inputText.value.trim();
+  if (!text) {
     translatedText.value = '';
     return;
   }
 
   if (sourceLang.value === targetLang.value) {
-    translatedText.value = inputText.value;
+    translatedText.value = text;
     return;
   }
 
-  isLoading.value = true;
-  try {
-    const q = encodeURIComponent(inputText.value.trim());
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang.value}&tl=${targetLang.value}&dt=t&q=${q}`;
-    const response = await fetch(url);
-    const data = await response.json();
+  // 캐시 확인
+  const cacheKey = `${sourceLang.value}:${targetLang.value}:${text}`;
+  if (translationCache.has(cacheKey)) {
+    translatedText.value = translationCache.get(cacheKey) || '';
+    return;
+  }
 
-    if (data && data[0] && Array.isArray(data[0])) {
-      translatedText.value = data[0].map((item: any) => item[0]).filter(Boolean).join('');
-    } else {
-      translatedText.value = '번역을 완료하지 못했습니다. 다시 시도해 주세요.';
+  // 이전 진행 중인 요청 취소
+  if (abortController) {
+    abortController.abort();
+  }
+  abortController = new AbortController();
+
+  isLoading.value = true;
+
+  try {
+    const formData = new URLSearchParams();
+    formData.append('sl', sourceLang.value);
+    formData.append('tl', targetLang.value);
+    formData.append('q', text);
+
+    // 1차 시도: Chrome Extension 공식 엔드포인트 (POST 본문 전송으로 긴 문자열 완벽 지원)
+    try {
+      const primaryUrl = 'https://clients5.google.com/translate_a/t?client=dict-chrome-ex';
+      const response = await fetch(primaryUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString(),
+        signal: abortController.signal
+      });
+      if (response.ok) {
+        const data = await response.json();
+        let result = '';
+        if (Array.isArray(data)) {
+          result = data.join('');
+        } else if (typeof data === 'string') {
+          result = data;
+        }
+        if (result) {
+          translatedText.value = result;
+          translationCache.set(cacheKey, result);
+          return;
+        }
+      }
+    } catch (primaryErr: any) {
+      if (primaryErr.name === 'AbortError') return;
+      console.warn('Primary translate endpoint failed, falling back:', primaryErr);
     }
-  } catch (error) {
+
+    // 2차 폴백: MyMemory 오픈 번역 API (단문 지원)
+    if (text.length <= 500) {
+      try {
+        const q = encodeURIComponent(text);
+        const fallbackUrl = `https://api.mymemory.translated.net/get?q=${q}&langpair=${sourceLang.value}|${targetLang.value}`;
+        const response = await fetch(fallbackUrl, { signal: abortController.signal });
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.responseData && data.responseData.translatedText) {
+            const result = data.responseData.translatedText;
+            translatedText.value = result;
+            translationCache.set(cacheKey, result);
+            return;
+          }
+        }
+      } catch (fallbackErr: any) {
+        if (fallbackErr.name === 'AbortError') return;
+        console.warn('Secondary translate endpoint failed:', fallbackErr);
+      }
+    }
+
+    // 3차 폴백: 기존 Google Translate API (POST 전송)
+    try {
+      const lastUrl = 'https://translate.googleapis.com/translate_a/single?client=gtx&dt=t';
+      const response = await fetch(lastUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString(),
+        signal: abortController.signal
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data[0] && Array.isArray(data[0])) {
+          const result = data[0].map((item: any) => item[0]).filter(Boolean).join('');
+          translatedText.value = result;
+          translationCache.set(cacheKey, result);
+          return;
+        }
+      }
+    } catch (lastErr: any) {
+      if (lastErr.name === 'AbortError') return;
+      console.warn('Last translate fallback failed:', lastErr);
+    }
+
+    translatedText.value = '번역을 완료하지 못했습니다. 다시 시도해 주세요.';
+  } catch (error: any) {
+    if (error.name === 'AbortError') return;
     console.error('Translation error:', error);
     translatedText.value = '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
   } finally {
@@ -161,8 +253,12 @@ const triggerTranslate = async () => {
   }
 };
 
-// 입력 디바운싱 (타이핑 시 800ms 대기 후 자동 번역)
-const handleInput = () => {
+// 입력 처리 (한글 IME 조합 중 실시간 동기화 및 디바운싱)
+const handleInput = (event?: Event) => {
+  if (event && event.target instanceof HTMLTextAreaElement) {
+    inputText.value = event.target.value;
+  }
+
   if (debounceTimer) clearTimeout(debounceTimer);
 
   if (!inputText.value.trim()) {

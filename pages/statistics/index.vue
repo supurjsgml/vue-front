@@ -55,7 +55,7 @@ const pageColors: Record<string, string> = {
   Camel: '#4facfe',
   Translate: '#38ef7d',
   Diff: '#a855f7',
-  Google: '#f5576c'
+  Jasypt: '#10b981'
 };
 
 const pageStats = ref([
@@ -63,7 +63,7 @@ const pageStats = ref([
   { name: 'Camel', visits: 0, color: '#4facfe' },
   { name: 'Translate', visits: 0, color: '#38ef7d' },
   { name: 'Diff', visits: 0, color: '#a855f7' },
-  { name: 'Google', visits: 0, color: '#f5576c' }
+  { name: 'Jasypt', visits: 0, color: '#10b981' }
 ]);
 
 const fetchPageStats = async () => {

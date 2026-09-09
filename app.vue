@@ -44,12 +44,11 @@
         <NuxtLink class="custom-link" to="/translate" @mousedown.stop>번역쓰</NuxtLink>
       </div>
       <div class="sub-menu" v-if="isMainOpen">
-        <NuxtLink class="custom-link" to="/diff" @mousedown.stop>Diff 비교</NuxtLink>
+        <NuxtLink class="custom-link" to="/diff" @mousedown.stop>Diff</NuxtLink>
       </div>
-
-        <div class="sub-menu" v-if="isMainOpen">
-          <NuxtLink class="custom-link" to="/google" @mousedown.stop>googleDownLink</NuxtLink>
-        </div>
+      <div class="sub-menu" v-if="isMainOpen">
+        <NuxtLink class="custom-link" to="/jasypt" @mousedown.stop>Jasypt</NuxtLink>
+      </div>
       </div> <!-- End of nav-container -->
 
       </div> <!-- End of left-panel-wrapper -->
@@ -608,8 +607,8 @@ const bigBangOverlayStyle = computed(() => {
 });
 
 const isMainOpen = ref(true)
-const isGrafanaSectionOpen = ref(true)
-const isChromeExtensionsSectionOpen = ref(true)
+const isGrafanaSectionOpen = ref(false)
+const isChromeExtensionsSectionOpen = ref(false)
 
 const toggleGrafanaSection = () => {
   isGrafanaSectionOpen.value = !isGrafanaSectionOpen.value
@@ -778,8 +777,8 @@ const getPageNameByPath = (path: string): string => {
   if (path.startsWith('/camel')) return 'Camel';
   if (path.startsWith('/translate')) return 'Translate';
   if (path.startsWith('/diff')) return 'Diff';
+  if (path.startsWith('/jasypt')) return 'Jasypt';
   if (path.startsWith('/grafana')) return 'Grafana';
-  if (path.startsWith('/google')) return 'Google';
   return 'Main';
 }
 

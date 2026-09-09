@@ -577,9 +577,48 @@ const initGalaxy = () => {
 };
 
 
+const isInteractiveOrComponentArea = (target: HTMLElement | null): boolean => {
+  if (!target) return false;
+
+  const componentSelectors = [
+    'input',
+    'textarea',
+    'button',
+    'a',
+    'select',
+    'option',
+    'label',
+    'pre',
+    'code',
+    'svg',
+    '[role="button"]',
+    '[role="dialog"]',
+    '[role="tab"]',
+    '.nav-container',
+    '.draggable-panel',
+    '.sidebar',
+    '.sub-menu',
+    '.extension-card',
+    '.mini-stats-widget',
+    '.glass-card',
+    '.panel-card',
+    '.guide-card',
+    '.editor-card',
+    '.card',
+    '.top-control-bar',
+    '.download-bar',
+    '.grafana-container',
+    '.toast-popup',
+    '.modal',
+    '.global-dog-container'
+  ].join(', ');
+
+  return !!target.closest(componentSelectors);
+};
+
 const handleMouseDown = (e: MouseEvent) => {
   const target = e.target as HTMLElement;
-  if (target && target.closest('input, textarea, button, a, select, .nav-container, .draggable-panel, .sidebar, .sub-menu, .extension-card, .mini-stats-widget')) {
+  if (isInteractiveOrComponentArea(target)) {
     return;
   }
   isDragging = true;
@@ -613,7 +652,7 @@ const handleMouseUp = () => {
 const handleTouchStart = (e: TouchEvent) => {
   if (e.touches.length === 1) {
     const target = e.target as HTMLElement;
-    if (target && target.closest('input, textarea, button, a, select, .nav-container, .draggable-panel, .sidebar, .sub-menu, .extension-card, .mini-stats-widget')) {
+    if (isInteractiveOrComponentArea(target)) {
       return;
     }
     isDragging = true;

@@ -656,7 +656,6 @@ const createPackage = async () => {
         }
 
         strArray.push(bar('import io.swagger.v3.oas.annotations.media.Schema;'))
-        strArray.push(bar('import lombok.AccessLevel;'))
         strArray.push(bar('import lombok.Builder;'))
         strArray.push(bar('import lombok.Getter;'))
         strArray.push(bar('import lombok.Setter;'))
@@ -670,7 +669,7 @@ const createPackage = async () => {
         strArray.push(bar('@Builder'))
         strArray.push(bar('@ToString'))
         strArray.push(bar('@AllArgsConstructor'))
-        strArray.push(bar('@NoArgsConstructor(access = AccessLevel.PRIVATE)'))
+        strArray.push(bar('@NoArgsConstructor'))
         strArray.push(bar(`@Schema(name = "${inputData.class}", description = "${inputData.class}")`))
 
         strArray.push(bar(`public class ${inputData.class} {`, 2))
