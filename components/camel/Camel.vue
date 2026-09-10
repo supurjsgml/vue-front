@@ -739,12 +739,12 @@ const triggerDblClick = (checkbox: any) => {
 }
 
 .glass-card {
-  background: var(--card-bg);
+  background: var(--glass-card-bg);
   border: 1px solid var(--nav-border);
   border-radius: 16px;
   padding: 24px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: var(--glass-card-blur);
+  -webkit-backdrop-filter: var(--glass-card-blur);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   margin-bottom: 24px;
 }

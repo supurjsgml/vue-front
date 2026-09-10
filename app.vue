@@ -20,36 +20,19 @@
     <WidgetGlobalDog 
       :bhPhase="bhPhase" 
       :bhProgress="bhProgress" 
+      :isIdle="isIdle"
+      :isCaged="isDogCaged"
     />
 
     <div class="main-ui-wrapper" :style="containerWarpStyle">
       <!-- 왼쪽 패널 그룹 -->
       <div class="left-panel-wrapper" :style="leftPanelWarpStyle">
-      <!-- 메인 네비게이션 영역 (개별 드래그) -->
-      <div 
-        tabindex="0"
-        class="nav-container draggable-panel"
-        :class="{ dragging: navIsDragging }"
-        @mousedown.stop="startNavDrag"
-        :style="navWarpStyle"
-      >
-        <div class="nav-item">
-          <NuxtLink class="custom-link" to="/" @mousedown.stop>main</NuxtLink>
-          <ChevronRightIcon @click.stop="toggleMain" :class="{ rotated: isMainOpen }" class="icon" />
-        </div>
-      <div class="sub-menu" v-if="isMainOpen">
-        <NuxtLink class="custom-link" to="/camel" @mousedown.stop>camel</NuxtLink>
-      </div>
-      <div class="sub-menu" v-if="isMainOpen">
-        <NuxtLink class="custom-link" to="/translate" @mousedown.stop>번역쓰</NuxtLink>
-      </div>
-      <div class="sub-menu" v-if="isMainOpen">
-        <NuxtLink class="custom-link" to="/diff" @mousedown.stop>Diff</NuxtLink>
-      </div>
-      <div class="sub-menu" v-if="isMainOpen">
-        <NuxtLink class="custom-link" to="/jasypt" @mousedown.stop>Jasypt</NuxtLink>
-      </div>
-      </div> <!-- End of nav-container -->
+      <!-- 메인 네비게이션 영역 (공통 컴포넌트) -->
+      <NavigationMenu 
+        :is-dragging="navIsDragging"
+        :warp-style="navWarpStyle"
+        @start-drag="startNavDrag"
+      />
 
       </div> <!-- End of left-panel-wrapper -->
 
@@ -62,197 +45,133 @@
 
     <!-- 오른쪽 홍보 링크 및 주간 방문자 패널 그룹 -->
     <div class="right-panel-wrapper" :style="sidebarWarpStyle">
-      <aside class="sidebar">
-        <ul>
-          <li>
-            <a :href="useRuntimeConfig().public.restApi" target="_blank" @click="openSwagger" @mousedown.stop>
-              <img src="@/assets/styles/img/logo/swaggerLogo.png" alt="SwaggerLogo" class="sidebar-logo" />
-            </a>
-          </li>
-          
-          <!-- 그라파나 대시보드 세션 -->
-          <li class="extension-section grafana-section">
-            <div class="extension-section-header clickable-header" @click="toggleGrafanaSection" @mousedown.stop>
-              <div class="extension-header-left">
-                <img src="@/assets/styles/img/logo/grafanaLogo.png" alt="Grafana" class="extension-header-logo" />
-                <span class="extension-header-title">구라파나 Dashboards</span>
-              </div>
-              <ChevronRightIcon :class="{ rotated: isGrafanaSectionOpen }" class="icon section-toggle-icon" />
-            </div>
-            <div class="extension-links" v-if="isGrafanaSectionOpen">
-              <NuxtLink 
-                to="/grafana?type=batch" 
-                class="extension-card extension-card-batch"
-                @mousedown.stop
-              >
-                <div class="extension-info">
-                  <span class="extension-name">Batch</span>
-                </div>
-                <button 
-                  type="button"
-                  class="external-tab-btn"
-                  title="새 창으로 열기"
-                  @click.stop.prevent="openExternalGrafana('batch')"
-                  @mousedown.stop
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                    <polyline points="15 3 21 3 21 9"></polyline>
-                    <line x1="10" y1="14" x2="21" y2="3"></line>
-                  </svg>
-                </button>
-              </NuxtLink>
-              <NuxtLink 
-                to="/grafana?type=api" 
-                class="extension-card extension-card-api"
-                @mousedown.stop
-              >
-                <div class="extension-info">
-                  <span class="extension-name">API</span>
-                </div>
-                <button 
-                  type="button"
-                  class="external-tab-btn"
-                  title="새 창으로 열기"
-                  @click.stop.prevent="openExternalGrafana('api')"
-                  @mousedown.stop
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                    <polyline points="15 3 21 3 21 9"></polyline>
-                    <line x1="10" y1="14" x2="21" y2="3"></line>
-                  </svg>
-                </button>
-              </NuxtLink>
-            </div>
-          </li>
-          <!-- 크롬 확장프로그램 세션 -->
-          <li class="extension-section">
-            <div class="extension-section-header clickable-header" @click="toggleChromeExtensionsSection" @mousedown.stop>
-              <div class="extension-header-left">
-                <img src="@/assets/styles/img/logo/chromeWebStoreLogo.png" alt="Chrome Web Store" class="extension-header-logo" />
-                <span class="extension-header-title">Chrome Extensions</span>
-              </div>
-              <ChevronRightIcon :class="{ rotated: isChromeExtensionsSectionOpen }" class="icon section-toggle-icon" />
-            </div>
-            <div class="extension-links" v-if="isChromeExtensionsSectionOpen">
-              <a 
-                href="https://chromewebstore.google.com/detail/%EC%9E%A1%EC%BD%94%EB%A6%AC%EC%95%84-%EC%9D%B4%EB%A0%A5%EC%84%9C-%EA%B0%B1%EC%8B%A0/chjbcemdkiommdpeklplkbfpemefejcp" 
-                target="_blank" 
-                class="extension-card"
-              >
-                <div class="extension-info">
-                  <span class="extension-name">잡코리아 이력서 갱신</span>
-                  <span class="extension-desc">이력서 자동 갱신 툴</span>
-                </div>
-                <span class="extension-tag">확장앱</span>
-              </a>
-              <a 
-                href="https://chromewebstore.google.com/detail/gemini-ai-web-agent/cigmfccgmaeohgblgnpfcheefkpockeo?authuser=0&hl=ko" 
-                target="_blank" 
-                class="extension-card extension-card-new"
-              >
-                <div class="extension-info">
-                  <span class="extension-name">Gemini AI Web Agent</span>
-                  <span class="extension-desc">AI 웹 자동화 에이전트</span>
-                </div>
-                <span class="extension-tag tag-new">NEW</span>
-              </a>
-            </div>
-          </li>
-        </ul>
-      </aside>
+      <!-- 상단 홍보 및 외부 서비스 링크 사이드바 -->
+      <PromoSidebar />
 
-      <!-- Mini Stats Widget (분리된 독립 컴포넌트) -->
-      <div 
-        tabindex="0"
-        class="mini-stats-widget draggable-panel" 
-        :class="{ dragging: statsIsDragging }"
-        @click="openStatsModalIfNoDrag" 
-        @mousedown.stop="startStatsDrag"
-        :style="statsWarpStyle"
+      <!-- 주간 방문자 차트 미니 위젯 -->
+      <MiniStatsWidget @open-modal="showStatsModal = true" />
+    </div>
+
+    </div>
+
+    <!-- 우측 상단 퀵 토글 버튼 그룹 (1레벨 호버 전개) -->
+    <QuickToggleGroup :keep-open="showAmbientSettings" :warp-style="themeWarpStyle">
+      <!-- 테마 토글 버튼 -->
+      <button class="theme-toggle-btn" @click="toggleTheme" title="테마 변경">
+        <SunIcon v-if="isDarkMode" class="theme-icon" />
+        <MoonIcon v-else class="theme-icon" />
+      </button>
+
+      <!-- 견희 우리 가두기 토글 버튼 -->
+      <button 
+        type="button" 
+        class="dog-cage-toggle-btn" 
+        :class="{ 'is-caged': isDogCaged }" 
+        @click="toggleDogCage" 
+        :title="isDogCaged ? '풀어주기' : '구속'"
       >
-        <div class="mini-stats-header">
-          <div class="mini-stats-info">
-            <span class="mini-label">{{ statsData.label }}</span>
-            <span class="mini-value">{{ statsData.value }}</span>
-            <span class="mini-value">{{ statsData.description }}</span>
-          </div>
-          <div class="trend-badge">
-            <svg v-if="statsData.trendDirection === 'up'" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-            <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
-            {{ formatTrend(statsData.trend) }}
-          </div>
+        <img src="/dog.jpg" alt="견희" class="dog-btn-avatar" />
+        <div v-if="isDogCaged" class="cage-bars-mini">
+          <span></span>
+          <span></span>
+          <span></span>
         </div>
-        <div class="sparkline-container">
-          <svg viewBox="0 0 200 50" class="sparkline" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="sparkline-gradient" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stop-color="#34d399" stop-opacity="0.35"/>
-                <stop offset="100%" stop-color="#34d399" stop-opacity="0"/>
-              </linearGradient>
-            </defs>
-            <path 
-              :d="sparklinePaths.fill" 
-              fill="url(#sparkline-gradient)"
-            />
-            <path 
-              :d="sparklinePaths.line" 
-              fill="none" 
-              stroke="#34d399" 
-              stroke-width="3"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="sparkline-path"
-            />
-            <!-- Interactive Dots on the Sparkline -->
-            <circle
-              v-for="(pt, index) in sparklinePoints"
-              :key="index"
-              :cx="pt.x"
-              :cy="pt.y"
-              r="4"
-              fill="#34d399"
-              stroke="#ffffff"
-              stroke-width="1.5"
-              class="sparkline-dot"
-              :class="{ active: hoveredIndex === index }"
-              @mouseenter="hoveredIndex = index"
-              @mouseleave="hoveredIndex = null"
-            />
+      </button>
+
+      <!-- 블랙홀 버전 토글 버튼 -->
+      <button 
+        class="bh-version-toggle-btn" 
+        @click="toggleBlackHoleVersion" 
+        :title="`블랙홀 버전 변경 ${bhVersion.toUpperCase()}`"
+      >
+        <span class="bh-version-text">{{ bhVersion.toUpperCase() }}</span>
+      </button>
+
+      <!-- 우주 감상 및 투명도 컨트롤 버튼 -->
+      <div class="ambient-control-wrapper">
+        <button 
+          type="button"
+          class="ambient-control-btn" 
+          @click.stop="toggleAmbientSettings" 
+          :class="{ active: showAmbientSettings, 'zen-active': isIdle }"
+          title="우주 감상 및 UI 투명도 설정"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ambient-icon">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
           </svg>
-        </div>
-        <div class="days-row">
-          <span 
-            v-for="(day, index) in statsData.days" 
-            :key="index"
-            :class="{ today: day === '오늘', active: hoveredIndex === index }"
-            :data-tooltip="statsData.sparklineValues && statsData.sparklineValues[index] !== undefined ? `${statsData.sparklineValues[index]}명` : '0명'"
-            @mouseenter="hoveredIndex = index"
-            @mouseleave="hoveredIndex = null"
-          >
-            {{ day }}
-          </span>
+        </button>
+
+        <!-- 팝오버 설정 패널 -->
+        <div v-if="showAmbientSettings" class="ambient-popover" @click.stop>
+          <div class="ambient-popover-header">
+            <div class="ambient-header-left">
+              <span class="ambient-popover-title">컴포넌트 투명도 설정</span>
+            </div>
+            <button type="button" class="ambient-close-btn" @click="showAmbientSettings = false">×</button>
+          </div>
+
+          <div class="ambient-item">
+            <div class="ambient-label-row">
+              <span>UI 투명도</span>
+              <span class="ambient-val-badge">{{ uiOpacity }}%</span>
+            </div>
+            <input 
+              type="range" 
+              min="10" 
+              max="100" 
+              step="5" 
+              v-model.number="uiOpacity" 
+              @input="updateOpacity(uiOpacity)"
+              class="ambient-slider" 
+            />
+            <div class="ambient-slider-hint">
+              <span>투명 우주 뷰</span>
+              <span>선명 작업 뷰</span>
+            </div>
+          </div>
+
+          <div class="ambient-divider"></div>
+
+          <div class="ambient-item">
+            <div class="ambient-label-row">
+              <span>투과 글래스 뷰</span>
+              <label class="ambient-toggle-switch">
+                <input type="checkbox" :checked="isClearGlass" @change="toggleClearGlass" />
+                <span class="ambient-switch-track"></span>
+              </label>
+            </div>
+            <p class="ambient-desc-text">블러를 끄고 배경 별빛이 맑게 투과되도록 합니다.</p>
+          </div>
+
+          <div class="ambient-divider"></div>
+
+          <div class="ambient-item">
+            <div class="ambient-label-row">
+              <span>유휴 시간 자동 감상</span>
+              <label class="ambient-toggle-switch">
+                <input type="checkbox" :checked="isIdleModeEnabled" @change="toggleIdleMode" />
+                <span class="ambient-switch-track"></span>
+              </label>
+            </div>
+            <p class="ambient-desc-text">입력이 없으면 화면이 사라져 우주를 감상합니다.</p>
+            <div v-if="isIdleModeEnabled" class="ambient-time-chips">
+              <button 
+                type="button" 
+                v-for="sec in [5, 10, 30, 60]" 
+                :key="sec" 
+                class="ambient-chip" 
+                :class="{ active: idleTimeoutSeconds === sec }"
+                @click="setIdleSeconds(sec)"
+              >
+                {{ sec >= 60 ? '1분' : `${sec}초` }}
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
-    </div>
-    </div>
-
-    <!-- 블랙홀 버전 토글 버튼 -->
-    <button 
-      class="bh-version-toggle-btn" 
-      :style="themeWarpStyle" 
-      @click="toggleBlackHoleVersion" 
-      :title="`블랙홀 버전 변경 ${bhVersion.toUpperCase()}`"
-    >
-      <span class="bh-version-text">{{ bhVersion.toUpperCase() }}</span>
-    </button>
-
-    <!-- 테마 토글 버튼 -->
-    <button class="theme-toggle-btn" :style="themeWarpStyle" @click="toggleTheme" title="테마 변경">
-      <SunIcon v-if="isDarkMode" class="theme-icon" />
-      <MoonIcon v-else class="theme-icon" />
-    </button>
+    </QuickToggleGroup>
 
     <StatisticsPanel v-if="showStatsModal" @close="showStatsModal = false" />
     <div class="big-bang-overlay" :style="bigBangOverlayStyle"></div>
@@ -262,7 +181,11 @@
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useHead, useRoute } from '#imports'
-import { ChevronRightIcon, SunIcon, MoonIcon } from '@heroicons/vue/24/solid'
+import { SunIcon, MoonIcon } from '@heroicons/vue/24/solid'
+import NavigationMenu from '~/components/nav/NavigationMenu.vue'
+import PromoSidebar from '~/components/sidebar/PromoSidebar.vue'
+import MiniStatsWidget from '~/components/widget/MiniStatsWidget.vue'
+import QuickToggleGroup from '~/components/button/QuickToggleGroup.vue'
 import { getAPI } from '~/api/get'
 
 const { isBlackHoleEnabled, isActionEnabled, bigBangTriggerTime, timeOffset, bhVersion, toggleBlackHoleVersion, initBlackHoleSetting } = useBlackHole()
@@ -336,8 +259,128 @@ const containerStyle = computed(() => {
   };
 });
 
+// 우주 감상 및 투명도 조절 상태 관리
+const uiOpacity = ref(100);
+const isIdle = ref(false);
+const isIdleModeEnabled = ref(true);
+const idleTimeoutSeconds = ref(10);
+const showAmbientSettings = ref(false);
+let idleTimer: any = null;
+
+// 투과 글래스 뷰 (다운로드 버튼 스타일 투과 vs 이전 블러 글래스)
+const isClearGlass = ref(true);
+
+const applyClearGlassMode = (enabled: boolean) => {
+  if (!process.client) return;
+  document.documentElement.setAttribute('data-glass-mode', enabled ? 'clear' : 'blur');
+  document.documentElement.classList.toggle('clear-glass-mode', enabled);
+};
+
+const toggleClearGlass = () => {
+  isClearGlass.value = !isClearGlass.value;
+  if (process.client) {
+    localStorage.setItem('ambient_clear_glass', String(isClearGlass.value));
+  }
+  applyClearGlassMode(isClearGlass.value);
+};
+
+const initAmbientSettings = () => {
+  if (!process.client) return;
+  const savedOpacity = localStorage.getItem('ambient_ui_opacity');
+  if (savedOpacity !== null) {
+    uiOpacity.value = Math.max(10, Math.min(100, parseInt(savedOpacity, 10)));
+  }
+  const savedIdleEnabled = localStorage.getItem('ambient_idle_enabled');
+  if (savedIdleEnabled !== null) {
+    isIdleModeEnabled.value = savedIdleEnabled === 'true';
+  }
+  const savedIdleTime = localStorage.getItem('ambient_idle_seconds');
+  if (savedIdleTime !== null) {
+    idleTimeoutSeconds.value = parseInt(savedIdleTime, 10) || 10;
+  }
+  const savedClearGlass = localStorage.getItem('ambient_clear_glass');
+  if (savedClearGlass !== null) {
+    isClearGlass.value = savedClearGlass === 'true';
+  } else {
+    isClearGlass.value = true;
+  }
+  applyClearGlassMode(isClearGlass.value);
+};
+
+const resetIdleTimer = () => {
+  if (isIdle.value) {
+    isIdle.value = false;
+  }
+  if (idleTimer) {
+    clearTimeout(idleTimer);
+    idleTimer = null;
+  }
+  if (!isIdleModeEnabled.value) return;
+
+  idleTimer = setTimeout(() => {
+    isIdle.value = true;
+    showAmbientSettings.value = false;
+  }, idleTimeoutSeconds.value * 1000);
+};
+
+const toggleAmbientSettings = () => {
+  showAmbientSettings.value = !showAmbientSettings.value;
+};
+
+const updateOpacity = (val: number) => {
+  uiOpacity.value = val;
+  if (process.client) {
+    localStorage.setItem('ambient_ui_opacity', String(val));
+  }
+};
+
+const toggleIdleMode = () => {
+  isIdleModeEnabled.value = !isIdleModeEnabled.value;
+  if (process.client) {
+    localStorage.setItem('ambient_idle_enabled', String(isIdleModeEnabled.value));
+  }
+  resetIdleTimer();
+};
+
+const setIdleSeconds = (sec: number) => {
+  idleTimeoutSeconds.value = sec;
+  if (process.client) {
+    localStorage.setItem('ambient_idle_seconds', String(sec));
+  }
+  resetIdleTimer();
+};
+
+const handleWindowClick = (e: MouseEvent) => {
+  const target = e.target as HTMLElement;
+  if (showAmbientSettings.value && !target.closest('.ambient-control-wrapper')) {
+    showAmbientSettings.value = false;
+  }
+};
+
+// 견희 우리(케이지) 상태 관리
+const isDogCaged = ref(false);
+
+const toggleDogCage = () => {
+  isDogCaged.value = !isDogCaged.value;
+  if (process.client) {
+    localStorage.setItem('is_dog_caged', String(isDogCaged.value));
+  }
+};
+
 const containerWarpStyle = computed(() => {
-  return {};
+  if (isIdle.value) {
+    return {
+      opacity: 0,
+      pointerEvents: 'none' as const,
+      transform: 'scale(0.98)',
+      transition: 'opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+    };
+  }
+  return {
+    opacity: uiOpacity.value / 100,
+    transform: 'scale(1)',
+    transition: 'opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+  };
 });
 
 // 1단계: 왼쪽 패널 스타일 (가장 먼저 소멸/복구)
@@ -606,65 +649,6 @@ const bigBangOverlayStyle = computed(() => {
   };
 });
 
-const isMainOpen = ref(true)
-const isGrafanaSectionOpen = ref(false)
-const isChromeExtensionsSectionOpen = ref(false)
-
-const toggleGrafanaSection = () => {
-  isGrafanaSectionOpen.value = !isGrafanaSectionOpen.value
-}
-
-const toggleChromeExtensionsSection = () => {
-  isChromeExtensionsSectionOpen.value = !isChromeExtensionsSectionOpen.value
-}
-
-const openExternalGrafana = (type: string) => {
-  const config = useRuntimeConfig()
-  const url = type === 'api' ? config.public.grafanaApiUrl : config.public.grafanaBatchUrl
-  if (url && process.client) {
-    window.open(url, '_blank')
-  }
-}
-
-const openSwagger = async (event: MouseEvent) => {
-  event.preventDefault()
-  if (!process.client) return
-
-  const config = useRuntimeConfig()
-  const primaryUrl = config.public.restApi
-  const fallbackUrl = config.public.fallbackRestApi
-
-  if (!primaryUrl) {
-    if (fallbackUrl) window.open(fallbackUrl, '_blank')
-    return
-  }
-
-  const newTab = window.open('about:blank', '_blank')
-
-  try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 2000)
-
-    const response = await fetch(primaryUrl, {
-      method: 'GET',
-      signal: controller.signal
-    })
-    clearTimeout(timeoutId)
-
-    if (response && response.status === 500) {
-      if (newTab) newTab.location.href = primaryUrl
-    } else if (response && response.status >= 400 && response.status !== 500) {
-      if (newTab) newTab.location.href = fallbackUrl || primaryUrl
-    } else {
-      if (newTab) newTab.location.href = primaryUrl
-    }
-  } catch {
-    if (newTab) {
-      newTab.location.href = fallbackUrl || primaryUrl
-    }
-  }
-}
-
 const isMobile = computed(() => {
   return windowWidth.value <= 1024;
 })
@@ -678,97 +662,7 @@ const navWarpStyle = computed(() => {
   };
 })
 
-const statsWarpStyle = computed(() => {
-  if (isMobile.value) {
-    return {};
-  }
-  return {
-    transform: `translate(${statsPosition.value.x}px, ${statsPosition.value.y}px)`
-  };
-})
-
 const showStatsModal = ref(false)
-
-const statsData = ref({
-  label: '주간 방문자 (1주)',
-  value: '',
-  description: '데이터를 불러오는 중...',
-  trend: '0%',
-  trendDirection: 'up',
-  sparklineValues: [40, 30, 10, 20, 45, 25, 10],
-  days: ['05', '06', '07', '08', '09', '10', '오늘']
-})
-
-const formatTrend = (trendStr: string): string => {
-  if (!trendStr) return '0%';
-  return trendStr.replace(/\.\d+/, '');
-}
-
-const sparklinePaths = computed(() => {
-  const values = statsData.value.sparklineValues || [];
-  if (values.length === 0) return { line: '', fill: '' };
-  
-  const width = 200;
-  const height = 50;
-  const maxVal = Math.max(...values, 10);
-  const minVal = 0;
-  const range = maxVal - minVal;
-  
-  const points = values.map((val, index) => {
-    const x = (index / (values.length - 1)) * width;
-    const y = height - (val / range) * (height - 10) - 5;
-    return { x, y };
-  });
-
-  let linePath = `M ${points[0].x} ${points[0].y}`;
-  for (let i = 0; i < points.length - 1; i++) {
-    const p0 = points[i];
-    const p1 = points[i + 1];
-    const cpX1 = p0.x + (p1.x - p0.x) / 2;
-    const cpY1 = p0.y;
-    const cpX2 = p0.x + (p1.x - p0.x) / 2;
-    const cpY2 = p1.y;
-    linePath += ` C ${cpX1} ${cpY1}, ${cpX2} ${cpY2}, ${p1.x} ${p1.y}`;
-  }
-  
-  const fillPath = `${linePath} L ${width} ${height} L 0 ${height} Z`;
-  
-  return {
-    line: linePath,
-    fill: fillPath
-  };
-})
-
-const hoveredIndex = ref<number | null>(null)
-
-const sparklinePoints = computed(() => {
-  const values = statsData.value.sparklineValues || [];
-  if (values.length === 0) return [];
-  
-  const width = 200;
-  const height = 50;
-  const maxVal = Math.max(...values, 10);
-  const minVal = 0;
-  const range = maxVal - minVal;
-  
-  return values.map((val, index) => {
-    const x = (index / (values.length - 1)) * width;
-    const y = height - (val / range) * (height - 10) - 5;
-    return { x, y, val };
-  });
-})
-
-const fetchStats = async () => {
-  try {
-    const api = getAPI();
-    const res = await api.getDashboardStats();
-    if (res && res.success && res.data) {
-      statsData.value = res.data;
-    }
-  } catch (error) {
-    console.error('Failed to fetch dashboard stats:', error);
-  }
-}
 
 const route = useRoute()
 
@@ -820,20 +714,8 @@ watch(() => route.path, () => {
   recordHit();
 })
 
-function toggleMain(event: Event) {
-  event.stopPropagation()
-  isMainOpen.value = !isMainOpen.value
-}
-
-
 const { position: navPosition, startDrag: startNavDrag, isDragging: navIsDragging } = useDraggable()
-const { position: statsPosition, startDrag: startStatsDrag, hasMoved: statsHasMoved, isDragging: statsIsDragging } = useDraggable()
 
-function openStatsModalIfNoDrag() {
-  if (!statsHasMoved.value) {
-    showStatsModal.value = true
-  }
-}
 const leftRect = ref({ left: 0, top: 0, width: 0, height: 0 })
 const contentRect = ref({ left: 0, top: 0, width: 0, height: 0 })
 const sidebarRect = ref({ left: 0, top: 0, width: 0, height: 0 })
@@ -917,7 +799,6 @@ const runPhaseLoop = () => {
 onMounted(async () => {
   isMounted.value = true;
   await recordHit();
-  fetchStats();
   initBlackHoleSetting();
   
   const savedTheme = localStorage.getItem('theme')
@@ -930,6 +811,20 @@ onMounted(async () => {
 
   if (process.client && isBlackHoleEnabled.value) {
     phaseAnimationFrameId = requestAnimationFrame(runPhaseLoop);
+  }
+
+  if (process.client) {
+    initAmbientSettings();
+    const savedDogCaged = localStorage.getItem('is_dog_caged');
+    if (savedDogCaged !== null) {
+      isDogCaged.value = savedDogCaged === 'true';
+    }
+    window.addEventListener('mousemove', resetIdleTimer, { passive: true });
+    window.addEventListener('keydown', resetIdleTimer, { passive: true });
+    window.addEventListener('mousedown', resetIdleTimer, { passive: true });
+    window.addEventListener('touchstart', resetIdleTimer, { passive: true });
+    window.addEventListener('click', handleWindowClick);
+    resetIdleTimer();
   }
 });
 
@@ -978,6 +873,12 @@ watch(bigBangTriggerTime, (newVal) => {
 onUnmounted(() => {
   if (process.client) {
     cancelAnimationFrame(phaseAnimationFrameId);
+    if (idleTimer) clearTimeout(idleTimer);
+    window.removeEventListener('mousemove', resetIdleTimer);
+    window.removeEventListener('keydown', resetIdleTimer);
+    window.removeEventListener('mousedown', resetIdleTimer);
+    window.removeEventListener('touchstart', resetIdleTimer);
+    window.removeEventListener('click', handleWindowClick);
   }
 });
 </script>

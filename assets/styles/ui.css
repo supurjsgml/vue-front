@@ -105,7 +105,6 @@ body {
   background-color: rgba(255, 255, 255, 0.04);
 }
 
-/* Global Dark/Light Mode CSS Variables */
 :root, [data-bs-theme="dark"] {
   --nav-bg: rgba(15, 23, 42, 0.65);
   --nav-border: rgba(255, 255, 255, 0.08);
@@ -114,7 +113,7 @@ body {
   --nav-active-bg: rgba(52, 211, 153, 0.12);
   --nav-active-text: #34d399;
 
-  /* Card and editor dark mode variables */
+  /* Card and editor dark mode variables (Default: Classic blur glass) */
   --card-bg: rgba(30, 41, 59, 0.45);
   --card-header-bg: rgba(255, 255, 255, 0.02);
   --text-main: #f8fafc;
@@ -125,6 +124,30 @@ body {
   --input-bg: rgba(15, 23, 42, 0.6);
   --chip-bg: rgba(255, 255, 255, 0.03);
   --switch-bg: rgba(255, 255, 255, 0.05);
+
+  --glass-blur: blur(16px);
+  --glass-card-blur: blur(12px);
+  --glass-card-bg: rgba(30, 41, 59, 0.7);
+  --diff-textarea-bg: rgba(15, 23, 42, 0.8);
+}
+
+/* Clear Glass Mode (투과 글래스 뷰 - 다운로드 버튼 효과 토글 ON) */
+html.clear-glass-mode,
+[data-glass-mode="clear"] {
+  --nav-bg: rgba(15, 23, 42, 0.35);
+  --nav-border: rgba(255, 255, 255, 0.12);
+  --card-bg: rgba(15, 23, 42, 0.3);
+  --card-header-bg: rgba(255, 255, 255, 0.03);
+  --textarea-bg: transparent;
+  --textarea-output-bg: rgba(15, 23, 42, 0.15);
+  --input-bg: rgba(15, 23, 42, 0.35);
+  --chip-bg: rgba(255, 255, 255, 0.04);
+  --switch-bg: rgba(255, 255, 255, 0.06);
+
+  --glass-blur: none;
+  --glass-card-blur: none;
+  --glass-card-bg: var(--card-bg);
+  --diff-textarea-bg: rgba(15, 23, 42, 0.25);
 }
 
 [data-bs-theme="light"] {
@@ -167,8 +190,8 @@ body {
   display: flex;
   flex-direction: column;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
 }
 
 .editor-card:hover {
@@ -336,12 +359,13 @@ code,
 }
 
 .glass-card {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--glass-card-bg);
+  backdrop-filter: var(--glass-card-blur);
+  -webkit-backdrop-filter: var(--glass-card-blur);
+  border: 1px solid var(--nav-border);
   border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 [data-bs-theme="light"] .glass-card {

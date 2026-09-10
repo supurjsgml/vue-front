@@ -3,6 +3,7 @@
     <div
       v-if="showGlobalDog"
       class="global-dog-container"
+      :class="{ 'is-dog-caged': props.isCaged }"
       :style="globalDogContainerStyle"
       @mousedown.stop="startGlobalDogDrag"
       @mouseenter="onDogHover"
@@ -15,6 +16,24 @@
         draggable="false"
         @dragstart.prevent
       />
+
+      <!-- 견희 우리(케이지) 3D 쇠창살 오버레이 -->
+      <div v-if="props.isCaged" class="caged-jail-overlay">
+        <div class="jail-roof-bar">
+          <span v-for="i in 5" :key="`rivet-top-${i}`" class="jail-rivet"></span>
+        </div>
+        <div class="jail-bars">
+          <div v-for="i in 5" :key="i" class="jail-bar-col">
+            <span class="jail-spike-top"></span>
+            <span class="jail-bar"></span>
+            <span class="jail-spike-bottom"></span>
+          </div>
+        </div>
+        <div class="jail-bottom-bar">
+          <span v-for="i in 5" :key="`rivet-bot-${i}`" class="jail-rivet"></span>
+        </div>
+      </div>
+
       <Transition name="fade-bubble">
         <div v-if="showSpeechBubble" class="speech-bubble">
           {{ bubbleText }}
@@ -31,6 +50,8 @@ import { useRoute } from '#imports';
 const props = defineProps<{
   bhPhase: string;
   bhProgress: number;
+  isIdle?: boolean;
+  isCaged?: boolean;
 }>();
 
 const route = useRoute();
@@ -66,8 +87,53 @@ const showSpeechBubble = ref(false);
 const bubbleText = ref('끄어억!');
 let bubbleTimer: any = null;
 
+const cagedMessages = [
+  '키운다며!!!! 키운다며!!!!!!!!!!',
+  '끄어',
+  '이제 감이 좀 오는구먼'
+];
+let cagedMessageIndex = 0;
+let cagedIntervalTimer: any = null;
+
+const startCagedMessageTimer = () => {
+  stopCagedMessageTimer();
+  if (!process.client) return;
+
+  cagedIntervalTimer = setInterval(() => {
+    if (!props.isCaged || props.isIdle || !isTabActive) return;
+
+    bubbleText.value = cagedMessages[cagedMessageIndex];
+    cagedMessageIndex = (cagedMessageIndex + 1) % cagedMessages.length;
+    showSpeechBubble.value = true;
+
+    if (bubbleTimer) clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(() => {
+      showSpeechBubble.value = false;
+    }, 3500);
+  }, 10000);
+};
+
+const stopCagedMessageTimer = () => {
+  if (cagedIntervalTimer) {
+    clearInterval(cagedIntervalTimer);
+    cagedIntervalTimer = null;
+  }
+};
+
 const onDogHover = () => {
   if (gIsDragging.value) return;
+  
+  if (props.isCaged) {
+    bubbleText.value = cagedMessages[cagedMessageIndex];
+    cagedMessageIndex = (cagedMessageIndex + 1) % cagedMessages.length;
+    showSpeechBubble.value = true;
+    if (bubbleTimer) clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(() => {
+      showSpeechBubble.value = false;
+    }, 4000);
+    startCagedMessageTimer();
+    return;
+  }
   
   const messages = [
     '끄어어억...',
@@ -96,7 +162,7 @@ let lastDragTime = 0;
 let dragHasMoved = false;
 
 const startGlobalDogDrag = (event: MouseEvent) => {
-  if (event.button !== 0) return; // Only allow left-clicks
+  if (event.button !== 0 || props.isCaged) return; // 갇혔을 때는 드래그 불가
   
   gIsDragging.value = true;
   dragHasMoved = false;
@@ -170,18 +236,25 @@ const startGlobalDogDrag = (event: MouseEvent) => {
 };
 
 const globalDogContainerStyle = computed(() => {
+  const isCaged = props.isCaged;
+  const viewWidth = process.client ? window.innerWidth : 1200;
+  const viewHeight = process.client ? window.innerHeight : 800;
+  const posX = isCaged ? (viewWidth - globalDogWidth.value - 25) : gx.value;
+  const posY = isCaged ? (viewHeight - globalDogHeight.value - 25) : gy.value;
+
   return {
     position: 'fixed' as const,
-    left: `${gx.value}px`,
-    top: `${gy.value}px`,
+    left: `${posX}px`,
+    top: `${posY}px`,
     width: `${globalDogWidth.value}px`,
     height: `${globalDogHeight.value}px`,
     display: showGlobalDog.value ? 'block' : 'none',
     zIndex: 100,
-    pointerEvents: 'auto' as const,
-    cursor: gIsDragging.value ? 'grabbing' : 'grab',
+    opacity: props.isIdle ? 0 : 1,
+    pointerEvents: (props.isIdle ? 'none' : 'auto') as const,
+    cursor: isCaged ? 'pointer' : (gIsDragging.value ? 'grabbing' : 'grab'),
     transform: `scale(${globalDogScale.value})`,
-    transition: gIsDragging.value ? 'none' : 'transform 0.1s ease'
+    transition: gIsDragging.value ? 'none' : (isCaged ? 'left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.8s ease' : 'opacity 0.8s ease, transform 0.1s ease')
   };
 });
 
@@ -208,6 +281,12 @@ let isTabActive = true;
 
 const animateGlobalDog = () => {
   if (!showGlobalDog.value || !isTabActive) return;
+
+  if (props.isCaged) {
+    gRotation.value = 0;
+    gAnimationFrameId = requestAnimationFrame(animateGlobalDog);
+    return;
+  }
 
   const dogCenterX = gx.value + globalDogWidth.value / 2;
   const dogCenterY = gy.value + globalDogHeight.value / 2;
@@ -412,11 +491,15 @@ const handleVisibilityChange = () => {
   if (document.hidden) {
     isTabActive = false;
     cancelAnimationFrame(gAnimationFrameId);
+    stopCagedMessageTimer();
   } else {
     isTabActive = true;
     if (showGlobalDog.value) {
       cancelAnimationFrame(gAnimationFrameId);
       gAnimationFrameId = requestAnimationFrame(animateGlobalDog);
+    }
+    if (props.isCaged) {
+      startCagedMessageTimer();
     }
   }
 };
@@ -435,6 +518,36 @@ watch(isBlackHoleEnabled, (newVal) => {
   }
 });
 
+watch(() => props.isCaged, (newVal, oldVal) => {
+  if (newVal) {
+    startCagedMessageTimer();
+    if (oldVal !== undefined) {
+      bubbleText.value = '...';
+      showSpeechBubble.value = true;
+      if (bubbleTimer) clearTimeout(bubbleTimer);
+      bubbleTimer = setTimeout(() => {
+        showSpeechBubble.value = false;
+      }, 3000);
+    }
+  } else {
+    stopCagedMessageTimer();
+    if (oldVal !== undefined) {
+      if (process.client) {
+        gx.value = window.innerWidth - globalDogWidth.value - 25;
+        gy.value = window.innerHeight - globalDogHeight.value - 25;
+        gvx.value = -1.8;
+        gvy.value = -1.4;
+      }
+      bubbleText.value = '깔깔깔';
+      showSpeechBubble.value = true;
+      if (bubbleTimer) clearTimeout(bubbleTimer);
+      bubbleTimer = setTimeout(() => {
+        showSpeechBubble.value = false;
+      }, 3000);
+    }
+  }
+}, { immediate: true });
+
 onMounted(() => {
   if (process.client) {
     window.addEventListener('keydown', handleKeydown);
@@ -451,6 +564,8 @@ onUnmounted(() => {
     document.removeEventListener('visibilitychange', handleVisibilityChange);
     window.removeEventListener('resize', updateGlobalDogDimensions);
     cancelAnimationFrame(gAnimationFrameId);
+    stopCagedMessageTimer();
+    if (bubbleTimer) clearTimeout(bubbleTimer);
   }
 });
 </script>
@@ -543,5 +658,118 @@ onUnmounted(() => {
     opacity: 1;
     transform: translate(-50%, 0) scale(1);
   }
+}
+
+/* 우리(케이지) 3D 리얼 쇠창살 및 자물쇠 오버레이 */
+.caged-jail-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  border-radius: 50%;
+  overflow: visible;
+  filter: drop-shadow(4px 8px 12px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 8px rgba(0, 0, 0, 0.6));
+  animation: jail-appear 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes jail-appear {
+  from {
+    opacity: 0;
+    transform: scale(1.15);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.jail-bars {
+  position: absolute;
+  top: 4px;
+  left: 10px;
+  right: 10px;
+  bottom: 4px;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: stretch;
+}
+
+.jail-bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+/* 뾰족한 창끝 스파이크 마감 */
+.jail-spike-top,
+.jail-spike-bottom {
+  width: 7px;
+  height: 9px;
+  flex-shrink: 0;
+  background: linear-gradient(90deg, #1e293b 0%, #94a3b8 30%, #ffffff 50%, #64748b 70%, #0f172a 100%);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+
+.jail-spike-bottom {
+  transform: rotate(180deg);
+}
+
+/* 가로 곡면 반사광 원통형 쇠창살 기둥 */
+.jail-bar {
+  width: 7px;
+  flex: 1 1 auto;
+  background: linear-gradient(90deg, 
+    #0f172a 0%, 
+    #334155 18%, 
+    #e2e8f0 42%, 
+    #ffffff 50%, 
+    #cbd5e1 58%, 
+    #475569 80%, 
+    #020617 100%
+  );
+  box-shadow: inset 1px 0 1px rgba(255, 255, 255, 0.8), inset -1px 0 1px rgba(0, 0, 0, 0.9), 1px 0 3px rgba(0, 0, 0, 0.6);
+  border-radius: 1px;
+}
+
+/* 묵직한 주철 가로 쇠빔 프레임 */
+.jail-roof-bar,
+.jail-bottom-bar {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 8px;
+  background: linear-gradient(180deg, 
+    #94a3b8 0%, 
+    #f8fafc 25%, 
+    #475569 65%, 
+    #0f172a 100%
+  );
+  border-radius: 3px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 255, 255, 0.9), inset 0 -1px 2px rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  z-index: 2;
+}
+
+.jail-roof-bar {
+  top: 20px;
+}
+
+.jail-bottom-bar {
+  bottom: 20px;
+}
+
+/* 교차점에 박힌 3D 볼트/리벳 */
+.jail-rivet {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffffff 0%, #cbd5e1 35%, #475569 70%, #0f172a 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), 0 0 1px rgba(255, 255, 255, 0.8);
+  flex-shrink: 0;
 }
 </style>

@@ -122,7 +122,7 @@
           </div>
           <div class="guide-col">
             <span class="guide-label">애플리케이션 실행 시 비밀키 주입</span>
-            <pre><code>java -jar app.jar --jasypt.encryptor.password={{ secretKey || 'yourSecretKey' }}</code></pre>
+            <pre><code>java -jar app.jar --jasypt.encryptor.password={{ displayGuideKey }}</code></pre>
           </div>
         </div>
       </div>
@@ -237,6 +237,12 @@ const inputText = ref('')
 const outputText = ref('')
 const errorMessage = ref('')
 const matchResult = ref<boolean | null>(null)
+
+// 가이드 표시용 비밀키 (마스킹 상태 연동)
+const displayGuideKey = computed(() => {
+  if (!secretKey.value) return 'yourSecretKey'
+  return showSecret.value ? secretKey.value : '•'.repeat(secretKey.value.length)
+})
 
 // 다이제스트 알고리즘 여부
 const isDigestAlgorithm = computed(() => {
@@ -392,7 +398,7 @@ function resetAll() {
 /* 모드 탭 */
 .mode-tabs {
   display: flex;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(15, 23, 42, 0.35);
   border-radius: 8px;
   padding: 3px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -417,7 +423,7 @@ function resetAll() {
 
 /* 툴바 폼 요소 */
 .toolbar-select {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(15, 23, 42, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #f1f5f9;
   border-radius: 8px;
@@ -433,7 +439,7 @@ function resetAll() {
 }
 
 .key-input {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(15, 23, 42, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #f1f5f9;
   border-radius: 8px;
@@ -527,7 +533,7 @@ function resetAll() {
 
 /* 접이식 가이드 패널 */
 .guide-collapsible {
-  background: rgba(15, 23, 42, 0.7);
+  background: rgba(15, 23, 42, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   padding: 12px 16px;

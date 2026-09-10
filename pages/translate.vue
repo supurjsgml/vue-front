@@ -330,10 +330,10 @@ const copyToClipboard = (event?: MouseEvent) => {
   min-height: 420px;
   border-radius: 20px;
   border: 1px solid var(--nav-border);
-  background: var(--nav-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+  background: var(--glass-card-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   overflow: hidden;
 }
 
