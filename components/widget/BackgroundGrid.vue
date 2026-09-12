@@ -262,7 +262,7 @@ const animateBackground = (time: number) => {
 
     ctx.save();
     ctx.beginPath();
-    ctx.strokeStyle = props.isDarkMode ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.04)';
+    ctx.strokeStyle = props.isDarkMode ? 'rgba(255, 255, 255, 0.03)' : 'rgba(15, 23, 42, 0.06)';
     ctx.lineWidth = 1;
 
     for (let r = 0; r < rows; r++) {
@@ -285,7 +285,7 @@ const animateBackground = (time: number) => {
     ctx.stroke();
     ctx.restore();
 
-    const dotColor = props.isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
+    const dotColor = props.isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 23, 42, 0.12)';
     const glowRGB = props.isDarkMode ? '52, 211, 153' : '5, 150, 105';
 
     for (let i = 0; i < points.length; i++) {
@@ -519,6 +519,6 @@ onUnmounted(() => {
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  z-index: -1;
+  z-index: 0;
 }
 </style>

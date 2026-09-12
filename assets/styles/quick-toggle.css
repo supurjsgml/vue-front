@@ -20,7 +20,7 @@
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: var(--panel-shadow, 0 4px 15px rgba(0, 0, 0, 0.2));
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -107,4 +107,11 @@
 }
 .quick-toggle-items.expanded :deep(> *:nth-child(4)) {
   transition-delay: 0.11s;
+}
+
+[data-bs-theme="light"] .quick-toggle-master-btn:hover,
+[data-bs-theme="light"] .quick-toggle-master-btn.active {
+  border-color: #059669;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.3), 0 4px 15px rgba(0, 0, 0, 0.08);
+  color: #059669;
 }

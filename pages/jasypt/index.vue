@@ -63,13 +63,13 @@
           </div>
 
           <!-- 복호화 시 검증 동작 분기 -->
-          <select v-if="mode === 'decrypt'" v-model="decryptAction" class="toolbar-select">
+          <select v-if="mode === 'decrypt'" v-model="decryptAction" class="toolbar-select decrypt-action-select">
             <option value="decrypt">Decrypt</option>
             <option value="match">Match</option>
           </select>
 
           <!-- 알고리즘 선택 -->
-          <select v-model="selectedAlgorithm" class="toolbar-select">
+          <select v-model="selectedAlgorithm" class="toolbar-select algo-select">
             <template v-if="mode === 'encrypt' || decryptAction === 'decrypt'">
               <option value="PBEWithMD5AndDES">PBEWithMD5AndDES</option>
               <option value="PBEWithHMACSHA512AndAES_256">PBEWithHMACSHA512AndAES_256</option>
@@ -376,44 +376,52 @@ function resetAll() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   margin-bottom: 1.25rem;
   flex-wrap: wrap;
 }
 
 .control-left {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
   align-items: center;
+  flex-shrink: 0;
+}
+
+.control-left .action-btn {
+  padding: 0.48rem 0.8rem;
+  font-size: 0.83rem;
+  white-space: nowrap;
 }
 
 .control-right {
   display: flex;
-  gap: 8px;
+  gap: 5px;
   align-items: center;
   flex-wrap: wrap;
+  max-width: 100%;
 }
 
-
-/* 모드 탭 */
 .mode-tabs {
   display: flex;
-  background: rgba(15, 23, 42, 0.35);
+  background: var(--chip-bg);
   border-radius: 8px;
-  padding: 3px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 2px;
+  border: 1px solid var(--nav-border);
+  flex-shrink: 0;
 }
 
 .tab-btn {
   background: none;
   border: none;
-  color: #94a3b8;
-  padding: 5px 12px;
+  color: var(--text-muted);
+  padding: 4px 8px;
   border-radius: 6px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .tab-btn.active {
@@ -423,31 +431,58 @@ function resetAll() {
 
 /* 툴바 폼 요소 */
 .toolbar-select {
-  background: rgba(15, 23, 42, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #f1f5f9;
+  background: var(--input-bg);
+  border: 1px solid var(--nav-border);
+  color: var(--text-main);
   border-radius: 8px;
-  padding: 6px 10px;
-  font-size: 0.82rem;
+  padding: 5px 6px;
+  font-size: 0.78rem;
   outline: none;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.toolbar-select option {
+  background-color: #0f172a;
+  color: #f1f5f9;
+}
+
+:deep([data-bs-theme="light"]) .toolbar-select option,
+[data-bs-theme="light"] .toolbar-select option {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+.algo-select {
+  max-width: 142px;
+  min-width: 90px;
+  text-overflow: ellipsis;
+}
+
+.decrypt-action-select {
+  min-width: 64px;
+  flex-shrink: 0;
 }
 
 .key-input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .key-input {
-  background: rgba(15, 23, 42, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #f1f5f9;
+  background: var(--input-bg);
+  border: 1px solid var(--nav-border);
+  color: var(--text-main);
   border-radius: 8px;
-  padding: 6px 28px 6px 10px;
-  font-size: 0.82rem;
-  width: 240px;
+  padding: 5px 22px 5px 8px;
+  font-size: 0.78rem;
+  width: 130px;
+  min-width: 75px;
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, width 0.2s ease;
 }
 
 .key-input:focus {
@@ -471,8 +506,8 @@ function resetAll() {
 }
 
 .run-btn {
-  padding: 0.6rem 1.1rem;
-  font-size: 0.9rem;
+  padding: 0.48rem 0.95rem;
+  font-size: 0.83rem;
 }
 
 /* 에디터 그리드 */
@@ -506,9 +541,9 @@ function resetAll() {
 }
 
 .swap-btn {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #94a3b8;
+  background: var(--nav-bg);
+  border: 1px solid var(--nav-border);
+  color: var(--nav-text);
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -520,8 +555,9 @@ function resetAll() {
 }
 
 .swap-btn:hover {
-  background: rgba(51, 65, 85, 0.9);
-  color: #38bdf8;
+  background: var(--nav-hover-bg);
+  color: var(--nav-active-text);
+  border-color: var(--nav-active-text);
   transform: rotate(180deg);
 }
 
@@ -533,11 +569,13 @@ function resetAll() {
 
 /* 접이식 가이드 패널 */
 .guide-collapsible {
-  background: rgba(15, 23, 42, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--card-header-bg);
+  border: 1px solid var(--nav-border);
   border-radius: 8px;
   padding: 12px 16px;
   margin-bottom: 1.25rem;
+  backdrop-filter: var(--glass-card-blur);
+  -webkit-backdrop-filter: var(--glass-card-blur);
 }
 
 .guide-content {
@@ -562,25 +600,58 @@ function resetAll() {
 .guide-label {
   font-size: 0.78rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .guide-col pre {
   margin: 0;
-  background: rgba(2, 6, 23, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
   border-radius: 6px;
   padding: 8px 12px;
   overflow-x: auto;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+  backdrop-filter: var(--glass-card-blur);
+  -webkit-backdrop-filter: var(--glass-card-blur);
 }
 
 .guide-col code {
   font-family: 'Fira Code', Consolas, Monaco, monospace;
   font-size: 0.78rem;
-  color: #cbd5e1;
+  color: var(--code-text);
   white-space: pre-wrap;
   word-break: break-all;
+  transition: color 0.25s ease;
 }
+
+:deep([data-bs-theme="light"]) .guide-collapsible,
+[data-bs-theme="light"] .guide-collapsible {
+  background: var(--card-header-bg);
+  border-color: var(--nav-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+:deep([data-bs-theme="light"]) .guide-label,
+[data-bs-theme="light"] .guide-label {
+  color: var(--text-muted);
+}
+
+:deep([data-bs-theme="light"]) .guide-col pre,
+[data-bs-theme="light"] .guide-col pre {
+  background: var(--code-bg) !important;
+  border-color: var(--code-border) !important;
+}
+
+:deep([data-bs-theme="light"]) .guide-col code,
+[data-bs-theme="light"] .guide-col code {
+  color: var(--code-text) !important;
+}
+
+:deep([data-bs-theme="light"]) .output-textarea,
+[data-bs-theme="light"] .output-textarea {
+  color: #0284c7;
+}
+
 
 
 /* 에러 배너 */

@@ -745,7 +745,7 @@ const triggerDblClick = (checkbox: any) => {
   padding: 24px;
   backdrop-filter: var(--glass-card-blur);
   -webkit-backdrop-filter: var(--glass-card-blur);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: var(--panel-shadow, 0 10px 30px rgba(0, 0, 0, 0.2));
   margin-bottom: 24px;
 }
 
@@ -780,7 +780,7 @@ const triggerDblClick = (checkbox: any) => {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #64748b;
+  color: var(--text-muted);
   margin-bottom: 10px;
 }
 
@@ -792,27 +792,35 @@ const triggerDblClick = (checkbox: any) => {
 
 .chip {
   padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--nav-border);
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
   border-radius: 9999px;
-  color: var(--nav-text);
+  color: var(--chip-text);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   user-select: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  backdrop-filter: var(--glass-card-blur);
+  -webkit-backdrop-filter: var(--glass-card-blur);
 }
 
 .chip:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(52, 211, 153, 0.3);
+  background: var(--chip-hover-bg);
+  border-color: var(--chip-hover-border);
+  color: var(--chip-hover-text);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.15);
 }
 
 .chip.active {
-  background: linear-gradient(135deg, rgba(52, 211, 153, 0.2) 0%, rgba(96, 165, 250, 0.2) 100%);
-  border-color: rgba(52, 211, 153, 0.5);
-  color: #34d399;
-  box-shadow: 0 4px 12px rgba(52, 211, 153, 0.2);
+  background: var(--chip-active-bg);
+  border-color: var(--chip-active-border);
+  color: var(--chip-active-text);
+  box-shadow: var(--chip-active-shadow);
+  font-weight: 700;
+  transform: translateY(-1px);
 }
 
 .sr-only {
@@ -859,6 +867,8 @@ const triggerDblClick = (checkbox: any) => {
   font-size: 0.9rem;
   outline: none;
   transition: all 0.2s ease;
+  backdrop-filter: var(--glass-card-blur);
+  -webkit-backdrop-filter: var(--glass-card-blur);
 }
 
 .custom-select option {
@@ -896,10 +906,12 @@ const triggerDblClick = (checkbox: any) => {
   position: relative;
   width: 40px;
   height: 20px;
-  background-color: var(--switch-bg);
+  background: var(--switch-bg);
   border-radius: 9999px;
-  transition: background-color 0.3s;
-  border: 1px solid var(--nav-border);
+  transition: background-color 0.3s, border-color 0.3s;
+  border: 1px solid var(--switch-border);
+  backdrop-filter: var(--glass-card-blur);
+  -webkit-backdrop-filter: var(--glass-card-blur);
 }
 
 .custom-switch-slider::before {
@@ -910,18 +922,20 @@ const triggerDblClick = (checkbox: any) => {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background-color: var(--nav-active-text);
-  transition: transform 0.3s, background-color 0.3s;
+  background-color: var(--switch-knob);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .custom-switch-input:checked + .custom-switch-slider {
-  background-color: rgba(52, 211, 153, 0.2);
-  border-color: rgba(52, 211, 153, 0.4);
+  background: var(--switch-checked-bg);
+  border-color: var(--switch-checked-border);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
 }
 
 .custom-switch-input:checked + .custom-switch-slider::before {
   transform: translateX(20px);
-  background-color: var(--nav-active-text);
+  background-color: var(--switch-checked-knob);
 }
 
 .switch-label {
@@ -982,6 +996,8 @@ const triggerDblClick = (checkbox: any) => {
   color: var(--textarea-text);
   white-space: pre-wrap;
   word-wrap: break-word;
+  backdrop-filter: var(--glass-card-blur);
+  -webkit-backdrop-filter: var(--glass-card-blur);
 }
 
 @media (max-width: 992px) {
@@ -1005,16 +1021,6 @@ const triggerDblClick = (checkbox: any) => {
   --token-variable: #a78bfa;
 }
 
-:global([data-bs-theme="light"]) .converter-wrapper {
-  --token-keyword: #2563eb;
-  --token-annotation: #059669;
-  --token-string: #b45309;
-  --token-comment: #94a3b8;
-  --token-tag: #db2777;
-  --token-attr-name: #0284c7;
-  --token-attr-value: #d97706;
-  --token-variable: #7c3aed;
-}
 
 .output-area :deep(.token-keyword),
 .output-area-large :deep(.token-keyword) {
@@ -1055,4 +1061,6 @@ const triggerDblClick = (checkbox: any) => {
 .output-area-large:focus {
   outline: none;
 }
+
 </style>
+

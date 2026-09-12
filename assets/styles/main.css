@@ -247,7 +247,7 @@
   border: 1px solid var(--nav-border);
   border-radius: 16px;
   padding: 16px;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: var(--panel-shadow, 0 15px 40px rgba(0, 0, 0, 0.4));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   animation: ambient-pop-fade 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -456,6 +456,40 @@
   color: #34d399;
 }
 
+[data-bs-theme="light"] .theme-toggle-btn,
+[data-bs-theme="light"] .dog-cage-toggle-btn,
+[data-bs-theme="light"] .bh-version-toggle-btn,
+[data-bs-theme="light"] .ambient-control-btn {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+[data-bs-theme="light"] .ambient-slider {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+[data-bs-theme="light"] .ambient-divider {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+[data-bs-theme="light"] .ambient-switch-track {
+  background-color: rgba(15, 23, 42, 0.08);
+}
+
+[data-bs-theme="light"] .ambient-chip {
+  background: rgba(15, 23, 42, 0.04);
+  color: var(--text-muted);
+}
+
+[data-bs-theme="light"] .ambient-chip:hover {
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--text-main);
+}
+
+[data-bs-theme="light"] .ambient-chip.active {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #059669;
+}
 
 .theme-icon {
   width: 22px;

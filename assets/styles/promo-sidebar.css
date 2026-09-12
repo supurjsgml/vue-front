@@ -9,7 +9,7 @@
   border: 1px solid var(--nav-border);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: var(--panel-shadow, 0 10px 30px rgba(0, 0, 0, 0.2));
   z-index: 3;
 }
 
@@ -274,4 +274,85 @@
     width: 100%;
     max-width: 320px;
   }
+}
+
+[data-bs-theme="light"] .sidebar {
+  background: var(--card-bg);
+  border-color: var(--nav-border);
+  box-shadow: var(--panel-shadow, 0 10px 30px -5px rgba(0, 0, 0, 0.05));
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+[data-bs-theme="light"] .extension-section {
+  background: rgba(255, 255, 255, 0.35);
+  border-color: var(--nav-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  backdrop-filter: var(--glass-card-blur);
+  -webkit-backdrop-filter: var(--glass-card-blur);
+}
+
+[data-bs-theme="light"] .extension-section-header {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+[data-bs-theme="light"] .extension-header-title {
+  color: #0f172a;
+  opacity: 0.9;
+}
+
+[data-bs-theme="light"] .section-toggle-icon {
+  color: #64748b;
+}
+
+[data-bs-theme="light"] .extension-card {
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid var(--nav-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  backdrop-filter: var(--glass-card-blur);
+  -webkit-backdrop-filter: var(--glass-card-blur);
+}
+
+[data-bs-theme="light"] .extension-card:hover {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(5, 150, 105, 0.45);
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.12);
+}
+
+[data-bs-theme="light"] .extension-card:hover .extension-name {
+  color: #059669;
+}
+
+[data-bs-theme="light"] .extension-name {
+  color: #0f172a;
+}
+
+[data-bs-theme="light"] .extension-desc {
+  color: #64748b;
+  opacity: 1;
+}
+
+[data-bs-theme="light"] .external-tab-btn {
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid var(--nav-border);
+  color: #64748b;
+  opacity: 0.9;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+[data-bs-theme="light"] .external-tab-btn:hover {
+  color: #059669;
+  background: rgba(5, 150, 105, 0.12);
+  border-color: #059669;
+  opacity: 1;
+}
+
+[data-bs-theme="light"] .extension-tag {
+  background: rgba(241, 245, 249, 0.6);
+  border-color: var(--nav-border);
+  color: #475569;
+}
+
+[data-bs-theme="light"] .clickable-header:hover .section-toggle-icon {
+  color: #059669;
 }

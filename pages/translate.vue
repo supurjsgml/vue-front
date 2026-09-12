@@ -332,8 +332,7 @@ const copyToClipboard = (event?: MouseEvent) => {
   border: 1px solid var(--nav-border);
   background: var(--glass-card-bg);
   backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: var(--panel-shadow, 0 10px 30px rgba(0, 0, 0, 0.2));
   overflow: hidden;
 }
 
@@ -382,7 +381,19 @@ const copyToClipboard = (event?: MouseEvent) => {
 }
 
 [data-bs-theme="light"] .lang-select {
-  background: rgba(0, 0, 0, 0.02);
+  background: var(--input-bg);
+  backdrop-filter: var(--glass-card-blur);
+  -webkit-backdrop-filter: var(--glass-card-blur);
+  border-color: var(--nav-border);
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+[data-bs-theme="light"] .lang-select:hover {
+  background: var(--input-bg);
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.15);
+  color: #059669;
 }
 
 .lang-select:hover {
@@ -525,6 +536,15 @@ const copyToClipboard = (event?: MouseEvent) => {
   transform: scale(1.1) rotate(180deg);
   border-color: #34d399;
   color: #34d399;
+}
+
+[data-bs-theme="light"] .swap-btn {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+[data-bs-theme="light"] .swap-btn:hover {
+  border-color: #059669;
+  color: #059669;
 }
 
 .translate-action-btn {

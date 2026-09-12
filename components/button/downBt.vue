@@ -45,4 +45,5 @@
 .btn-premium-download:hover .download-icon {
   transform: translateY(1px);
 }
+
 </style>
