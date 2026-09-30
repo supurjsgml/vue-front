@@ -70,13 +70,13 @@
 :deep(.bh-version-toggle-btn),
 :deep(.dog-cage-toggle-btn),
 :deep(.ambient-control-wrapper) {
-  position: relative !important;
-  top: auto !important;
-  right: auto !important;
-  left: auto !important;
-  bottom: auto !important;
-  z-index: 1 !important;
-  margin: 0 !important;
+  position: relative;
+  top: auto;
+  right: auto;
+  left: auto;
+  bottom: auto;
+  z-index: 1;
+  margin: 0;
   flex-shrink: 0;
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
@@ -90,10 +90,10 @@
 }
 
 :deep(.ambient-popover) {
-  position: absolute !important;
-  top: 55px !important;
-  right: 0 !important;
-  z-index: 10001 !important;
+  position: absolute;
+  top: 55px;
+  right: 0;
+  z-index: 10001;
 }
 
 .quick-toggle-items.expanded :deep(> *:nth-child(1)) {
@@ -114,4 +114,55 @@
   border-color: #059669;
   box-shadow: 0 0 15px rgba(16, 185, 129, 0.3), 0 4px 15px rgba(0, 0, 0, 0.08);
   color: #059669;
+}
+
+/* 모바일 화면 최적화 수평 정렬 스타일 */
+@media (max-width: 1024px) {
+  .quick-toggle-group {
+    top: 100px;
+    right: 15px;
+    gap: 6px;
+  }
+
+  .quick-toggle-master-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .master-icon {
+    width: 17px;
+    height: 17px;
+  }
+
+  .quick-toggle-items {
+    gap: 6px;
+  }
+
+  :deep(.theme-toggle-btn),
+  :deep(.bh-version-toggle-btn),
+  :deep(.dog-cage-toggle-btn),
+  :deep(.ambient-control-wrapper),
+  :deep(.ambient-control-btn) {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+  }
+
+  :deep(.theme-icon),
+  :deep(.ambient-icon) {
+    width: 17px;
+    height: 17px;
+  }
+
+  :deep(.bh-version-text) {
+    font-size: 0.72rem;
+  }
+
+  :deep(.ambient-popover) {
+    top: 48px;
+    right: 0;
+    max-width: calc(100vw - 24px);
+    width: 280px;
+  }
 }

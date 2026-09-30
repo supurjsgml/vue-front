@@ -18,7 +18,7 @@
 }
 
 .mini-stats-widget.dragging {
-  transition: none !important;
+  transition: none;
 }
 
 .mini-stats-widget:hover {

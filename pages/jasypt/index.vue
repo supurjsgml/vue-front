@@ -367,7 +367,7 @@ function resetAll() {
 <style scoped>
 /* 페이지 너비 확장 */
 .jasypt-page-wrapper {
-  max-width: 1360px !important;
+  max-width: 1360px;
   width: 100%;
 }
 
@@ -638,13 +638,13 @@ function resetAll() {
 
 :deep([data-bs-theme="light"]) .guide-col pre,
 [data-bs-theme="light"] .guide-col pre {
-  background: var(--code-bg) !important;
-  border-color: var(--code-border) !important;
+  background: var(--code-bg);
+  border-color: var(--code-border);
 }
 
 :deep([data-bs-theme="light"]) .guide-col code,
 [data-bs-theme="light"] .guide-col code {
-  color: var(--code-text) !important;
+  color: var(--code-text);
 }
 
 :deep([data-bs-theme="light"]) .output-textarea,

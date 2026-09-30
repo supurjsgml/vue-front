@@ -572,7 +572,7 @@ onUnmounted(() => {
 
 <style scoped>
 .global-dog-container {
-  position: fixed !important;
+  position: fixed;
   z-index: 100;
   pointer-events: auto;
   cursor: pointer;

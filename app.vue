@@ -24,6 +24,13 @@
       :isCaged="isDogCaged"
     />
 
+    <!-- 자율 주행 3D 동물 펫 위젯 -->
+    <WidgetGlobalPet3D 
+      :bhPhase="bhPhase" 
+      :bhProgress="bhProgress" 
+      :isIdle="isIdle"
+    />
+
     <div class="main-ui-wrapper" :style="containerWarpStyle">
       <!-- 왼쪽 패널 그룹 -->
       <div class="left-panel-wrapper" :style="leftPanelWarpStyle">
@@ -380,8 +387,7 @@ const containerWarpStyle = computed(() => {
   }
   return {
     opacity: uiOpacity.value / 100,
-    transform: 'scale(1)',
-    transition: 'opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+    transition: 'opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
   };
 });
 

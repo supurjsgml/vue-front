@@ -1,5 +1,5 @@
 .nav-container {
-  position: absolute !important;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -20,7 +20,7 @@
 
 .nav-container.dragging {
   cursor: grabbing;
-  transition: none !important;
+  transition: none;
 }
 
 .nav-container:hover {

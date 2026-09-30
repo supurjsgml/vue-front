@@ -498,7 +498,7 @@ onUnmounted(() => {
 
 <style scoped>
 .black-hole-bg-container {
-  position: fixed !important;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100vw;

@@ -326,7 +326,7 @@ function onMouseUp() {
 }
 
 .bouncing-dog {
-  position: absolute !important;
+  position: absolute;
   z-index: -1;
   pointer-events: none;
   object-fit: contain;
