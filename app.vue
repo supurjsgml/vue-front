@@ -189,6 +189,7 @@ import QuickToggleGroup from '~/components/button/QuickToggleGroup.vue'
 import { getAPI } from '~/api/get'
 
 const { isBlackHoleEnabled, isActionEnabled, bigBangTriggerTime, timeOffset, bhVersion, toggleBlackHoleVersion, initBlackHoleSetting } = useBlackHole()
+const route = useRoute()
 
 useHead({
   title: '카멜따리 ~',
@@ -315,6 +316,7 @@ const resetIdleTimer = () => {
     clearTimeout(idleTimer);
     idleTimer = null;
   }
+  if (route.path.startsWith('/grafana')) return;
   if (!isIdleModeEnabled.value) return;
 
   idleTimer = setTimeout(() => {
@@ -664,8 +666,6 @@ const navWarpStyle = computed(() => {
 
 const showStatsModal = ref(false)
 
-const route = useRoute()
-
 const getPageNameByPath = (path: string): string => {
   if (path === '/') return 'Main';
   if (path.startsWith('/camel')) return 'Camel';
@@ -709,9 +709,18 @@ const recordHit = async (forcePageName?: string) => {
   }
 }
 
-// SPA 라우트 이동 감지하여 페이지뷰 기록
-watch(() => route.path, () => {
+// SPA 라우트 이동 감지하여 페이지뷰 기록 및 그라파나 유휴 타이머 제어
+watch(() => route.path, (newPath) => {
   recordHit();
+  if (newPath.startsWith('/grafana')) {
+    isIdle.value = false;
+    if (idleTimer) {
+      clearTimeout(idleTimer);
+      idleTimer = null;
+    }
+  } else {
+    resetIdleTimer();
+  }
 })
 
 const { position: navPosition, startDrag: startNavDrag, isDragging: navIsDragging } = useDraggable()
