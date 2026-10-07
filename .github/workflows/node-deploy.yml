@@ -101,8 +101,6 @@ jobs:
 
       - name: Deploy to Azure Container Apps
         env:
-          GH_ACTOR: ${{ github.actor }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LOKI_USER: ${{ secrets.LOKI_USER }}
           LOKI_TOKEN: ${{ secrets.LOKI_TOKEN }}
           AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
@@ -144,8 +142,6 @@ jobs:
 
       - name: Restart Azure Container App
         env:
-          GH_ACTOR: ${{ github.actor }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LOKI_USER: ${{ secrets.LOKI_USER }}
           LOKI_TOKEN: ${{ secrets.LOKI_TOKEN }}
           AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
