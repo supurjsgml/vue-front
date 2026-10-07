@@ -300,7 +300,7 @@ const copyOutput = (event: MouseEvent) => {
     });
 }
 
-// default data
+// 기본 데이터
 const input = ref('USER_ID\nADDR_HOME_STREET\nYOU_LOVE_ME_SO_MUCH\n');
 const output = ref();
 
